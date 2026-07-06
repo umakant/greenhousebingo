@@ -1,5 +1,4 @@
-import { readFileSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { PLANT_BINGO_BASH_HTML_ROUTES } from "@/lib/company-themes/plant-bingo-bash-html-routes";
 
 export type CompanyNextjsTheme = {
   slug: string;
@@ -18,39 +17,6 @@ const LEGACY_THEME_SLUGS: Record<string, string> = {
   "win-with-barlow-securx": "plant-bingo-bash",
 };
 
-const PLANT_BINGO_BASH_FALLBACK_ROUTES: Record<string, string> = {
-  "/": "index.html",
-  "/about": "about/index.html",
-  "/about/": "about/index.html",
-  "/events": "events/index.html",
-  "/events/": "events/index.html",
-  "/contact": "contact/index.html",
-  "/contact/": "contact/index.html",
-  "/how-it-works": "how-it-works/index.html",
-  "/how-it-works/": "how-it-works/index.html",
-  "/community": "community/index.html",
-  "/community/": "community/index.html",
-};
-
-function loadPlantBingoBashHtmlRoutes(): Record<string, string> {
-  const manifestPath = join(
-    process.cwd(),
-    "public",
-    "company-themes",
-    "plant-bingo-bash",
-    "theme-routes.json",
-  );
-  if (!existsSync(manifestPath)) return PLANT_BINGO_BASH_FALLBACK_ROUTES;
-  try {
-    const raw = JSON.parse(readFileSync(manifestPath, "utf8")) as { htmlRoutes?: Record<string, string> };
-    return raw.htmlRoutes && Object.keys(raw.htmlRoutes).length > 0
-      ? raw.htmlRoutes
-      : PLANT_BINGO_BASH_FALLBACK_ROUTES;
-  } catch {
-    return PLANT_BINGO_BASH_FALLBACK_ROUTES;
-  }
-}
-
 const PLANT_BINGO_BASH_THEME: CompanyNextjsTheme = {
   slug: "plant-bingo-bash",
   name: "Plant Bingo Bash",
@@ -58,7 +24,7 @@ const PLANT_BINGO_BASH_THEME: CompanyNextjsTheme = {
     "Greenhouse Bingo marketing theme with events, ticketing, community, host signup, and business pages.",
   publicPath: "/company-themes/plant-bingo-bash",
   sitePathPrefix: "/company-website",
-  htmlRoutes: PLANT_BINGO_BASH_FALLBACK_ROUTES,
+  htmlRoutes: PLANT_BINGO_BASH_HTML_ROUTES,
   previewImage: "/company-themes/plant-bingo-bash/theme-thumbnail.png",
 };
 
@@ -73,12 +39,7 @@ export function resolveCompanyThemeSlug(slug: string | null | undefined): string
 export function getCompanyNextjsTheme(slug: string | null | undefined): CompanyNextjsTheme | null {
   const resolved = resolveCompanyThemeSlug(slug);
   if (!resolved) return null;
-  const base = COMPANY_NEXTJS_THEMES.find((t) => t.slug === resolved) ?? null;
-  if (!base) return null;
-  if (base.slug === "plant-bingo-bash") {
-    return { ...base, htmlRoutes: loadPlantBingoBashHtmlRoutes() };
-  }
-  return base;
+  return COMPANY_NEXTJS_THEMES.find((t) => t.slug === resolved) ?? null;
 }
 
 export function listCompanyNextjsThemeOptions() {
