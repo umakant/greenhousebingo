@@ -13,7 +13,7 @@ export function CompanyCard({ company }: { company: Company }) {
 
   return (
     <Link
-      href={`/companies/${company.slug}`}
+      href={`/partners/${company.slug}`}
       className="group flex gap-4 rounded-2xl border border-border bg-card p-5 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift"
     >
       <div

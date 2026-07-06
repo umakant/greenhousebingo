@@ -9,6 +9,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import CookieConsent from "@/components/cookie-consent";
 import { t } from "@/lib/admin-t";
 import {
+  AuthCopyrightFooter,
   CrsBrandPanel,
   CrsMobileBrandBar,
   usePublicAuthBackgrounds,
@@ -116,9 +117,7 @@ export default function ForgotPasswordPage() {
           </form>
         </div>
 
-        <p className="absolute bottom-4 left-0 right-0 text-center text-xs text-slate-600">
-          &copy; {new Date().getFullYear()} SecurX
-        </p>
+        <AuthCopyrightFooter />
       </div>
 
       <CookieConsent settings={{}} />

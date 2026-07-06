@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { GhBingoShell } from "@/components/greenhouse-bingo/gh-bingo-shell";
 import { AuthPageContent } from "@/components/greenhouse-bingo/auth-page";
 
@@ -11,7 +12,9 @@ export const metadata: Metadata = {
 export default function AuthPage() {
   return (
     <GhBingoShell>
-      <AuthPageContent />
+      <Suspense fallback={<div className="min-h-[50vh]" aria-busy="true" />}>
+        <AuthPageContent />
+      </Suspense>
     </GhBingoShell>
   );
 }

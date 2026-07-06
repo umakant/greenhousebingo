@@ -16,10 +16,14 @@ export const CRS_BUTTON_BG = "#a89f68";
 /** @deprecated use PF_RED */
 export const CRS_RED = PF_RED;
 
+export const DEFAULT_AUTH_BRAND_NAME = "Green House Bingo";
+
 type PublicBrandSettings = {
   loginImage?: string;
   loginBgColor?: string;
   loginFormBgColor?: string;
+  titleText?: string;
+  footerText?: string;
 };
 
 /** Public login/register branding from `/api/public-settings`. */
@@ -34,6 +38,24 @@ export function usePublicLoginBranding(): PublicBrandSettings {
       .catch(() => {});
   }, []);
   return brand;
+}
+
+/** Platform name and copyright for login/register pages (from public settings). */
+export function usePublicAuthBrand() {
+  const settings = usePublicLoginBranding();
+  const brandName = settings.titleText?.trim() || DEFAULT_AUTH_BRAND_NAME;
+  const footerText = settings.footerText?.trim();
+  const copyright = footerText || `© ${new Date().getFullYear()} ${brandName}`;
+  return { brandName, copyright, settings };
+}
+
+export function AuthCopyrightFooter({ className }: { className?: string }) {
+  const { copyright } = usePublicAuthBrand();
+  return (
+    <p className={className ?? "absolute bottom-4 left-0 right-0 text-center text-xs text-slate-600"}>
+      {copyright}
+    </p>
+  );
 }
 
 /** Resolved background colors for auth split layout (from public settings + defaults). */

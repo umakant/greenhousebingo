@@ -85,7 +85,7 @@ export function AppSidebar({
   const titleText =
     (settings.titleText ?? "").trim() ||
     (settings.company_name ?? "").trim() ||
-    "SecurX";
+    "Green House Bingo";
   const poweredByLight = (settings.powered_by_light ?? "").trim();
   const poweredByDark = (settings.powered_by_dark ?? "").trim();
   const poweredBy = isDark ? poweredByDark : poweredByLight;

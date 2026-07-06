@@ -38,7 +38,7 @@ export default function AppSettingsApplier() {
     const titleText =
       (settings.titleText ?? "").trim() ||
       (settings.company_name ?? "").trim() ||
-      "SecurX";
+      "Green House Bingo";
     document.title = titleText;
 
     const favicon =

@@ -1,4 +1,5 @@
 import { type PropsWithChildren } from "react";
+import { AuthCopyrightFooter } from "@/components/auth/crs-auth-brand";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import CookieConsent from "@/components/cookie-consent";
 
@@ -77,9 +78,7 @@ export default function AuthSimpleLayout({
         </div>
       </div>
 
-      <div className="relative z-10 py-4 text-center text-sm text-slate-500">
-        &copy; {new Date().getFullYear()} SecurX
-      </div>
+      <AuthCopyrightFooter className="relative z-10 py-4 text-center text-sm text-slate-500" />
 
       <CookieConsent settings={{}} />
     </div>

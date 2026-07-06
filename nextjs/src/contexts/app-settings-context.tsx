@@ -11,7 +11,7 @@ type Ctx = {
 
 const AppSettingsContext = React.createContext<Ctx | null>(null);
 
-const DEFAULT_APP_SETTINGS: AppSettings = { titleText: "SecurX" };
+const DEFAULT_APP_SETTINGS: AppSettings = { titleText: "Green House Bingo" };
 
 function mergeAppSettings(prev: AppSettings, patch: Partial<AppSettings>): AppSettings {
   const next: AppSettings = { ...prev };

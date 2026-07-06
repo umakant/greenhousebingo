@@ -34,7 +34,7 @@ export function EventDetailContent({ event }: { event: BingoEvent }) {
         <div className="absolute inset-0 opacity-20 mix-blend-overlay [background-image:radial-gradient(circle_at_30%_10%,white,transparent_45%)]" />
         <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24">
           <Link
-            href={`/companies/${co.slug}`}
+            href={`/partners/${co.slug}`}
             className="text-xs font-semibold uppercase tracking-widest opacity-80 hover:opacity-100"
           >
             {co.name}

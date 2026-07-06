@@ -187,7 +187,7 @@ export function GreenhouseBingoHome() {
             <h2 className="mt-2 font-display text-3xl font-semibold md:text-4xl">Reps hosting near you</h2>
           </div>
           <Button asChild variant="ghost">
-            <Link href="/companies">
+            <Link href="/partners">
               All companies <ArrowRight className="ml-1 h-4 w-4" />
             </Link>
           </Button>

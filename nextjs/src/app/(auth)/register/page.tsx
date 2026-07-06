@@ -7,7 +7,12 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import CookieConsent from "@/components/cookie-consent";
-import { CrsBrandPanel, CrsMobileBrandBar, usePublicAuthBackgrounds } from "@/components/auth/crs-auth-brand";
+import {
+  AuthCopyrightFooter,
+  CrsBrandPanel,
+  CrsMobileBrandBar,
+  usePublicAuthBackgrounds,
+} from "@/components/auth/crs-auth-brand";
 import { CompanyRegisterWizard } from "@/components/auth/company-register-wizard";
 import { t } from "@/lib/admin-t";
 
@@ -50,9 +55,7 @@ function RegisterPendingView() {
           <LanguageSwitcher />
         </div>
         <RegisterPendingPanel />
-        <p className="absolute bottom-4 left-0 right-0 text-center text-xs text-slate-600">
-          &copy; {new Date().getFullYear()} SecurX
-        </p>
+        <AuthCopyrightFooter />
       </div>
       <CookieConsent settings={{}} />
     </div>

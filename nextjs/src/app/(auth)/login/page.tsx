@@ -12,9 +12,11 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import CookieConsent from "@/components/cookie-consent";
 import { Eye, EyeOff } from "lucide-react";
 import {
+  AuthCopyrightFooter,
   CrsBrandPanel,
   CrsMobileBrandBar,
   usePublicAuthBackgrounds,
+  usePublicAuthBrand,
   CRS_INPUT_BG,
   CRS_INPUT_BORDER,
 } from "@/components/auth/crs-auth-brand";
@@ -25,6 +27,7 @@ import { t } from "@/lib/admin-t";
 
 function LoginPageContent() {
   const { leftBg, rightBg } = usePublicAuthBackgrounds();
+  const { brandName } = usePublicAuthBrand();
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextFromQuery = searchParams?.get("next") ?? null;
@@ -84,7 +87,7 @@ function LoginPageContent() {
         </div>
 
         <div className="mx-auto w-full max-w-[340px]">
-          <h1 className="text-[1.65rem] font-bold leading-tight text-white">Welcome to SecurX</h1>
+          <h1 className="text-[1.65rem] font-bold leading-tight text-white">Welcome to {brandName}</h1>
           <p className="mt-3 text-sm leading-relaxed text-slate-400">
             Please sign-in to your account and start the adventure
           </p>
@@ -187,9 +190,7 @@ function LoginPageContent() {
           </form>
         </div>
 
-        <p className="absolute bottom-4 left-0 right-0 text-center text-xs text-slate-600">
-          &copy; {new Date().getFullYear()} SecurX
-        </p>
+        <AuthCopyrightFooter />
       </div>
 
       <CookieConsent settings={{}} />

@@ -267,7 +267,7 @@ export function resolvePlatformAppName(settings: SettingsBlob): string {
   }
   const env = (process.env.NEXT_PUBLIC_APP_NAME ?? "").trim();
   if (env) return env;
-  return "SecurX";
+  return "Green House Bingo";
 }
 
 export async function getPlatformAppName(): Promise<string> {

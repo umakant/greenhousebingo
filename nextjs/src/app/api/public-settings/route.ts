@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSuperadminId } from "@/lib/settings-service";
 
-const PUBLIC_KEYS = ["loginImage", "loginBgColor", "loginFormBgColor"] as const;
+const PUBLIC_KEYS = ["loginImage", "loginBgColor", "loginFormBgColor", "titleText", "footerText"] as const;
 
 export async function GET() {
   try {
