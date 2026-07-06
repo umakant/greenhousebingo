@@ -167,12 +167,12 @@ export function AppSidebar({
         <div className="flex flex-col gap-2 p-2">
           <div className="w-full min-w-0 px-1 group-data-[collapsible=icon]:hidden">
             {logo ? (
-              <div className="flex w-full aspect-[220/65] items-center overflow-hidden rounded-md">
+              <div className="flex w-full items-center overflow-hidden rounded-md py-1">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={getImagePath(logo)}
                   alt={titleText}
-                  className="h-full w-full object-contain object-left"
+                  className="h-10 w-auto max-w-full object-contain object-left"
                 />
               </div>
             ) : (

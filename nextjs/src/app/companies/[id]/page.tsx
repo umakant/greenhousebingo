@@ -7,13 +7,11 @@ import {
   CompanyEditDrawerProvider,
 } from "@/components/companies/company-edit-drawer";
 import CompanyViewShell from "@/components/companies/company-view-shell";
-import { GhBingoShell } from "@/components/greenhouse-bingo/gh-bingo-shell";
-import { CompanyDetailContent } from "@/components/greenhouse-bingo/company-detail";
 import AuthenticatedLayout from "@/layouts/authenticated-layout";
 import { hasPermission } from "@/lib/authz";
 import type { CompanyPlanDetailsPayload } from "@/components/companies/company-billing-plan-panel";
 import type { UserSubscriptionInfo } from "@/components/plans/subscription-setting";
-import { companies, getCompany } from "@/lib/greenhouse-bingo/mock";
+import { getCompany } from "@/lib/greenhouse-bingo/mock";
 import { readLmsOrgEnabled } from "@/lib/lms-organization";
 import { readMarketplaceOrgEnabled } from "@/lib/marketplace-organization";
 import { prisma } from "@/lib/prisma";
@@ -40,18 +38,13 @@ const COMPANY_SETTING_KEYS = [
 ] as const;
 
 export async function generateStaticParams() {
-  return companies.map((c) => ({ id: c.slug }));
+  return [];
 }
 
 export default async function CompanyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const ghCompany = getCompany(id);
-  if (ghCompany) {
-    return (
-      <GhBingoShell>
-        <CompanyDetailContent company={ghCompany} />
-      </GhBingoShell>
-    );
+  if (getCompany(id)) {
+    redirect(`/partners/${id}`);
   }
 
   const store = await cookies();
