@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAppSettings } from "@/contexts/app-settings-context";
 import { useTranslation } from "@/contexts/translation-context";
 import { formatDate as fmtDateLib } from "@/lib/format-date";
+import { CompanySectionError } from "@/components/companies/company-section-error";
 
 export type CompanyPaymentRow = {
   id: string;
