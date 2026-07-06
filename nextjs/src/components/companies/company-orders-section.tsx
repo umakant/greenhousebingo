@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 
 import { TableActionButton } from "@/components/ui/table-action-button";
+import { CompanySectionError } from "@/components/companies/company-section-error";
 import { Eye } from "lucide-react";
 import { useAppSettingsOptional } from "@/contexts/app-settings-context";
 import { useTranslation } from "@/contexts/translation-context";
@@ -82,9 +83,7 @@ export default function CompanyOrdersSection({ companyId }: Props) {
           <p className="mt-1 text-xs text-muted-foreground">{t("Company orders tab description")}</p>
         </div>
       </div>
-      {loadError ? (
-        <div className="px-4 py-10 text-center text-sm text-destructive">{loadError}</div>
-      ) : (
+      <CompanySectionError message={loadError} />
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted/40 text-muted-foreground">
@@ -153,7 +152,6 @@ export default function CompanyOrdersSection({ companyId }: Props) {
           </tbody>
         </table>
       </div>
-      )}
       <div className="border-t px-4 py-3 text-xs text-muted-foreground">
         {t("Orders link hint")}{" "}
         <Link href="/orders" className="text-primary hover:underline">

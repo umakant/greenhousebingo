@@ -123,6 +123,15 @@ import { getImagePath } from "@/utils/image-path";
 import { formatPhone, normalizeMobileForStorage } from "@/lib/phone";
 import { companyWebsiteDnsTargetForDisplay, normalizeWebsiteUrl } from "@/lib/website-url";
 import { brandTextDefaultsFromCompanyName } from "@/lib/brand-text-defaults";
+import {
+  brandLogoImageStyle,
+  brandLogoPreviewBoxStyle,
+  DEFAULT_BRAND_LOGO_HEIGHT,
+  DEFAULT_BRAND_LOGO_WIDTH,
+  resolveBrandLogoHeight,
+  resolveBrandLogoWidth,
+  syncBrandLogoDimensions,
+} from "@/lib/brand-logo-size";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { useAppSettingsOptional } from "@/contexts/app-settings-context";
 import type {
@@ -289,9 +298,16 @@ type SectionDef = {
 const NAVY_LEFT = "#0f172a";
 const NAVY_FORM = "#1e293b";
 /** Matches recommended brand logo dimensions (220×65). */
-const BRAND_LOGO_PREVIEW_BOX =
-  "flex w-full min-h-[65px] items-center rounded-md border p-3 aspect-[220/65]";
-const BRAND_LOGO_PREVIEW_IMG = "h-full w-full object-contain object-left";
+const BRAND_LOGO_PREVIEW_BOX = "flex w-full items-center rounded-md border p-3";
+const BRAND_LOGO_PREVIEW_IMG = "w-full object-contain object-left";
+const BRAND_LOGO_UPLOAD_PREVIEW_BOX_STYLE = brandLogoPreviewBoxStyle(
+  String(DEFAULT_BRAND_LOGO_WIDTH),
+  String(DEFAULT_BRAND_LOGO_HEIGHT),
+);
+const BRAND_LOGO_UPLOAD_PREVIEW_IMG_STYLE = brandLogoImageStyle(
+  String(DEFAULT_BRAND_LOGO_WIDTH),
+  String(DEFAULT_BRAND_LOGO_HEIGHT),
+);
 
 const SECTIONS: SectionDef[] = [
   { id: "brand", title: "Brand Settings", icon: Palette, viewPermission: "manage-brand-settings", writePermission: "edit-brand-settings", order: 10 },
@@ -974,11 +990,17 @@ function BrandSection({
   );
 
   const buildBrandSettings = React.useCallback(
-    (source: Record<string, string>) => ({
+    (source: Record<string, string>) => {
+      const logoWidth = resolveBrandLogoWidth(source);
+      const logoHeight = resolveBrandLogoHeight(source);
+      const logoDimensions = syncBrandLogoDimensions(logoWidth, logoHeight);
+
+      return {
       logo_dark: source.logo_dark?.trim() || "",
       logo_light: source.logo_light?.trim() || "",
-      favicon: source.favicon?.trim() || "",
-      logo_icon: source.logo_icon?.trim() || "",
+      ...logoDimensions,
+      favicon: source.favicon?.trim() || source.logo_icon?.trim() || "",
+      logo_icon: source.favicon?.trim() || source.logo_icon?.trim() || "",
       powered_by_light: source.powered_by_light?.trim() || "",
       powered_by_dark: source.powered_by_dark?.trim() || "",
       titleText: source.titleText?.trim() || brandTextDefaults.titleText,
@@ -992,7 +1014,8 @@ function BrandSection({
       loginImage: source.loginImage?.trim() || "",
       loginBgColor: source.loginBgColor?.trim() || "",
       loginFormBgColor: source.loginFormBgColor?.trim() || "",
-    }),
+      };
+    },
     [brandTextDefaults.footerText, brandTextDefaults.titleText],
   );
 
@@ -1015,6 +1038,30 @@ function BrandSection({
         window.dispatchEvent(new CustomEvent("pf:app-settings-updated", { detail: { [name]: urlString } }));
       }
       return next;
+    });
+  };
+
+  const handleBrandIconSelect = (url: string | string[]) => {
+    const urlString = Array.isArray(url) ? url[0] || "" : url;
+    setSettings((prev) => ({ ...prev, favicon: urlString, logo_icon: urlString }));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("pf:app-settings-updated", {
+          detail: { favicon: urlString, logo_icon: urlString },
+        }),
+      );
+    }
+  };
+
+  const brandIcon = settings.favicon || settings.logo_icon;
+  const logoWidth = settings.logo_dark_width;
+  const logoHeight = settings.logo_dark_height;
+
+  const handleLogoSizeChange = (field: "width" | "height", value: string) => {
+    setSettings((prev) => {
+      const nextWidth = field === "width" ? value : prev.logo_dark_width;
+      const nextHeight = field === "height" ? value : prev.logo_dark_height;
+      return { ...prev, ...syncBrandLogoDimensions(nextWidth, nextHeight) };
     });
   };
 
@@ -1091,10 +1138,18 @@ function BrandSection({
                   <Label>Logo (Light Mode)</Label>
                   <p className="text-xs text-muted-foreground">Recommended: 220px × 65px</p>
                   <div className="flex flex-col gap-3">
-                    <div className={`${BRAND_LOGO_PREVIEW_BOX} bg-muted/30`}>
+                    <div
+                      className={`${BRAND_LOGO_PREVIEW_BOX} bg-muted/30`}
+                      style={BRAND_LOGO_UPLOAD_PREVIEW_BOX_STYLE}
+                    >
                       {settings.logo_dark ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={getImagePath(settings.logo_dark)} alt="Dark Logo" className={BRAND_LOGO_PREVIEW_IMG} />
+                        <img
+                          src={getImagePath(settings.logo_dark)}
+                          alt="Dark Logo"
+                          className={BRAND_LOGO_PREVIEW_IMG}
+                          style={BRAND_LOGO_UPLOAD_PREVIEW_IMG_STYLE}
+                        />
                       ) : (
                         <div className="text-muted-foreground flex flex-col items-center gap-2">
                           <div className="h-12 w-24 bg-muted flex items-center justify-center rounded border border-dashed">
@@ -1118,13 +1173,17 @@ function BrandSection({
                   <Label>Logo (Dark Mode)</Label>
                   <p className="text-xs text-muted-foreground">Recommended: 220px × 65px</p>
                   <div className="flex flex-col gap-3">
-                    <div className={`${BRAND_LOGO_PREVIEW_BOX} bg-gray-800`}>
+                    <div
+                      className={`${BRAND_LOGO_PREVIEW_BOX} bg-gray-800`}
+                      style={BRAND_LOGO_UPLOAD_PREVIEW_BOX_STYLE}
+                    >
                       {settings.logo_light ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={getImagePath(settings.logo_light)}
                           alt="Light Logo"
                           className={BRAND_LOGO_PREVIEW_IMG}
+                          style={BRAND_LOGO_UPLOAD_PREVIEW_IMG_STYLE}
                         />
                       ) : (
                         <div className="text-muted-foreground flex flex-col items-center gap-2">
@@ -1145,59 +1204,87 @@ function BrandSection({
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <Label>Favicon</Label>
-                  <div className="flex flex-col gap-3">
-                    <div className="border rounded-md p-4 flex items-center justify-center bg-muted/30 h-20">
-                      {settings.favicon ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={getImagePath(settings.favicon)} alt="Favicon" className="h-16 w-16 object-contain" />
-                      ) : (
-                        <div className="text-muted-foreground flex flex-col items-center gap-1">
-                          <div className="h-10 w-10 bg-muted flex items-center justify-center rounded border border-dashed">
-                            <span className="font-semibold text-xs text-muted-foreground">Icon</span>
-                          </div>
-                          <span className="text-xs">No favicon selected</span>
-                        </div>
-                      )}
+                <div className="space-y-3 md:col-span-2">
+                  <Label>Logo Size</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Applies to the sidebar logo area only. Recommended: 220px × 65px
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 max-w-md">
+                    <div className="space-y-1">
+                      <Label htmlFor="logo_width" className="text-xs text-muted-foreground">
+                        Width (px)
+                      </Label>
+                      <Input
+                        id="logo_width"
+                        type="number"
+                        min={1}
+                        value={logoWidth}
+                        onChange={(e) => handleLogoSizeChange("width", e.target.value)}
+                        disabled={!canEdit}
+                      />
                     </div>
-                    <MediaPicker
-                      value={settings.favicon}
-                      onChange={(url) => handleMediaSelect("favicon", url)}
-                      placeholder="Select favicon..."
-                      showPreview={false}
-                      disabled={!canEdit}
-                    />
+                    <div className="space-y-1">
+                      <Label htmlFor="logo_height" className="text-xs text-muted-foreground">
+                        Height (px)
+                      </Label>
+                      <Input
+                        id="logo_height"
+                        type="number"
+                        min={1}
+                        value={logoHeight}
+                        onChange={(e) => handleLogoSizeChange("height", e.target.value)}
+                        disabled={!canEdit}
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <Label>Icon</Label>
-                  <div className="flex flex-col gap-3">
-                    <div className="border rounded-md p-4 flex items-center justify-center bg-muted/30 h-20">
-                      {settings.logo_icon ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={getImagePath(settings.logo_icon)} alt="Icon logo" className="h-12 w-12 object-contain" />
-                      ) : (
-                        <div className="text-muted-foreground flex flex-col items-center gap-1">
-                          <div className="h-10 w-10 bg-muted flex items-center justify-center rounded border border-dashed">
-                            <span className="font-semibold text-xs text-muted-foreground">Icon</span>
+                <div className="space-y-3 md:col-span-2">
+                  <Label>Favicon &amp; Icon</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Used in the browser tab and when the sidebar is collapsed. Recommended: 32px × 32px
+                  </p>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="flex flex-col gap-2">
+                      <p className="text-xs font-medium text-muted-foreground">Browser tab</p>
+                      <div className="flex h-20 items-center justify-center rounded-md border bg-muted/30 p-4">
+                        {brandIcon ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={getImagePath(brandIcon)} alt="Favicon" className="h-16 w-16 object-contain" />
+                        ) : (
+                          <div className="text-muted-foreground flex flex-col items-center gap-1">
+                            <div className="h-10 w-10 bg-muted flex items-center justify-center rounded border border-dashed">
+                              <span className="font-semibold text-xs text-muted-foreground">Icon</span>
+                            </div>
+                            <span className="text-xs">No icon selected</span>
                           </div>
-                          <span className="text-xs">No icon selected</span>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
-                    <MediaPicker
-                      value={settings.logo_icon}
-                      onChange={(url) => handleMediaSelect("logo_icon", url)}
-                      placeholder="Select icon logo..."
-                      showPreview={false}
-                      disabled={!canEdit}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Square mark shown when the sidebar is collapsed. Recommended: 32px × 32px
-                    </p>
+                    <div className="flex flex-col gap-2">
+                      <p className="text-xs font-medium text-muted-foreground">Collapsed sidebar</p>
+                      <div className="flex h-20 items-center justify-center rounded-md border bg-muted/30 p-4">
+                        {brandIcon ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={getImagePath(brandIcon)} alt="Sidebar icon" className="h-12 w-12 object-contain" />
+                        ) : (
+                          <div className="text-muted-foreground flex flex-col items-center gap-1">
+                            <div className="h-10 w-10 bg-muted flex items-center justify-center rounded border border-dashed">
+                              <span className="font-semibold text-xs text-muted-foreground">Icon</span>
+                            </div>
+                            <span className="text-xs">No icon selected</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
+                  <MediaPicker
+                    value={brandIcon}
+                    onChange={handleBrandIconSelect}
+                    placeholder="Select favicon & icon..."
+                    showPreview={false}
+                    disabled={!canEdit}
+                  />
                 </div>
               </div>
 
@@ -1691,6 +1778,8 @@ function BrandSection({
               <ThemePreview
                 logoDark={settings.logo_dark}
                 logoLight={settings.logo_light}
+                logoWidth={logoWidth}
+                logoHeight={logoHeight}
                 themeColor={settings.themeColor}
                 customColor={settings.customColor}
                 sidebarVariant={settings.sidebarVariant}

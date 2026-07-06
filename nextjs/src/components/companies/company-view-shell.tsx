@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Building2,
   CreditCard,
@@ -200,6 +200,7 @@ function Field({
 
 export default function CompanyViewShell(props: CompanyViewShellProps) {
   const { t } = useTranslation();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [active, setActive] = React.useState<SectionId>("overview");
   const {
@@ -230,6 +231,17 @@ export default function CompanyViewShell(props: CompanyViewShellProps) {
     if (!raw) return;
     if (SECTIONS.some((s) => s.id === raw)) setActive(raw as SectionId);
   }, [searchParams]);
+
+  const selectSection = React.useCallback(
+    (section: SectionId) => {
+      setActive(section);
+      const params = new URLSearchParams(searchParams?.toString() ?? "");
+      params.set("section", section);
+      if (section !== "invoices") params.delete("invoice");
+      router.replace(`/companies/${companyId}?${params.toString()}`, { scroll: false });
+    },
+    [companyId, router, searchParams],
+  );
 
   const address = [settings.companyAddress, settings.companyAddress2, settings.companyCity, settings.companyState, settings.companyZipCode]
     .filter(Boolean)
@@ -269,7 +281,7 @@ export default function CompanyViewShell(props: CompanyViewShellProps) {
             icon={LayoutDashboard}
             actions={
               <div className="flex flex-wrap gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => setActive("company_details")}>
+                <Button type="button" variant="outline" size="sm" onClick={() => selectSection("company_details")}>
                   {t("Company Details")}
                 </Button>
                 <EditCompanyTrigger companyId={companyId} size="sm">
@@ -439,7 +451,7 @@ export default function CompanyViewShell(props: CompanyViewShellProps) {
               />
               <CompanyBillingPaymentMethodsCard
                 companyId={companyId}
-                onGoToPayments={() => setActive("payments")}
+                onGoToPayments={() => selectSection("payments")}
               />
               <div id="company-plan-comparison" className="scroll-mt-6 space-y-3">
                 <div>
@@ -589,7 +601,7 @@ export default function CompanyViewShell(props: CompanyViewShellProps) {
                   variant={active === s.id ? "default" : "outline"}
                   size="sm"
                   className="whitespace-nowrap"
-                  onClick={() => setActive(s.id)}
+                  onClick={() => selectSection(s.id)}
                 >
                   <s.icon className="mr-2 h-4 w-4" />
                   {t(s.titleKey)}
@@ -608,7 +620,7 @@ export default function CompanyViewShell(props: CompanyViewShellProps) {
                     "w-full justify-start text-foreground",
                     active === s.id && "bg-muted font-medium",
                   )}
-                  onClick={() => setActive(s.id)}
+                  onClick={() => selectSection(s.id)}
                 >
                   <s.icon className="mr-2 h-4 w-4 shrink-0" />
                   {t(s.titleKey)}

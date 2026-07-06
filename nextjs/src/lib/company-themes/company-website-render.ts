@@ -4,8 +4,6 @@ import { applyCompanyThemeCustomizations } from "@/lib/company-themes/apply-cust
 import { getCompanyThemeCustomizerSchema } from "@/lib/company-themes/customizer-schema";
 import { getCustomizerValuesForSlug } from "@/lib/company-themes/customizer-service";
 import { getCompanyWebsiteSettingsForOwnerId } from "@/lib/company-themes/company-website-settings";
-import { findCompanyPublicSlugByOwnerId } from "@/lib/company-themes/company-website-host-resolver";
-import { injectCompanySiteCommerce } from "@/lib/company-themes/inject-company-site-commerce";
 import { loadCompanyThemeHtml } from "@/lib/company-themes/load-theme-html";
 import { getCompanyNextjsTheme, type CompanyNextjsTheme } from "@/lib/company-themes/registry";
 import {
@@ -57,16 +55,6 @@ export async function renderCompanyWebsitePage(
   if (schema) {
     const values = getCustomizerValuesForSlug(theme.slug, companyWebsite.customizerRaw);
     output = applyCompanyThemeCustomizations(html, schema.fields, values, pathname);
-  }
-
-  if (theme.slug === "win-with-barlow-securx") {
-    const slugFromPrefix = sitePathPrefix.match(/^\/sites\/([^/]+)/i)?.[1];
-    const companySlug =
-      (slugFromPrefix ? decodeURIComponent(slugFromPrefix) : null) ??
-      (await findCompanyPublicSlugByOwnerId(ownerId));
-    if (companySlug) {
-      output = injectCompanySiteCommerce(output, theme, companySlug);
-    }
   }
 
   return {

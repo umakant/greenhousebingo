@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { getPermissionsFromCookieValue, hasPermission } from "@/lib/authz";
+import { hasPermission } from "@/lib/authz";
+import { getPermissionsFromRequest } from "@/lib/read-user-cookies";
 import { notifyRegistrantCompanyApproved } from "@/lib/send-company-approval-emails";
 
 /**
@@ -12,7 +13,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (role !== "superadmin") {
     return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
   }
-  const perms = getPermissionsFromCookieValue(req.cookies.get("pf_permissions")?.value);
+  const perms = await getPermissionsFromRequest(req);
   if (!hasPermission(perms, "edit-users")) {
     return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
   }

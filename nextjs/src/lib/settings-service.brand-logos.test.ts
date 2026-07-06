@@ -66,4 +66,18 @@ describe("reconcileCompanyBrandLogos", () => {
     const out = reconcileCompanyBrandLogos({}, merged);
     expect(out).toEqual(merged);
   });
+
+  it("syncs favicon and logo_icon when company set only one", () => {
+    const merged = { favicon: "/pf.ico", logo_icon: "/other.ico" };
+    const out = reconcileCompanyBrandLogos({ favicon: "/company.ico" }, merged);
+    expect(out.favicon).toBe("/company.ico");
+    expect(out.logo_icon).toBe("/company.ico");
+  });
+
+  it("syncs logo_icon to favicon when company set only logo_icon", () => {
+    const merged = { favicon: "/pf.ico", logo_icon: "/pf.ico" };
+    const out = reconcileCompanyBrandLogos({ logo_icon: "/company.ico" }, merged);
+    expect(out.favicon).toBe("/company.ico");
+    expect(out.logo_icon).toBe("/company.ico");
+  });
 });

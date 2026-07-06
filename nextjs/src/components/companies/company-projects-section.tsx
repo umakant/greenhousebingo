@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { TableActionButton } from "@/components/ui/table-action-button";
+import { CompanySectionError } from "@/components/companies/company-section-error";
 import { useAppSettings } from "@/contexts/app-settings-context";
 import { useTranslation } from "@/contexts/translation-context";
 import { formatDate as fmtDateLib } from "@/lib/format-date";
@@ -90,6 +91,7 @@ export default function CompanyProjectsSection({
   const currencyCode = (defaultCurrency ?? "USD").trim() || "USD";
   const [projects, setProjects] = React.useState<CompanyProjectRow[]>(initialProjects);
   const [loadingProjects, setLoadingProjects] = React.useState(initialProjects.length === 0);
+  const [loadError, setLoadError] = React.useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
@@ -137,9 +139,11 @@ export default function CompanyProjectsSection({
       const res = await fetch(`/api/companies/${companyId}/projects`, { cache: "no-store" });
       const json = (await res.json()) as { projects?: CompanyProjectRow[]; error?: string };
       if (!res.ok) throw new Error(json.error || "Failed to load projects");
+      setLoadError(null);
       setProjects(Array.isArray(json.projects) ? json.projects : []);
     } catch (e: unknown) {
       console.error(e);
+      setLoadError(e instanceof Error ? e.message : "Failed to load data");
     } finally {
       setLoadingProjects(false);
     }
@@ -231,6 +235,7 @@ export default function CompanyProjectsSection({
             {t("Add Project")}
           </Button>
         </div>
+        <CompanySectionError message={loadError} />
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-muted-foreground">

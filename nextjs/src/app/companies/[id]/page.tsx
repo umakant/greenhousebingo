@@ -18,6 +18,7 @@ import { prisma } from "@/lib/prisma";
 import { decodePermissions } from "@/lib/read-user-cookies";
 import { t } from "@/lib/admin-t";
 
+export const dynamic = "force-dynamic";
 
 const COMPANY_SETTING_KEYS = [
   "companyWebsite",
@@ -36,10 +37,6 @@ const COMPANY_SETTING_KEYS = [
   "companyGstVat",
   "defaultLanguage",
 ] as const;
-
-export async function generateStaticParams() {
-  return [];
-}
 
 export default async function CompanyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -99,12 +96,31 @@ export default async function CompanyDetailsPage({ params }: { params: Promise<{
   });
 
   let totalProjects = 0;
+  let totalEarnings = 0;
+  let dueInvoices = 0;
   try {
     totalProjects = await prisma.project.count({
       where: { createdBy: company.id },
     });
   } catch {
     totalProjects = 0;
+  }
+
+  try {
+    const revenueAgg = await prisma.revenue.aggregate({
+      where: { createdBy: company.id },
+      _sum: { amount: true },
+    });
+    totalEarnings = Number(revenueAgg._sum.amount ?? 0);
+    dueInvoices = await prisma.revenue.count({
+      where: {
+        createdBy: company.id,
+        status: { in: ["pending", "unpaid", "processing", "due", "overdue"] },
+      },
+    });
+  } catch {
+    totalEarnings = 0;
+    dueInvoices = 0;
   }
 
   const idStr = company.id.toString();
@@ -187,6 +203,8 @@ export default async function CompanyDetailsPage({ params }: { params: Promise<{
             settings={settings}
             totalProjects={totalProjects}
             employeeCount={employeeCount}
+            totalEarnings={totalEarnings}
+            dueInvoices={dueInvoices}
             companySubscriptionInfo={companySubscriptionInfo}
             canEditPlans={canEditPlans}
             canDeletePlans={canDeletePlans}

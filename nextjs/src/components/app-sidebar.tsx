@@ -8,6 +8,7 @@ import { ImageWithFallback } from "@/components/image-with-fallback";
 import { resolveCompanySidebarIconPaths } from "@/lib/company-user-avatar";
 import { useIsDark } from "@/hooks/use-is-dark";
 import { resolveBrandPrimaryHex } from "@/lib/brand-theme";
+import { brandLogoImageStyle, resolveBrandLogoHeight, resolveBrandLogoWidth } from "@/lib/brand-logo-size";
 import { cn } from "@/lib/utils";
 
 import {
@@ -78,6 +79,10 @@ export function AppSidebar({
       : undefined;
 
   const logo = isDark ? settings.logo_light : settings.logo_dark;
+  const logoStyle = brandLogoImageStyle(
+    resolveBrandLogoWidth(settings),
+    resolveBrandLogoHeight(settings),
+  );
   const sidebarIconPaths = React.useMemo(
     () => resolveCompanySidebarIconPaths(settings),
     [settings],
@@ -172,7 +177,8 @@ export function AppSidebar({
                 <img
                   src={getImagePath(logo)}
                   alt={titleText}
-                  className="h-10 w-auto max-w-full object-contain object-left"
+                  className="w-auto max-w-full object-contain object-left"
+                  style={logoStyle}
                 />
               </div>
             ) : (

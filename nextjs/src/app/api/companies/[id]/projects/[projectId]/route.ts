@@ -6,18 +6,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { Decimal } from "@prisma/client/runtime/library";
 
 import { prisma } from "@/lib/prisma";
-import { getPermissionsFromCookieValue, hasPermission } from "@/lib/authz";
-
-function forbidden() {
-  return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-}
-
-function requireSuperadminManageUsers(req: NextRequest) {
-  const role = req.cookies.get("pf_role")?.value;
-  if (role !== "superadmin") return false;
-  const perms = getPermissionsFromCookieValue(req.cookies.get("pf_permissions")?.value);
-  return hasPermission(perms, "manage-users");
-}
+import {
+  companyRouteForbidden,
+  parseCompanyIdFromParam,
+  requireSuperadminManageUsers,
+  verifyCompanyTenant,
+} from "@/lib/company-route-auth";
 
 async function loadOwnedProject(companyId: bigint, projectId: bigint) {
   return prisma.project.findFirst({
@@ -146,7 +140,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; projectId: string }> },
 ) {
-  if (!requireSuperadminManageUsers(req)) return forbidden();
+  if (!(await requireSuperadminManageUsers(req))) return companyRouteForbidden();
 
   const { id, projectId } = await params;
   const companyIdNum = parseInt(id, 10);
@@ -211,7 +205,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; projectId: string }> },
 ) {
-  if (!requireSuperadminManageUsers(req)) return forbidden();
+  if (!(await requireSuperadminManageUsers(req))) return companyRouteForbidden();
 
   const { id, projectId } = await params;
   const companyIdNum = parseInt(id, 10);

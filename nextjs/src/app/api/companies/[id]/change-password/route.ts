@@ -6,24 +6,18 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
 import { prisma } from "@/lib/prisma";
-import { getPermissionsFromCookieValue, hasPermission } from "@/lib/authz";
-
-function forbidden() {
-  return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-}
-
-function requireSuperadminManageUsers(req: NextRequest) {
-  const role = req.cookies.get("pf_role")?.value;
-  if (role !== "superadmin") return false;
-  const perms = getPermissionsFromCookieValue(req.cookies.get("pf_permissions")?.value);
-  return hasPermission(perms, "manage-users");
-}
+import {
+  companyRouteForbidden,
+  parseCompanyIdFromParam,
+  requireSuperadminManageUsers,
+  verifyCompanyTenant,
+} from "@/lib/company-route-auth";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!requireSuperadminManageUsers(req)) return forbidden();
+  if (!(await requireSuperadminManageUsers(req))) return companyRouteForbidden();
 
   const { id } = await params;
   const companyId = parseInt(id, 10);

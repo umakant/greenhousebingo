@@ -6,6 +6,11 @@ import {
   getCompanyWebsiteSettingsForUser,
 } from "@/lib/company-themes/company-website-settings";
 import { sanitizeCompanyWebsiteSettingsForClient } from "@/lib/company-themes/company-website-access-shared";
+import {
+  resolveBrandLogoHeight,
+  resolveBrandLogoWidth,
+  syncBrandLogoDimensions,
+} from "@/lib/brand-logo-size";
 
 export type SettingsBlob = Record<string, string>;
 
@@ -41,6 +46,10 @@ const SUPERADMIN_MERGE_KEYS = [
 export const BRAND_MERGE_KEYS = [
   "logo_dark",
   "logo_light",
+  "logo_dark_width",
+  "logo_dark_height",
+  "logo_light_width",
+  "logo_light_height",
   "favicon",
   "logo_icon",
   "powered_by_light",
@@ -233,11 +242,26 @@ export async function getEffectiveBrandSettings(ownerId: bigint): Promise<Settin
 export function reconcileCompanyBrandLogos(companyOnly: SettingsBlob, merged: SettingsBlob): SettingsBlob {
   const companyLight = (companyOnly.logo_light ?? "").trim();
   const companyDark = (companyOnly.logo_dark ?? "").trim();
-  if (!companyLight && !companyDark) return merged;
-
+  const companyFavicon = (companyOnly.favicon ?? "").trim();
+  const companyIcon = (companyOnly.logo_icon ?? "").trim();
   const out = { ...merged };
-  if (companyLight && !companyDark) out.logo_dark = companyLight;
-  if (companyDark && !companyLight) out.logo_light = companyDark;
+
+  if (companyLight || companyDark) {
+    if (companyLight && !companyDark) out.logo_dark = companyLight;
+    if (companyDark && !companyLight) out.logo_light = companyDark;
+  }
+
+  if (companyFavicon || companyIcon) {
+    const icon = companyFavicon || companyIcon;
+    out.favicon = icon;
+    out.logo_icon = icon;
+  }
+
+  Object.assign(
+    out,
+    syncBrandLogoDimensions(resolveBrandLogoWidth(out), resolveBrandLogoHeight(out)),
+  );
+
   return out;
 }
 

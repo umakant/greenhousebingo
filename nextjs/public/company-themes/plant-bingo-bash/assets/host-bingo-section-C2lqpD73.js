@@ -1,0 +1,1 @@
+var e=`/assets/host-bingo-section-DHEnrG_V.jpg`;export{e as t};

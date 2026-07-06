@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import dynamic from "next/dynamic";
 
 import AuthenticatedLayout from "@/layouts/authenticated-layout";
+import CompaniesPageActions from "@/components/companies/companies-page-actions";
 import { decodePermissions } from "@/lib/read-user-cookies";
 import { t } from "@/lib/admin-t";
 
@@ -24,7 +25,8 @@ export default async function CompaniesPage() {
     <AuthenticatedLayout
       user={{ name, email, roles, permissions, activatedPackages }}
       breadcrumbs={[{ label: t("Companies") }]}
-      pageTitle={t("Companies")}
+      pageTitle={t("Manage Companies")}
+      pageActions={<CompaniesPageActions />}
     >
       <CompaniesAdmin />
     </AuthenticatedLayout>

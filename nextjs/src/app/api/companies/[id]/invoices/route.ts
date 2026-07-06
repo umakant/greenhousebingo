@@ -5,40 +5,31 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { hasPermission } from "@/lib/authz";
-import { getPermissionsFromRequest } from "@/lib/read-user-cookies";
-
-function forbidden() {
-  return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-}
-
-async function requireSuperadminManageUsers(req: NextRequest): Promise<boolean> {
-  const role = req.cookies.get("pf_role")?.value;
-  if (role !== "superadmin") return false;
-  const perms = await getPermissionsFromRequest(req);
-  return hasPermission(perms, "manage-users");
-}
+import {
+  companyRouteForbidden,
+  parseCompanyIdFromParam,
+  requireSuperadminManageUsers,
+  verifyCompanyTenant,
+} from "@/lib/company-route-auth";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await requireSuperadminManageUsers(req))) return forbidden();
+  if (!(await requireSuperadminManageUsers(req))) return companyRouteForbidden();
 
   const { id } = await params;
-  const companyId = parseInt(id, 10);
-  if (Number.isNaN(companyId))
+  const companyId = parseCompanyIdFromParam(id);
+  if (companyId == null) {
     return NextResponse.json({ error: "Invalid company id" }, { status: 400 });
+  }
 
-  const company = await prisma.user.findFirst({
-    where: { id: BigInt(companyId), type: { in: ["company", "company_admin"] } },
-    select: { id: true },
-  });
+  const company = await verifyCompanyTenant(companyId);
   if (!company) {
     return NextResponse.json({ error: "Company not found" }, { status: 404 });
   }
 
-  const tenantId = BigInt(companyId);
+  const tenantId = companyId;
 
   const rows = await prisma.revenue.findMany({
     where: { createdBy: tenantId },

@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { getPermissionsFromCookieValue, hasPermission } from "@/lib/authz";
+import { hasPermission } from "@/lib/authz";
+import { getPermissionsFromRequest } from "@/lib/read-user-cookies";
 
 function computePrefix(moduleName: string, moduleCode: string | null | undefined): string {
   const letters = moduleName.replace(/[^A-Za-z]/g, "").toUpperCase();
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
   const role = req.cookies.get("pf_role")?.value;
   if (role !== "superadmin") return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
 
-  const perms = getPermissionsFromCookieValue(req.cookies.get("pf_permissions")?.value);
+  const perms = await getPermissionsFromRequest(req);
   if (!hasPermission(perms, "manage-users")) {
     return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
   }

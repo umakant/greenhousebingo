@@ -2,11 +2,14 @@
 
 import * as React from "react";
 
+import { brandLogoImageStyle } from "@/lib/brand-logo-size";
 import { getImagePath } from "@/utils/image-path";
 
 type ThemePreviewProps = {
   logoDark?: string;
   logoLight?: string;
+  logoWidth?: string;
+  logoHeight?: string;
   themeColor?: string;
   customColor?: string;
   sidebarVariant?: string;
@@ -18,6 +21,8 @@ type ThemePreviewProps = {
 export function ThemePreview({
   logoDark,
   logoLight,
+  logoWidth,
+  logoHeight,
   themeColor = "green",
   customColor = "#10b981",
   sidebarVariant = "inset",
@@ -51,6 +56,7 @@ export function ThemePreview({
   };
 
   const currentLogo = isDark ? logoLight : logoDark;
+  const currentLogoStyle = brandLogoImageStyle(logoWidth, logoHeight);
 
   return (
     <div
@@ -88,7 +94,8 @@ export function ThemePreview({
               <img
                 src={getImagePath(currentLogo)}
                 alt="Logo"
-                className="h-10 w-full max-w-full object-contain object-center"
+                className="w-full max-w-full object-contain object-center"
+                style={currentLogoStyle}
               />
             ) : (
               <div className="h-10 w-full rounded" style={{ backgroundColor: primaryColor }} />

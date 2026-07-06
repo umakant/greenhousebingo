@@ -37,6 +37,7 @@ export default function CompanyDocumentsSection({ companyId }: Props) {
 
   const [rows, setRows] = React.useState<CompanyDocumentRow[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -65,7 +66,8 @@ export default function CompanyDocumentsSection({ companyId }: Props) {
           <p className="mt-1 text-xs text-muted-foreground">{t("Company documents tab description")}</p>
         </div>
       </div>
-      <div className="overflow-x-auto">
+      <CompanySectionError message={loadError} />
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted/40 text-muted-foreground">
             <tr className="border-b">

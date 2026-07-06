@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.email_for_username(text);

@@ -7,6 +7,10 @@ import { getMergedSettingsForUserEmail } from "@/lib/settings-service";
 const EXPOSED_KEYS = [
   "logo_dark",
   "logo_light",
+  "logo_dark_width",
+  "logo_dark_height",
+  "logo_light_width",
+  "logo_light_height",
   "favicon",
   "logo_icon",
   "powered_by_light",

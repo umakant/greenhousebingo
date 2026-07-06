@@ -3,7 +3,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { prisma } from "@/lib/prisma";
-import { getPermissionsFromCookieValue, hasPermission } from "@/lib/authz";
+import { hasPermission } from "@/lib/authz";
+import { getPermissionsFromRequest } from "@/lib/read-user-cookies";
 import { getCloudinaryCredentials, uploadImageToCloudinary } from "@/lib/cloudinary";
 import { syncCompanyUserAvatarFromSettings } from "@/lib/company-user-avatar";
 import { getSettingsForOwner } from "@/lib/settings-service";
@@ -87,7 +88,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   if (role !== "superadmin") {
     return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
   }
-  const perms = getPermissionsFromCookieValue(req.cookies.get("pf_permissions")?.value);
+  const perms = await getPermissionsFromRequest(req);
   if (!hasPermission(perms, "manage-users")) {
     return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
   }
@@ -152,7 +153,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if (role !== "superadmin") {
     return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
   }
-  const perms = getPermissionsFromCookieValue(req.cookies.get("pf_permissions")?.value);
+  const perms = await getPermissionsFromRequest(req);
   if (!hasPermission(perms, "edit-users")) {
     return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
   }
@@ -293,7 +294,7 @@ export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: stri
   const role = req.cookies.get("pf_role")?.value;
   if (role !== "superadmin") return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
 
-  const perms = getPermissionsFromCookieValue(req.cookies.get("pf_permissions")?.value);
+  const perms = await getPermissionsFromRequest(req);
   if (!hasPermission(perms, "delete-users")) {
     return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
   }

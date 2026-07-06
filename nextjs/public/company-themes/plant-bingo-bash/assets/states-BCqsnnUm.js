@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-bzQ4Vb5N.js";import{r as t}from"./index-KfdLpJG8.js";var n=e(),r=()=>(0,n.jsx)(t,{kicker:`States`,title:`Growing coast to coast.`});export{r as component};

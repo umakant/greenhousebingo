@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-bzQ4Vb5N.js";import{r as t}from"./index-KfdLpJG8.js";var n=e(),r=()=>(0,n.jsx)(t,{kicker:`About`,title:`A community, growing.`,children:`We're on a mission to bring people together inside beautiful greenhouses — one bingo night, one plant, one new friend at a time.`});export{r as component};

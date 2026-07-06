@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-bzQ4Vb5N.js";import{r as t}from"./index-KfdLpJG8.js";var n=e(),r=()=>(0,n.jsx)(t,{kicker:`Pricing`,title:`One price. Every game. A plant.`,children:`Standard admission is $30 and includes 10 Bingo cards, event entry, a guaranteed take-home plant, and door prize entry.`});export{r as component};

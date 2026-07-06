@@ -1,43 +1,26 @@
 /* eslint-disable no-console */
 /**
- * Installs bundled Next.js company website themes (static HTML export).
+ * Installs bundled company website themes.
  * Usage: node scripts/ensure-company-themes.js
  *
- * Default zip: ../crimsonglobal.cc/crimson-consulting-nextjs-template.zip
- * Override: COMPANY_THEME_CRIMSON_ZIP=/path/to/theme.zip
+ * Plant Bingo Bash zip (default):
+ *   storage/plant-bingo-bash.zip
+ * Override: COMPANY_THEME_PLANT_BINGO_ZIP=/path/to/Plant Bingo Bash.zip
  */
 
 const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
+const { main: buildPlantBingoBash, THEME_SLUG } = require("./build-plant-bingo-bash-theme");
 
 const ROOT = path.join(__dirname, "..");
 const PUBLIC_THEMES = path.join(ROOT, "public", "company-themes");
 
-const THEMES = [
-  {
-    slug: "crimson-consulting",
-    name: "Crimson Consulting",
-    description:
-      "Professional security & consulting marketing site (Next.js static HTML theme). Includes home, about, careers, contact, and service pages.",
-    zipCandidates: [
-      process.env.COMPANY_THEME_CRIMSON_ZIP,
-      path.join(ROOT, "..", "..", "crimsonglobal.cc", "crimson-consulting-nextjs-template.zip"),
-      path.join(ROOT, "storage", "crimson-consulting-nextjs-template.zip"),
-    ].filter(Boolean),
-    zipDestName: "crimson-consulting-nextjs-template.zip",
-  },
-];
-
-function copyDir(src, dest) {
-  fs.mkdirSync(dest, { recursive: true });
-  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-    const from = path.join(src, entry.name);
-    const to = path.join(dest, entry.name);
-    if (entry.isDirectory()) copyDir(from, to);
-    else fs.copyFileSync(from, to);
-  }
-}
+const ZIP_CANDIDATES = [
+  process.env.COMPANY_THEME_PLANT_BINGO_ZIP,
+  path.join(ROOT, "storage", "plant-bingo-bash.zip"),
+  path.join(ROOT, "..", "..", "green house bingo", "Plant Bingo Bash.zip"),
+].filter(Boolean);
 
 function resolveZip(candidates) {
   for (const p of candidates) {
@@ -47,7 +30,10 @@ function resolveZip(candidates) {
 }
 
 function extractZip(zipPath, destDir) {
-  fs.rmSync(destDir, { recursive: true, force: true });
+  if (fs.existsSync(destDir)) {
+    console.log(`  Reusing existing extract at ${path.relative(ROOT, destDir)}`);
+    return;
+  }
   fs.mkdirSync(destDir, { recursive: true });
   if (process.platform === "win32") {
     execSync(
@@ -59,38 +45,45 @@ function extractZip(zipPath, destDir) {
   }
 }
 
-function main() {
-  console.log("Installing company Next.js themes...");
+function removeLegacyThemes() {
+  for (const legacy of ["crimson-consulting", "win-with-barlow-securx"]) {
+    const legacyDir = path.join(PUBLIC_THEMES, legacy);
+    if (fs.existsSync(legacyDir)) {
+      fs.rmSync(legacyDir, { recursive: true, force: true });
+      console.log(`  Removed legacy theme public/company-themes/${legacy}/`);
+    }
+  }
+}
+
+async function run() {
+  console.log("Installing company website themes...");
   fs.mkdirSync(PUBLIC_THEMES, { recursive: true });
 
-  for (const theme of THEMES) {
-    const zipPath = resolveZip(theme.zipCandidates);
-    if (!zipPath) {
-      console.warn(`  SKIP ${theme.slug}: zip not found. Set COMPANY_THEME_CRIMSON_ZIP or place zip at crimsonglobal.cc/.`);
-      continue;
-    }
-
-    const tempDir = path.join(ROOT, "storage", `_install-${theme.slug}`);
-    extractZip(zipPath, tempDir);
-
-    const publicSrc = path.join(tempDir, "public");
-    if (!fs.existsSync(publicSrc)) {
-      console.warn(`  SKIP ${theme.slug}: no public/ folder in zip.`);
-      fs.rmSync(tempDir, { recursive: true, force: true });
-      continue;
-    }
-
-    const destPublic = path.join(PUBLIC_THEMES, theme.slug);
-    fs.rmSync(destPublic, { recursive: true, force: true });
-    copyDir(publicSrc, destPublic);
-
-    fs.copyFileSync(zipPath, path.join(PUBLIC_THEMES, theme.zipDestName));
-
-    fs.rmSync(tempDir, { recursive: true, force: true });
-    console.log(`  OK ${theme.name} → public/company-themes/${theme.slug}/`);
+  const zipPath = resolveZip(ZIP_CANDIDATES);
+  if (!zipPath) {
+    console.warn(
+      "  SKIP plant-bingo-bash: zip not found. Place Plant Bingo Bash.zip at storage/plant-bingo-bash.zip",
+    );
+    return;
   }
 
+  const storageZip = path.join(ROOT, "storage", "plant-bingo-bash.zip");
+  if (path.resolve(zipPath) !== path.resolve(storageZip)) {
+    fs.copyFileSync(zipPath, storageZip);
+    console.log(`  Copied zip → storage/plant-bingo-bash.zip`);
+  }
+
+  const tempDir = path.join(ROOT, "storage", `_install-${THEME_SLUG}`);
+  extractZip(storageZip, tempDir);
+
+  removeLegacyThemes();
+  await buildPlantBingoBash(tempDir);
+
+  fs.copyFileSync(storageZip, path.join(PUBLIC_THEMES, "plant-bingo-bash.zip"));
   console.log("Done.");
 }
 
-main();
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

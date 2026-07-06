@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-bzQ4Vb5N.js";import{r as t}from"./index-KfdLpJG8.js";var n=e(),r=()=>(0,n.jsx)(t,{kicker:`Contact`,title:`Say hi.`,children:`Questions about tickets, hosting an event at your venue, or partnerships? Reach out at hello@greenhousebingo.com.`});export{r as component};

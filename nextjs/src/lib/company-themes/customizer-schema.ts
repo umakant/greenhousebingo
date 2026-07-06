@@ -1,6 +1,6 @@
-import { CRIMSON_FIELDS, CRIMSON_PANELS, GLOBAL_PAGE } from "@/lib/company-themes/crimson-consulting-fields";
-
 export type CompanyThemeFieldType = "text" | "textarea" | "color" | "image" | "url";
+
+export const GLOBAL_PAGE = "*";
 
 export type CompanyThemeApplyTarget =
   | { kind: "document-title"; page?: string }
@@ -52,24 +52,7 @@ export type CompanyThemeCustomizerSchema = {
   fields: CompanyThemeCustomizerField[];
 };
 
-export const CRIMSON_CONSULTING_CUSTOMIZER: CompanyThemeCustomizerSchema = {
-  slug: "crimson-consulting",
-  name: "Crimson Consulting",
-  pages: [
-    { path: "/", label: "Home" },
-    { path: "/about-us", label: "About Us" },
-    { path: "/careers", label: "Careers" },
-    { path: "/contact-us", label: "Contact Us" },
-    { path: "/services/consulting", label: "Consulting" },
-    { path: "/services/background-checks", label: "Background Checks" },
-  ],
-  panels: CRIMSON_PANELS,
-  fields: CRIMSON_FIELDS,
-};
-
-const SCHEMA_BY_SLUG: Record<string, CompanyThemeCustomizerSchema> = {
-  "crimson-consulting": CRIMSON_CONSULTING_CUSTOMIZER,
-};
+const SCHEMA_BY_SLUG: Record<string, CompanyThemeCustomizerSchema> = {};
 
 export function getCompanyThemeCustomizerSchema(slug: string | null | undefined): CompanyThemeCustomizerSchema | null {
   const s = (slug ?? "").trim();
