@@ -1,0 +1,1 @@
+import{j as l}from"./ui-B0dVR9sq.js";function c({options:r,selected:t,onChange:a,placeholder:i}){return l.jsx("div",{children:l.jsx("select",{multiple:!0,value:t,onChange:e=>{const s=Array.from(e.target.selectedOptions,u=>u.value);a(s)},children:r.map(e=>l.jsx("option",{value:e.value,children:e.label},e.value))})})}export{c as S};

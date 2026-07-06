@@ -1,0 +1,59 @@
+<div class="slidetabs-wrapper hidden-xs"
+     data-slide_delay="{{settings.new_home_slider_delay}}"
+     data-step_interval="{{settings.new_home_slider_delay}}">
+  <div class="slidetab-slide-container">
+    {% for i in (1..5) %}
+    {% assign show = 'new_home_slider_' | append: i %}
+
+    {% if settings[show] %}
+    {% assign count = count | plus:1 %}
+
+    {% assign image = 'home_slider_' | append: i | append: '_image.png' %}
+    {% assign slide_heading = 'home_slider_' | append: i | append: '_slide_heading' %}
+    {% assign slide_paragraph = 'home_slider_' | append: i | append: '_slide_paragraph' %}
+    {% assign slide_button_text = 'home_slider_' | append: i | append: '_button_text' %}
+    {% assign slide_url = 'home_slider_' | append: i | append: '_url' %}
+    {% assign slide_linklist = 'home_slider_' | append: i | append: '_linklist' %}
+	{% assign slide_bt_color = 'home_slider_' | append: i | append: '_button_color' %}
+    <div class="slide" data-image="{{ image | asset_img_url:"1000x" }}">
+      <div class="floating-half">
+        <h2>{{ settings[slide_heading] }}</h2>
+
+        <p>{{ settings[slide_paragraph] }}</p>
+        <div class="button-wrapper">
+          <a href="{{ settings[slide_url] }}" class="btn btn-1" style="background-color:{{settings[slide_bt_color]}}!important;">{{ settings[slide_button_text] }}</a>
+        </div>
+        {% if settings[slide_linklist] != blank %}
+        {% assign list = linklists[settings[slide_linklist]] %}
+        <div class="clearfix" style="margin-top: 40px;text-align:center;">
+          <ul style="list-style: none; display:inline-block;padding:0px;">
+            {% for link in list.links %}
+            <li style="float: left;margin:0px 10px;text-align:center;">
+              <i class="fa fa-caret-right" style="margin-right: 2px;"></i><a href="{{ link.url }}">{{ link.title | escape }}</a>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif%}
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  <div class="slidetab-tab-container">
+    {% for i in (1..5) %}
+    {% assign show = 'new_home_slider_' | append: i %}
+
+    {% if settings[show] %}
+    {% assign count = count | plus:1 %}
+    {% assign heading = 'home_slider_' | append: i | append: '_heading' %}
+    <div class="tab">
+      <dl>
+        <dt>{{ settings[heading] }}</dt>
+        <dd></dd>
+      </dl>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>

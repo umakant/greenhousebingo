@@ -1,0 +1,5 @@
+[
+  { "label": "2.5 Gal Tub", "qty": 1, "perTub": 1 },
+  { "label": "5 Gal Case (2×2.5 Gal)", "qty": 2, "perTub": 0.97 },
+  { "label": "Pallet (40 Tubs)", "qty": 40, "perTub": 0.88 }
+]

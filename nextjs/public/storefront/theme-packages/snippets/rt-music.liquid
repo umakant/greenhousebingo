@@ -1,0 +1,109 @@
+{% if settings.music_enabled %}
+{{ 'audio.min.js' | asset_url | script_tag }}
+<script>
+  audiojs.events.ready(function() {
+    audiojs.createAll();
+    audiojs.instances.audiojs0.play();
+  });
+</script>
+<audio src="{{'xmas_music.mp3' | asset_url}}" preload="auto" loop></audio>
+
+<div id="rt-music-wrapper">
+  <div id="rt-music-bars-wrapper">
+    <a href="#" onclick="audiojs.instances.audiojs0.playPause(); $('#rt-music-bars div').toggleClass('bar').toggleClass('bar-pause'); return false;">
+      <div id="rt-music-bars">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+    </a>
+  </div>
+  <div id="rt-music-caption">
+    <i class="zmdi zmdi-headset"></i>
+    {{ settings.music_text }}
+  </div>
+
+</div>
+
+<style>
+  #rt-music-wrapper {
+    right: 10px;
+    position: fixed;
+    bottom: 5px;
+    z-index:99999;
+  }
+
+  #rt-music-caption {
+    color: {{settings.music_text_color}};
+  }
+
+  #rt-music-bars-wrapper {
+    width:100%;
+    float:left;
+  }
+
+  #rt-music-bars {
+    height: 30px;
+    width: 40px;
+    position:relative;
+    float:right;
+  }
+
+  #rt-music-bars .bar-pause {
+    background: {{settings.music_visualizer_color}};
+    bottom: 1px;
+    height: 14px;
+    position: absolute;
+    width: 3px; 
+  }
+
+  #rt-music-bars .bar-pause:nth-child(1)  { left: 1px; }
+  #rt-music-bars .bar-pause:nth-child(2)  { left: 5px; }
+  #rt-music-bars .bar-pause:nth-child(3)  { left: 9px; }
+  #rt-music-bars .bar-pause:nth-child(4)  { left: 13px; }
+  #rt-music-bars .bar-pause:nth-child(5)  { left: 17px; }
+  #rt-music-bars .bar-pause:nth-child(6)  { left: 21px; }
+  #rt-music-bars .bar-pause:nth-child(7)  { left: 25px; }
+  #rt-music-bars .bar-pause:nth-child(8)  { left: 29px; }
+  #rt-music-bars .bar-pause:nth-child(9)  { left: 33px; }
+  #rt-music-bars .bar-pause:nth-child(10) { left: 37px; }
+
+  #rt-music-bars .bar {
+    background: {{settings.music_visualizer_color}};
+    bottom: 1px;
+    height: 3px;
+    position: absolute;
+    width: 3px;      
+    animation: sound 0ms -800ms linear infinite alternate;
+  }
+
+  @keyframes sound {
+    0% {
+      opacity: .35;
+      height: 3px; 
+    }
+    100% {
+      opacity: 1;       
+      height: 28px;        
+    }
+  }
+
+  #rt-music-bars .bar:nth-child(1)  { left: 1px; animation-duration: 474ms; }
+  #rt-music-bars .bar:nth-child(2)  { left: 5px; animation-duration: 433ms; }
+  #rt-music-bars .bar:nth-child(3)  { left: 9px; animation-duration: 407ms; }
+  #rt-music-bars .bar:nth-child(4)  { left: 13px; animation-duration: 458ms; }
+  #rt-music-bars .bar:nth-child(5)  { left: 17px; animation-duration: 400ms; }
+  #rt-music-bars .bar:nth-child(6)  { left: 21px; animation-duration: 427ms; }
+  #rt-music-bars .bar:nth-child(7)  { left: 25px; animation-duration: 441ms; }
+  #rt-music-bars .bar:nth-child(8)  { left: 29px; animation-duration: 419ms; }
+  #rt-music-bars .bar:nth-child(9)  { left: 33px; animation-duration: 487ms; }
+  #rt-music-bars .bar:nth-child(10) { left: 37px; animation-duration: 442ms; }
+</style>
+{% endif %}

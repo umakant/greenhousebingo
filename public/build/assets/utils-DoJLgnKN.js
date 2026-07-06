@@ -1,0 +1,1 @@
+const r=e=>`px-2 py-1 rounded-full text-sm ${{draft:"bg-gray-100 text-gray-800",posted:"bg-blue-100 text-blue-800",partial:"bg-yellow-100 text-yellow-800",paid:"bg-green-100 text-green-800",overdue:"bg-red-100 text-red-800",cancelled:"bg-red-100 text-red-800"}[e]}`;export{r as g};

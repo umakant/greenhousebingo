@@ -1,0 +1,663 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Paper Flight marketing home (`paperflight-nextjs-home.zip`).
+ * Tailwind v3 here: zip used v4 `@theme` / `@import "tailwindcss"` — those are NOT merged.
+ * Scoped tokens use HSL components so existing utilities (`bg-background`, `text-brand`, …) work.
+ */
+.pf-paperflight-home {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  --radius: 0.625rem;
+  --background: 0 0% 100%;
+  --foreground: 209.5 78.7% 10.7%;
+  --card: 0 0% 100%;
+  --card-foreground: 228.8 85.1% 5%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 228.8 85.1% 5%;
+  --primary: 222.3 49.4% 11.3%;
+  --primary-foreground: 210 34.5% 98%;
+  --secondary: 210 40.6% 96%;
+  --secondary-foreground: 222.3 49.4% 11.3%;
+  --muted: 210 40.6% 96%;
+  --muted-foreground: 215.4 18.4% 47%;
+  --accent: 210 40.6% 96%;
+  --accent-foreground: 222.3 49.4% 11.3%;
+  --destructive: 357.2 100% 45.3%;
+  --destructive-foreground: 210 34.5% 98%;
+  --border: 214.3 33% 91.4%;
+  --input: 214.3 33% 91.4%;
+  --ring: 215 22.6% 64.5%;
+}
+
+html.dark .pf-paperflight-home {
+  color-scheme: light;
+  --radius: 0.625rem;
+  --background: 0 0% 100%;
+  --foreground: 209.5 78.7% 10.7%;
+  --card: 0 0% 100%;
+  --card-foreground: 228.8 85.1% 5%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 228.8 85.1% 5%;
+  --primary: 222.3 49.4% 11.3%;
+  --primary-foreground: 210 34.5% 98%;
+  --secondary: 210 40.6% 96%;
+  --secondary-foreground: 222.3 49.4% 11.3%;
+  --muted: 210 40.6% 96%;
+  --muted-foreground: 215.4 18.4% 47%;
+  --accent: 210 40.6% 96%;
+  --accent-foreground: 222.3 49.4% 11.3%;
+  --destructive: 357.2 100% 45.3%;
+  --destructive-foreground: 210 34.5% 98%;
+  --border: 214.3 33% 91.4%;
+  --input: 214.3 33% 91.4%;
+  --ring: 215 22.6% 64.5%;
+}
+
+.pf-paperflight-home :is(h1, h2, h3) {
+  font-family: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+/*
+ * Water Ice Express public site (ported from `waterice-project.zip`).
+ * Zip used Tailwind v4 `@theme` + oklch; here we re-declare the same design
+ * tokens as HSL components so the v3 `hsl(var(--token))` utilities resolve.
+ * `--primary` is the brand cherry red. Kept light-only (dark = same values),
+ * mirroring `.pf-paperflight-home`.
+ */
+.wie-site {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  --radius: 1rem;
+  --background: 205 56% 98%;
+  --foreground: 230 45% 18%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 355 72% 51%;
+  --primary-foreground: 0 0% 99%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 215 20.2% 65.1%;
+  /* Events page raw color vars (used directly in box-shadow via var()) */
+  --event-orange: hsl(355 72% 51%);
+  --event-navy: oklch(0.246 0.073 285.79);
+}
+
+html.dark .wie-site {
+  color-scheme: light;
+  --radius: 1rem;
+  --background: 205 56% 98%;
+  --foreground: 230 45% 18%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 355 72% 51%;
+  --primary-foreground: 0 0% 99%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 215 20.2% 65.1%;
+}
+
+.wie-site {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    /* Laravel primary blue (#3B82F6) */
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    /* Slightly stronger than before so inputs and outlines stay readable in light mode */
+    --border: 220 13% 82%;
+    --input: 220 13% 82%;
+    --ring: 217.2 91.2% 59.8%;
+    --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 217.2 91.2% 59.8%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 234 28% 18%;
+    --foreground: 0 0% 98%;
+    --card: 234 24% 24.7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 234 24% 24.7%;
+    --popover-foreground: 0 0% 98%;
+    /* Keep Laravel-like primary in dark too */
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 234 22% 28%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 234 22% 28%;
+    --muted-foreground: 234 15% 65%;
+    --accent: 234 22% 28%;
+    --accent-foreground: 0 0% 98%;
+    /* Must stay light enough for `text-destructive` on dark popover/card (dark red text was ~invisible). `bg-destructive` pairs with --destructive-foreground. */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 234 20% 30%;
+    --input: 234 20% 30%;
+    --ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 234 28% 17%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 217.2 91.2% 59.8%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 234 22% 28%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 234 20% 30%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  /* Native scrollbars, form controls, and color hints follow the active scheme */
+  html {
+    color-scheme: light;
+    /* Avoid full-width “jump” when the vertical scrollbar appears after content loads */
+    scrollbar-gutter: stable;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) hsl(var(--muted) / 0.5);
+  }
+
+  .dark .bg-gray-50\/50 {
+    background-color: rgba(48, 51, 78, 0.5) !important;
+  }
+
+  .dark .bg-gray-50\/30 {
+    background-color: rgba(48, 51, 78, 0.3) !important;
+  }
+
+  .dark .bg-blue-50\/30 {
+    background-color: rgba(48, 51, 78, 0.3) !important;
+  }
+
+  .dark .bg-gray-50 {
+    background-color: rgb(48, 51, 78) !important;
+  }
+
+  .dark .bg-gray-100 {
+    background-color: rgb(58, 61, 90) !important;
+  }
+
+  .dark .text-gray-500 {
+    color: rgb(156, 163, 175) !important;
+  }
+
+  .dark .text-gray-600 {
+    color: rgb(209, 213, 219) !important;
+  }
+
+  .dark .text-gray-700 {
+    color: rgb(229, 231, 235) !important;
+  }
+
+  .dark .text-gray-900 {
+    color: rgb(243, 244, 246) !important;
+  }
+
+  .dark .bg-green-100 {
+    background-color: rgb(22, 101, 52) !important;
+  }
+
+  .dark .text-green-800 {
+    color: rgb(187, 247, 208) !important;
+  }
+
+  .dark .bg-blue-100 {
+    background-color: rgb(30, 58, 138) !important;
+  }
+
+  .dark .text-blue-700 {
+    color: rgb(219, 234, 254) !important;
+  }
+
+  .dark .text-blue-800 {
+    color: rgb(191, 219, 254) !important;
+  }
+
+  .dark .bg-red-100 {
+    background-color: rgb(127, 29, 29) !important;
+  }
+
+  .dark .text-red-800 {
+    color: rgb(254, 202, 202) !important;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: hsl(var(--muted) / 0.5);
+    border-radius: 3px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: hsl(var(--muted) / 0.5);
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* react-day-picker: caption, weekdays, and day cells inherit theme sans + foreground */
+  .rdp-root {
+    @apply font-sans text-sm text-foreground antialiased;
+  }
+  .rdp-root :is(button, select, option) {
+    @apply font-sans;
+  }
+}
+
+/* Google Places Autocomplete dropdown: above Sheet/Dialog (z-50) so clicks on suggestions work */
+.pac-container {
+  z-index: 99999 !important;
+  pointer-events: auto !important;
+}
+.pac-container .pac-item {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Flatpickr: above DropdownMenu / Dialog (z-50) */
+.flatpickr-calendar {
+  z-index: 100 !important;
+}
+
+.hover-elevate {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.hover-elevate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Invoice preview: print only the document (#invoice-print-root), not app chrome (sidebar, tabs, header). */
+@media print {
+  @page {
+    margin: 12mm;
+    size: auto;
+  }
+
+  html.invoice-print-scope {
+    color-scheme: light !important;
+  }
+
+  html.invoice-print-scope body * {
+    visibility: hidden;
+  }
+
+  html.invoice-print-scope #invoice-print-root,
+  html.invoice-print-scope #invoice-print-root *,
+  html.invoice-print-scope #proposal-print-root,
+  html.invoice-print-scope #proposal-print-root * {
+    visibility: visible;
+  }
+
+  html.invoice-print-scope #invoice-print-root,
+  html.invoice-print-scope #proposal-print-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: white !important;
+    color: #0a0a0a !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  html.invoice-print-scope [data-sonner-toaster],
+  html.invoice-print-scope [data-sonner-toast],
+  html.invoice-print-scope [data-radix-portal],
+  html.invoice-print-scope [data-slot="toast"] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+/* Shopify Liquid (Material / jQuery Flexslider): mask is decorative; keep controls above slide layers for reliable prev/next clicks */
+.pf-shopify-liquid-storefront .shopify-liquid-root #home-slider .slides .slider-mask {
+  pointer-events: none;
+}
+.pf-shopify-liquid-storefront .shopify-liquid-root #home-slider .flex-direction-nav,
+.pf-shopify-liquid-storefront .shopify-liquid-root #home-slider .flex-direction-nav a {
+  z-index: 30 !important;
+  pointer-events: auto !important;
+}
+.pf-shopify-liquid-storefront .shopify-liquid-root #home-slider .flex-control-nav,
+.pf-shopify-liquid-storefront .shopify-liquid-root #home-slider .flex-control-paging li a {
+  z-index: 30 !important;
+  pointer-events: auto !important;
+}
+
+/* OS2 / Concept / Horizon: horizontal slide strip must receive trackpad/touch pan; controls above masks */
+.pf-shopify-liquid-storefront .shopify-liquid-root slideshow-component [id^="Slider-"],
+.pf-shopify-liquid-storefront .shopify-liquid-root [id^="Slider-"].slider {
+  touch-action: pan-x pinch-zoom !important;
+  pointer-events: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+.pf-shopify-liquid-storefront .shopify-liquid-root slideshow-component .slider-buttons,
+.pf-shopify-liquid-storefront .shopify-liquid-root slideshow-component .slideshow__controls,
+.pf-shopify-liquid-storefront .shopify-liquid-root slideshow-component .slider-buttons button {
+  z-index: 40 !important;
+  pointer-events: auto !important;
+}
+
+/*
+ * Concept section slideshow: Flickity is on <slideshow-element class="slideshow"> (no .slider class).
+ * Overlay copy sits in .slideshow-content above the viewport; default pointer-events on headings blocks drag.
+ */
+.pf-shopify-liquid-storefront .shopify-liquid-root slideshow-element.slideshow .flickity-viewport,
+.pf-shopify-liquid-storefront .shopify-liquid-root slideshow-element.slideshow .flickity-slider {
+  touch-action: pan-x pinch-zoom !important;
+  pointer-events: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+.pf-shopify-liquid-storefront .shopify-liquid-root slideshow-element.slideshow.flickity-enabled {
+  touch-action: pan-x pinch-zoom !important;
+}
+
+/* Let drags reach Flickity; keep CTA links and dot/arrow controls clickable */
+.pf-shopify-liquid-storefront .shopify-liquid-root .slideshow-content nav.slideshow-words * {
+  pointer-events: none;
+}
+.pf-shopify-liquid-storefront .shopify-liquid-root .slideshow-content nav.slideshow-words a {
+  pointer-events: auto !important;
+}
+.pf-shopify-liquid-storefront .shopify-liquid-root .slideshow-content .slideshow-dots {
+  pointer-events: none;
+}
+.pf-shopify-liquid-storefront .shopify-liquid-root .slideshow-content .slideshow-dots button,
+.pf-shopify-liquid-storefront .shopify-liquid-root .slideshow-content .slideshow-dots slider-dots {
+  pointer-events: auto !important;
+}
+
+/*
+ * Shopify theme exports pair `hidden` with responsive utilities (`lg:flex`, `md:block`, …).
+ * App Tailwind `.hidden` can win at desktop breakpoints; keep announcement bar + logo + nav visible.
+ */
+@media (min-width: 640px) {
+  .pf-shopify-liquid-storefront .shopify-liquid-root .sm\:flex.hidden {
+    display: flex !important;
+  }
+  .pf-shopify-liquid-storefront .shopify-liquid-root .sm\:block.hidden {
+    display: block !important;
+  }
+  .pf-shopify-liquid-storefront .shopify-liquid-root .sm\:grid.hidden {
+    display: grid !important;
+  }
+}
+@media (min-width: 768px) {
+  .pf-shopify-liquid-storefront .shopify-liquid-root .md\:flex.hidden {
+    display: flex !important;
+  }
+  .pf-shopify-liquid-storefront .shopify-liquid-root .md\:block.hidden {
+    display: block !important;
+  }
+  .pf-shopify-liquid-storefront .shopify-liquid-root .md\:grid.hidden {
+    display: grid !important;
+  }
+}
+@media (min-width: 1024px) {
+  .pf-shopify-liquid-storefront .shopify-liquid-root .lg\:flex.hidden {
+    display: flex !important;
+  }
+  .pf-shopify-liquid-storefront .shopify-liquid-root .lg\:block.hidden {
+    display: block !important;
+  }
+  .pf-shopify-liquid-storefront .shopify-liquid-root .lg\:grid.hidden {
+    display: grid !important;
+  }
+}
+@media (min-width: 1280px) {
+  .pf-shopify-liquid-storefront .shopify-liquid-root .xl\:flex.hidden {
+    display: flex !important;
+  }
+  .pf-shopify-liquid-storefront .shopify-liquid-root .xl\:block.hidden {
+    display: block !important;
+  }
+  .pf-shopify-liquid-storefront .shopify-liquid-root .xl\:grid.hidden {
+    display: grid !important;
+  }
+}
+
+/*
+ * Concept / OS2 header polish (Roar reference): pure-black announcement row, crisp white main bar,
+ * black “pill” active state on open mega items, softer mega-menu surface + card radii.
+ * Scoped to Liquid storefront only (.pf-shopify-liquid-storefront .shopify-liquid-root).
+ */
+.pf-shopify-liquid-storefront .shopify-liquid-root .topbar-section {
+  --gradient-background: #000000 !important;
+  --color-background: 0 0 0 !important;
+  --color-foreground: 255 255 255 !important;
+  --color-highlight: 255 255 255 !important;
+}
+
+.pf-shopify-liquid-storefront .shopify-liquid-root .topbar-section .topbar {
+  color: rgb(255 255 255 / 0.95);
+}
+
+.pf-shopify-liquid-storefront .shopify-liquid-root .topbar-section .social-icons a,
+.pf-shopify-liquid-storefront .shopify-liquid-root .topbar-section .fader,
+.pf-shopify-liquid-storefront .shopify-liquid-root .topbar-section .announcement-text,
+.pf-shopify-liquid-storefront .shopify-liquid-root .topbar-section .localization button {
+  color: inherit;
+}
+
+.pf-shopify-liquid-storefront .shopify-liquid-root .topbar-section .icon {
+  stroke: currentColor;
+}
+
+.pf-shopify-liquid-storefront .shopify-liquid-root .header-section header.header {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid rgb(0 0 0 / 0.06);
+  box-shadow: none;
+}
+
+/* Concept: primary row is as tall as the logo; theme menu `ul` defaults leave links hugging the top. */
+.pf-shopify-liquid-storefront .shopify-liquid-root .header-section header.header .header__navigation {
+  align-items: center;
+}
+
+.pf-shopify-liquid-storefront .shopify-liquid-root .header-section header.header .header__menu {
+  align-items: center;
+}
+
+.pf-shopify-liquid-storefront .shopify-liquid-root .header-section header.header .header__menu > ul {
+  align-items: center;
+}
+
+/*
+ * OS2 Concept: hide packaged “Compare” / “Theme features” (HTML strip can miss after merges).
+ * Desktop: `aria-label` on `.menu__item`. Mobile `#MenuDrawer`: Compare/Theme stay `href="#"` while
+ * `rewriteThemeHeaderPlaceholderAnchors` rewrites Contact to `/shop/pages/contact`, so `#` plain links here are safe to drop.
+ */
+.pf-shopify-liquid-storefront .shopify-liquid-root .header__menu li:has(> a.menu__item[aria-label="Compare"]),
+.pf-shopify-liquid-storefront .shopify-liquid-root .header__menu li:has(> a.menu__item[aria-label="Theme features"]) {
+  display: none !important;
+}
+
+.pf-shopify-liquid-storefront
+  .shopify-liquid-root
+  #MenuDrawer
+  ul.drawer__menu[role="list"]
+  > li.drawer__menu-group:has(> a.drawer__menu-item[href="#"]) {
+  display: none !important;
+}
+
+/*
+ * Concept tabbed-collection sliders (e.g. "Best Sellers") render one `<div class="indicators
+ * hidden lg:flex …" hidden>` prev/next-button pair per tab. Inactive pairs are toggled with the
+ * HTML `hidden=""` attribute, but the theme's own `lg:flex` Tailwind class beats the browser's
+ * UA `[hidden]{display:none}` rule at the `lg:` breakpoint (same specificity, author stylesheet
+ * wins) — so all 4 chevron pairs end up visible on desktop. Force the `hidden` attribute to
+ * actually hide regardless of `lg:flex` so only the active tab's nav buttons show.
+ */
+.pf-shopify-liquid-storefront .shopify-liquid-root .indicators[hidden] {
+  display: none !important;
+}
+
+/*
+ * Scrolling ticker (`scrolling-text-section`): same **height** for every logo; `width: auto` keeps
+ * aspect ratio. `bumpScrollingSliderLogoSizes` (rewrite-storefront-shop-urls-in-html.ts) keeps srcset sharp.
+ */
+.pf-shopify-liquid-storefront .shopify-liquid-root .scrolling-text-section .scrolling-text__item.with-media {
+  align-items: center !important;
+  line-height: 0 !important;
+  padding-block: 0 !important;
+}
+
+.pf-shopify-liquid-storefront .shopify-liquid-root .scrolling-text-section .scrolling-text__item.with-media img {
+  display: block !important;
+  height: calc(var(--image-height, 60px) * 2) !important;
+  width: auto !important;
+  object-fit: contain !important;
+}
+
+.pf-shopify-liquid-storefront .shopify-liquid-root .header__menu details > summary {
+  border-radius: 9999px;
+  padding: 0.35rem 0.85rem;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.pf-shopify-liquid-storefront .shopify-liquid-root .header__menu details[open] > summary {
+  background-color: #0a0a0a !important;
+  color: #fafafa !important;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.08);
+}
+
+.pf-shopify-liquid-storefront .shopify-liquid-root .header__menu details[open] > summary .btn-text,
+.pf-shopify-liquid-storefront .shopify-liquid-root .header__menu details[open] > summary .btn-duplicate {
+  color: #fafafa !important;
+}
+
+.pf-shopify-liquid-storefront .shopify-liquid-root .mega-menu__container {
+  border-radius: 1.5rem !important;
+  overflow: hidden;
+  box-shadow:
+    0 24px 80px rgb(0 0 0 / 0.12),
+    0 0 0 1px rgb(0 0 0 / 0.04);
+}
+
+.pf-shopify-liquid-storefront .shopify-liquid-root .mega-menu .product-card,
+.pf-shopify-liquid-storefront .shopify-liquid-root .mega-menu .card {
+  border-radius: 1.25rem !important;
+}
+
+.pf-shopify-liquid-storefront .shopify-liquid-root .mega-menu__nav-item {
+  border-radius: 0.75rem;
+}
+
+/*
+ * Concept theme: primary hover sets color to rgb(--color-button-background) over a .btn-fill of
+ * rgb(--color-button-text). When those tokens match (e.g. section sets both to white), the label vanishes.
+ * Theme CSS loads after globals; use !important so this wins. Section-specific fixes (e.g. video hero)
+ * use #id selectors and still override this where needed.
+ */
+.pf-shopify-liquid-storefront .shopify-liquid-root
+  :is(button, a, input).button.button--primary:is(:hover, :focus-visible):not(:disabled):not([disabled]):not(
+    [aria-disabled="true"]
+  ):not(.self-button) {
+  color: rgb(var(--color-base-text)) !important;
+}
+
+.pf-shopify-liquid-storefront .shopify-liquid-root
+  :is(button, a, input).button.button--primary:is(:hover, :focus-visible):not(:disabled):not([disabled]):not(
+    [aria-disabled="true"]
+  ):not(.self-button)
+  .btn-text,
+.pf-shopify-liquid-storefront .shopify-liquid-root
+  :is(button, a, input).button.button--primary:is(:hover, :focus-visible):not(:disabled):not([disabled]):not(
+    [aria-disabled="true"]
+  ):not(.self-button)
+  .btn-text
+  * {
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+.pf-shopify-liquid-storefront .shopify-liquid-root
+  :is(button, a, input).button.button--primary:is(:hover, :focus-visible):not(:disabled):not([disabled]):not(
+    [aria-disabled="true"]
+  ):not(.self-button)
+  .btn-text
+  svg {
+  stroke: currentColor !important;
+}

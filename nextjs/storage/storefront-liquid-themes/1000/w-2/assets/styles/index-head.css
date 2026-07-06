@@ -1,0 +1,344 @@
+body {transition: opacity ease-in 0.2s; } 
+body[unresolved] {opacity: 0; display: block; overflow: hidden; position: relative; }
+
+@font-face {
+  font-family: Inter;
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("../remote/73dccd0e8aebd048a36c.woff2") format("woff2"),
+       url("../remote/7c8ecefd69c66b6c03d3.woff") format("woff");
+}
+@font-face {
+  font-family: Inter;
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url("../remote/e60e96773e6249251fb1.woff2") format("woff2"),
+       url("../remote/3f50306a07ad9bbaf0fb.woff") format("woff");
+}
+@font-face {
+  font-family: Inter;
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("../remote/8763f904bad4521e02b3.woff2") format("woff2"),
+       url("../remote/91bb0eb524e5c6a4b78e.woff") format("woff");
+}
+@font-face {
+  font-family: Inter;
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+  src: url("../remote/f4f5e2ed727780ede55e.woff2") format("woff2"),
+       url("../remote/0c2af11c6265a5e565d2.woff") format("woff");
+}
+@font-face {
+  font-family: Inter;
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+  src: url("../remote/36d5e845a83ead1a3a35.woff2") format("woff2"),
+       url("../remote/c1fc21a6da7ed7f755d7.woff") format("woff");
+}
+:root {
+    /*! General */
+    --color-base-text: 42 39 75;
+    --color-base-highlight: 251 146 60;
+    --color-base-background: 255 253 252;
+    --color-base-button: 234 88 12;
+    --color-base-button-gradient: linear-gradient(115deg, #fdba74 0%, #fb923c 28%, #f97316 55%, #ea580c 80%, #c2410c 100%);
+    --color-base-button-text: 255 255 255;
+    --color-keyboard-focus: 37 99 235;
+    --color-shadow: 191 219 254;
+    --color-price: 23 23 23;
+    --color-sale-price: 225 29 72;
+    --color-sale-tag: 225 29 72;
+    --color-sale-tag-text: 255 255 255;
+    --color-rating: 245 158 11;
+    --color-placeholder: 250 250 250;
+    --color-success-text: 77 124 15;
+    --color-success-background: 247 254 231;
+    --color-error-text: 225 29 72;
+    --color-error-background: 255 241 242;
+    --color-info-text: 180 83 9;
+    --color-info-background: 255 251 235;
+    
+    /*! Menu and drawers */
+    --color-drawer-text: 42 39 75;
+    --color-drawer-background: 255 253 252;
+    --color-drawer-button-background: 234 88 12;
+    --color-drawer-button-gradient: linear-gradient(115deg, #fdba74, #fb923c, #f97316, #ea580c, #c2410c);
+    --color-drawer-button-text: 255 255 255;
+    --color-drawer-overlay: 42 39 75;
+
+    /*! Product card */
+    --card-radius: var(--rounded-card);
+    --card-border-width: 0.0rem;
+    --card-border-opacity: 0.0;
+    --card-shadow-opacity: 0.1;
+    --card-shadow-horizontal-offset: 0.0rem;
+    --card-shadow-vertical-offset: 0.0rem;
+
+    /*! Buttons */
+    --buttons-radius: var(--rounded-button);
+    --buttons-border-width: 2px;
+    --buttons-border-opacity: 1.0;
+    --buttons-shadow-opacity: 0.0;
+    --buttons-shadow-horizontal-offset: 0px;
+    --buttons-shadow-vertical-offset: 0px;
+
+    /*! Inputs */
+    --inputs-radius: var(--rounded-input);
+    --inputs-border-width: 0px;
+    --inputs-border-opacity: 0.65;
+
+    /*! Spacing */
+    --sp-0d5: 0.125rem;
+    --sp-1: 0.25rem;
+    --sp-1d5: 0.375rem;
+    --sp-2: 0.5rem;
+    --sp-2d5: 0.625rem;
+    --sp-3: 0.75rem;
+    --sp-3d5: 0.875rem;
+    --sp-4: 1rem;
+    --sp-4d5: 1.125rem;
+    --sp-5: 1.25rem;
+    --sp-5d5: 1.375rem;
+    --sp-6: 1.5rem;
+    --sp-6d5: 1.625rem;
+    --sp-7: 1.75rem;
+    --sp-7d5: 1.875rem;
+    --sp-8: 2rem;
+    --sp-8d5: 2.125rem;
+    --sp-9: 2.25rem;
+    --sp-9d5: 2.375rem;
+    --sp-10: 2.5rem;
+    --sp-10d5: 2.625rem;
+    --sp-11: 2.75rem;
+    --sp-12: 3rem;
+    --sp-13: 3.25rem;
+    --sp-14: 3.5rem;
+    --sp-15: 3.875rem;
+    --sp-16: 4rem;
+    --sp-18: 4.5rem;
+    --sp-20: 5rem;
+    --sp-23: 5.625rem;
+    --sp-24: 6rem;
+    --sp-28: 7rem;
+    --sp-32: 8rem;
+    --sp-36: 9rem;
+    --sp-40: 10rem;
+    --sp-44: 11rem;
+    --sp-48: 12rem;
+    --sp-52: 13rem;
+    --sp-56: 14rem;
+    --sp-60: 15rem;
+    --sp-64: 16rem;
+    --sp-68: 17rem;
+    --sp-72: 18rem;
+    --sp-80: 20rem;
+    --sp-96: 24rem;
+    --sp-100: 32rem;
+
+    /*! Font family */
+    --font-heading-family: Inter, sans-serif;
+    --font-heading-style: normal;
+    --font-heading-weight: 700;
+    --font-heading-line-height: 1;
+    --font-heading-letter-spacing: -0.03em;
+    
+
+    --font-body-family: Inter, sans-serif;
+    --font-body-style: normal;
+    --font-body-weight: 400;
+    --font-body-line-height: 1.2;
+    --font-body-letter-spacing: 0.0em;
+
+    --font-navigation-family: var(--font-body-family);
+    --font-navigation-size: clamp(0.875rem, 0.748rem + 0.3174vw, 1.125rem);
+    --font-navigation-weight: 500;
+    
+
+    --font-button-family: var(--font-body-family);
+    --font-button-size: clamp(0.875rem, 0.8115rem + 0.1587vw, 1.0rem);
+    --font-button-weight: 500;
+    
+
+    --font-product-family: var(--font-body-family);
+    --font-product-size: clamp(1.0rem, 0.873rem + 0.3175vw, 1.25rem);
+    --font-product-weight: 500;
+    
+
+    /*! Font size */
+    --text-3xs: 0.625rem;
+    --text-2xs: 0.6875rem;
+    --text-xs: 0.75rem;
+    --text-2sm: 0.8125rem;
+    --text-sm: 0.875rem;
+    --text-base: 1.0rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
+    --text-5xl: 3.0rem;
+    --text-6xl: 3.75rem;
+    --text-7xl: 4.5rem;
+    --text-8xl: 6.0rem;
+
+    /*! Layout */
+    --page-width: 1900px;
+    --gap-padding: clamp(var(--sp-5), 2.526vw, var(--sp-12));
+    --grid-gap: clamp(40px, 20vw, 60px);
+    --page-padding: var(--sp-5);
+    --page-container: min(calc(100vw - var(--page-padding) * 2), var(--page-width));
+    --rounded-button: 3.75rem;
+    --rounded-input: 0.375rem;
+    --rounded-card: clamp(var(--sp-2d5), 1.053vw, var(--sp-5));
+    --rounded-block: clamp(var(--sp-2d5), 1.053vw, var(--sp-5));
+
+    /*! Other */
+    --icon-weight: 1.5px;
+  }
+
+  @media screen and (min-width: 1024px) {
+    :root {
+      --page-padding: var(--sp-9);
+    }
+  }
+
+  @media screen and (min-width: 1280px) {
+    :root {
+      --gap-padding: var(--sp-12);
+      --page-padding: var(--sp-12);
+      --page-container: min(calc(100vw - var(--page-padding) * 2), max(var(--page-width), 1280px));
+    }
+  }
+
+  @media screen and (min-width: 1536px) {
+    :root {
+      --page-padding: max(var(--sp-12), 50vw - var(--page-width)/2);
+    }
+  }
+
+#shopify-buyer-consent {
+  margin-top: 1em;
+  display: inline-block;
+  width: 100%;
+}
+
+#shopify-buyer-consent.hidden {
+  display: none;
+}
+
+#shopify-subscription-policy-button {
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+#shopify-subscription-policy-button::before {
+  box-shadow: none;
+}
+
+[data-shopify-attribute-error]::after {
+    content: attr(data-shopify-attribute-error);
+    background-color: #fff;
+    color: red;
+  }
+
+/* Philly Water Ice — soft orange & blue page wash (home) */
+body.template-index {
+  background: linear-gradient(
+    165deg,
+    rgb(255 247 237) 0%,
+    rgb(255 251 235) 28%,
+    rgb(239 246 255) 55%,
+    rgb(224 242 254) 78%,
+    rgb(255 247 237) 100%
+  );
+  background-attachment: fixed;
+}
+
+/* Hero slideshow — "Find Us" (slide 2): script style like logo, weight 500, white label */
+#shopify-section-template--26951428768025__slideshow
+  .slideshow-word[data-index="1"]
+  .button
+  .btn-text {
+  font-family: "Dancing Script", "Brush Script MT", "Segoe Script", cursive;
+  font-weight: 500;
+  font-size: clamp(1.35rem, 2.8vw, 1.85rem);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: rgb(255 255 255);
+}
+
+/* Video hero (Echo Elegance block): primary CTA — white background on hover */
+#shopify-section-template--26951428768025__836190ae-9193-4a52-91a5-e807d0417201
+  .banner__box
+  a.button.button--primary {
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+#shopify-section-template--26951428768025__836190ae-9193-4a52-91a5-e807d0417201
+  .banner__box
+  a.button.button--primary:is(:hover, :focus-visible) {
+  background: rgb(255 255 255) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border-color: rgb(255 255 255) !important;
+  color: rgb(23 23 23) !important;
+}
+
+#shopify-section-template--26951428768025__836190ae-9193-4a52-91a5-e807d0417201
+  .banner__box
+  a.button.button--primary:is(:hover, :focus-visible)
+  .btn-text {
+  color: inherit !important;
+}
+
+#shopify-section-template--26951428768025__836190ae-9193-4a52-91a5-e807d0417201
+  .banner__box
+  a.button.button--primary:is(:hover, :focus-visible)
+  .btn-text
+  svg {
+  stroke: currentColor !important;
+}
+
+#shopify-section-template--26951428768025__836190ae-9193-4a52-91a5-e807d0417201
+  .banner__box
+  a.button.button--primary:is(:hover, :focus-visible)
+  .btn-fill {
+  opacity: 0;
+}
+
+/* Philly Water Ice — pure-orange button gradient lockdown.
+   See w-1/.../index-head.css for the full rationale; mirrored here so both storefronts
+   stay in sync. */
+:root {
+  --pf-orange-button-gradient: linear-gradient(
+    115deg,
+    #fdba74 0%,
+    #fb923c 28%,
+    #f97316 55%,
+    #ea580c 80%,
+    #c2410c 100%
+  );
+  --color-base-button-gradient: var(--pf-orange-button-gradient);
+  --color-drawer-button-gradient: var(--pf-orange-button-gradient);
+}
+
+.drawer .button.button--primary,
+.cart-drawer .button.button--primary,
+form[novalidate] button[name="checkout"].button.button--primary {
+  background: var(--pf-orange-button-gradient) !important;
+}
+

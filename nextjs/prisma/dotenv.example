@@ -1,0 +1,7 @@
+# Prisma CLI auto-loads a file named `.env` in this same folder (`nextjs/prisma/.env`).
+# Copy this file to `.env` and set DATABASE_URL (same value as in ../.env.local works).
+#
+# Or from the `nextjs` folder always use: npm run db:generate
+# (that loads ../.env.local so you do not need prisma/.env).
+
+DATABASE_URL="postgresql://USER:PASSWORD@127.0.0.1:5432/your_database?schema=public"

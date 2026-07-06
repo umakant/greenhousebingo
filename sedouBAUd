@@ -1,0 +1,61 @@
+modules = ["nodejs-20", "php-8.4", "postgresql-16"]
+[agent]
+expertMode = true
+
+[nix]
+channel = "stable-25_05"
+packages = ["unzip", "nginx"]
+
+[userenv]
+
+[userenv.shared]
+DB_CONNECTION = "pgsql"
+DB_HOST = "helium"
+DB_PORT = "5432"
+DB_USERNAME = "postgres"
+DB_PASSWORD = "password"
+DB_DATABASE = "heliumdb"
+LOG_LEVEL = "debug"
+
+[userenv.development]
+APP_ENV = "local"
+APP_DEBUG = "true"
+APP_URL = "https://dd54e444-2c81-4345-8553-afac4407b314-00-2hdthwd7apkng.spock.replit.dev"
+
+[userenv.production]
+APP_KEY = "base64:l/0a7fA6FBBACDOShPl7G1CjfZOQli7qF1g0B2mPcIc="
+APP_ENV = "production"
+APP_DEBUG = "false"
+APP_URL = "https://dash.paperflight.cc"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd /home/runner/workspace && php artisan serve --host=0.0.0.0 --port=5000"
+waitForPort = 5000
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["bash", "deploy/start.sh"]

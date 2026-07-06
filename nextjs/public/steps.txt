@@ -1,0 +1,655 @@
+--- Storefront checklist: Days 7–30 are implemented in the Next.js app (CMS /shop, catalog + collections, cart/checkout, checkout sessions + stock reservations, Stripe PaymentIntent + webhook, storefront orders + merchant panel detail/notes/tracking, POS product storefront fields, public catalog facets API, product/collection SEO metadata). Next: Day 31+ discounts, shipping/tax engines, deeper audits. ---
+DAY 7 — STOREFRONT AUDIT COVERAGE
+Extend audit logging for all Storefronts actions.
+
+Add logs for:
+- website create/update/delete
+- domain attach/update/remove
+- theme create/update/activate
+- page create/update/publish/unpublish/rollback
+- navigation updates
+- product publish/unpublish
+- discount creation and updates
+- shipping/tax settings changes
+- order status changes
+
+Requirements:
+- Reuse the existing audit log system if present
+- Add readable metadata
+- Add filtering by Storefronts module in the audit UI
+DAY 8 — STOREFRONT SETTINGS
+Build storefront-specific settings integrated into the current settings architecture.
+
+Requirements:
+- Store name
+- Support email
+- Logo and favicon
+- Default locale
+- Default currency display settings
+- SEO defaults
+- Customer account enable/disable
+- Storefront maintenance mode
+- Checkout branding fields
+- Expose these settings to storefront rendering safely
+DAY 9 — MEDIA EXTENSIONS FOR STOREFRONTS
+Extend the existing media library for storefront and commerce use.
+
+Requirements:
+- Add media grouping/tags for:
+  - product gallery
+  - collection image
+  - hero image
+  - logo
+  - favicon
+  - theme asset
+- Add alt text support if missing
+- Add storefront image picker modal
+- Add media usage references where possible
+- Keep tenant isolation and reuse the existing media manager instead of rebuilding it
+DAY 10 — STOREFRONT NOTIFICATION SYSTEM
+Build Storefronts notification templates and logging using the existing notification system.
+
+Requirements:
+- Add templates for:
+  - customer account welcome
+  - customer password reset
+  - order confirmation
+  - order status update
+  - support ticket linked to storefront account
+- Add notification logging and admin view filters for Storefronts events
+- Use the existing notification architecture if available
+DAY 11 — WEBSITE + DOMAIN MANAGEMENT
+Build the Websites and Domains management module for Storefronts.
+
+Requirements:
+- Create websites list, create, edit, detail views
+- Create domains list, add, edit, remove
+- One company can have multiple websites
+- Each website supports:
+  - name
+  - slug
+  - status
+  - primary domain
+  - default homepage
+  - active theme
+  - storefront enabled/disabled
+- Add domain hostname uniqueness checks
+- Add verification status placeholder
+- Add proper validation and permissions
+DAY 12 — THEME ARCHITECTURE
+Build the theme architecture for Storefronts.
+
+Requirements:
+- Theme
+- ThemeVersion
+- ThemeTemplate
+- ThemeSectionDefinition
+- ThemeBlockDefinition
+- ThemeStyleToken
+- Support theme version activation per website
+- Support page templates:
+  - home
+  - standard page
+  - product
+  - collection
+  - cart
+  - customer account
+  - support help center
+- Store section/block schemas as structured JSON
+- Build admin pages for theme list, detail, versions, and activation
+DAY 13 — PAGE VERSIONING SYSTEM
+Build page management with draft/published versioning for Storefronts.
+
+Requirements:
+- Create page list, create page, edit page
+- Support page types:
+  - home
+  - standard
+  - product template
+  - collection template
+  - cart
+  - account
+  - support
+- Add PageVersion model and publishedVersionId
+- Add SectionInstance and BlockInstance models tied to versions
+- Automatically create a draft version 
+- Support rollback to previous published version 
+
+DAY 14 — PUBLIC STOREFRONT RENDERER
+Build the public storefront rendering engine.
+
+Requirements:
+- Resolve website by hostname/domain
+- Resolve route by slug
+- Load the published page version
+- Render sections and blocks dynamically using a component registry
+- Apply theme style tokens
+- Support maintenance mode and 404 page
+- Keep the storefront runtime separate from the admin runtime
+- Do not rebuild the current public CMS pages; integrate safely
+DAY 15 — STARTER THEME
+Create the first real starter storefront theme.
+
+Build these reusable sections:
+- Header
+- AnnouncementBar
+- HeroBanner
+- FeaturedProducts
+- FeaturedCollection
+- RichText
+- ImageWithText
+- NewsletterForm
+- Footer
+
+Requirements:
+- Add matching section/block schemas
+- Seed one sample storefront homepage
+- All content must be database-driven
+DAY 16 — PAGE EDITOR SHELL
+Build the page editor UI for Storefronts.
+
+Requirements:
+- Section list
+- Right-side settings panel
+- Live or near-live preview
+- Add/remove/reorder sections
+- Autosave draft
+- Save status indicator
+- Validation using section schemas
+- Use the existing admin design patterns
+DAY 17 — BLOCK EDITOR
+Extend the page editor to support block editing.
+
+Requirements:
+- Add/remove/reorder blocks within sections
+- Schema-driven block settings forms
+- Drag-and-drop block ordering
+- Autosave draft content
+- Nested editing architecture that stays clean and reusable
+DAY 18 — THEME SETTINGS EDITOR
+Build the theme settings editor for Storefronts.
+
+Requirements:
+- Global colors
+- Typography
+- Spacing
+- Button styles
+- Logo/fallback brand imagery
+- Website-level overrides
+- Expose theme tokens to the storefront renderer
+- Provide a clean admin UI for editing and saving theme styles
+DAY 19 — PUBLISHING WORKFLOW
+Build the page publishing workflow.
+
+Requirements:
+- Save draft
+- Publish current draft as live version
+- Preserve prior published versions
+- Add publish confirmation
+- Add rollback action
+- Trigger storefront revalidation/cache invalidation
+- Add audit logs for publish/rollback
+DAY 20 — NAVIGATION MANAGER
+Build the storefront navigation manager.
+
+Requirements:
+- Main navigation
+- Footer navigation
+- Nested menu items
+- Internal links to pages, products, collections, help center
+- External links
+- Drag-and-drop ordering
+- Reuse the existing CMS/navigation structures if possible without breaking current public pages
+DAY 21 — CATALOG NORMALIZATION
+Normalize or extend the existing products/catalog structure so it supports storefront ecommerce fully.
+
+Requirements:
+- Ensure products support:
+  - slug
+  - storefront visibility/status
+  - title
+  - description
+  - sku
+  - barcode
+  - price
+  - compareAtPrice
+  - images
+  - SEO title/description
+- Ensure collections support storefront merchandising
+- Ensure categories/brands can be surfaced publicly if needed
+- Do not rebuild existing product management unnecessarily; extend safely
+DAY 22 — INVENTORY FOR ONLINE STORE
+Extend the existing inventory system to support storefront checkout.
+
+Requirements:
+- Add stock reservation and release functions
+- Add inventory policies:
+  - track stock
+  - continue selling when out of stock
+  - stop selling when out of stock
+- Add low stock threshold
+- Add per-location online stock logic where possible
+- Reuse current POS/inventory models where available
+DAY 23 — PRODUCT ADMIN ENHANCEMENTS
+Enhance the existing product admin UI for storefront publishing.
+
+Requirements:
+- Add storefront publish/unpublish toggle
+- Add SEO tab
+- Add product gallery ordering
+- Add collection assignment for storefront
+- Add product template selection
+- Add related products/manual merchandising support
+DAY 24 — PRODUCT + COLLECTION STOREFRONT PAGES
+Build public storefront product and collection pages.
+
+Requirements:
+- Product detail page by slug
+- Collection page by slug
+- Product gallery
+- Variant selector
+- Quantity selector
+- Add to cart button
+- Related products block
+- SEO metadata rendering
+- Hide inactive/unpublished products correctly
+DAY 25 — CART SYSTEM
+Build the storefront cart system as part of the Storefronts add-on.
+
+Requirements:
+- Guest cart persistence
+- Customer cart persistence after login
+- Add item
+- Update quantity
+- Remove item
+- Variant-aware cart lines
+- Server-side totals calculation
+- Cart page and/or cart drawer
+- Clean service layer for cart operations
+DAY 26 — CHECKOUT + ORDER MODELS
+Build the missing checkout and order lifecycle models/services for storefront ecommerce.
+
+Requirements:
+- CheckoutSession
+- Order
+- OrderItem snapshot
+- PaymentRecord
+- Fulfillment
+- Shipment
+- Address snapshot on order
+- Guest and logged-in customer support
+- Reuse existing order structures where possible without breaking POS/order features
+DAY 27 — CHECKOUT UI
+Build the storefront checkout UI.
+
+Requirements:
+- Customer contact info
+- Shipping address
+- Billing address
+- Shipping method selection
+- Order summary
+- Coupon entry placeholder if discounts are enabled
+- Strong validation
+- Server-side recalculation of totals
+- Clean UX for guest and logged-in checkout
+DAY 28 — STRIPE PAYMENT FLOW
+Integrate Stripe payment processing for storefront checkout.
+
+Requirements:
+- Create checkout session or payment intent from the server
+- Store metadata safely
+- Handle webhooks securely
+- Add idempotency handling
+- Update payment and order status on webhook success/failure
+- Never trust client-side amounts
+- Reuse any existing billing/Stripe code where appropriate but keep storefront order payments separate from SaaS subscription billing
+DAY 29 — ORDER CREATION FLOW
+Build the storefront order creation flow after successful payment.
+
+Requirements:
+- Create order from paid checkout
+- Snapshot order items, addresses, prices, discounts, tax, shipping
+- Decrement inventory
+- Generate order number
+- Show thank-you page
+- Trigger confirmation notification
+- Add order timeline entries
+DAY 30 — ONLINE ORDER MANAGEMENT
+Extend the existing orders area to support storefront-originated online orders clearly.
+
+Requirements:
+- Mark source as storefront
+- Add payment timeline
+- Add fulfillment status
+- Add customer summary
+- Add order notes
+- Add timeline/activity log
+- Keep compatibility with existing POS/order flows
+DAY 31 — DISCOUNT ENGINE
+Build the discount engine for Storefronts.
+
+Requirements:
+- DiscountRule
+- DiscountCode
+- DiscountRedemption
+- Support:
+  - percentage discount
+  - fixed amount discount
+  - order-level discount
+  - product-level discount
+  - date windows
+  - usage limits
+- Admin CRUD
+- Apply/remove discount during checkout
+DAY 32 — SHIPPING ENGINE
+Build shipping for Storefronts.
+
+Requirements:
+- ShippingZone
+- ShippingMethod
+- ShippingRate
+- Flat-rate shipping first
+- Region/state/country targeting
+- Checkout shipping method selection
+- Persist selected shipping method to order
+- Admin shipping settings UI
+DAY 33 — TAX ENGINE
+Build tax settings and calculation for Storefronts.
+
+Requirements:
+- Tax rules by country/state
+- Tax-inclusive and tax-exclusive modes
+- Tax calculation service
+- Persist tax lines on orders
+- Admin tax settings UI
+- Keep the service modular so it can later be replaced or expanded
+DAY 34 — CUSTOMER ACCOUNTS
+Build storefront customer account features.
+
+Requirements:
+- Customer signup/login/logout
+- Account dashboard
+- Order history
+- Saved addresses
+- Profile management
+- Guest cart merge into authenticated cart
+- Strict customer isolation
+- Reuse support ticket linkage later
+DAY 35 — SEARCH, FILTER, SORT
+Build storefront catalog browsing enhancements.
+
+Requirements:
+- Product search
+- Collection filtering
+- Price filter
+- Availability filter
+- Sort by newest, price low-high, price high-low
+- Pagination
+- Performance-conscious querying
+DAY 36 — CRM LINKING LAYER
+Build the mapping layer between Storefronts and the existing CRM module.
+
+Requirements:
+- Link customer to CRM contact
+- Store website/page source metadata
+- Allow forms and orders to enrich CRM records
+- Keep dedupe by email logic
+- Do not recreate CRM core models if they already exist
+DAY 37 — CRM ECOMMERCE CONTEXT
+Enhance existing CRM views with storefront/ecommerce context.
+
+Requirements:
+- Related orders panel on contact
+- Storefront source metadata
+- Customer value/revenue placeholder stats
+- Website-origin events in CRM timeline
+- Reuse current CRM detail views without breaking them
+DAY 38 — WEBSITE FORMS TO CRM
+Connect storefront/CMS forms to the existing CRM.
+
+Requirements:
+- Per-form action:
+  - save only
+  - create/update contact
+  - create lead
+- Dedupe by email
+- Attach website and page source
+- Create CRM timeline entry
+- Reuse current form builder where possible
+DAY 39 — ORDERS TO CRM
+Connect storefront order events to CRM.
+
+Requirements:
+- Create or update contact on order
+- Add order-created and order-paid activity entries
+- Link related orders to CRM contact view
+- Prepare support ticket linkage to same customer/contact
+DAY 40 — INTERNAL EVENT BUS
+Build the internal event bus and event log for Storefronts integration.
+
+Requirements:
+- Event publishing utility
+- EventLog table if not already present
+- Subscriber pattern
+- Initial events:
+  - storefront.form.submitted
+  - storefront.customer.created
+  - storefront.order.created
+  - storefront.order.paid
+  - storefront.ticket.created
+- Admin event log view/filtering
+DAY 41 — SUPPORT + ORDER LINKING
+Extend the existing support ticket module for storefront commerce context.
+
+Requirements:
+- Link tickets to storefront customer accounts
+- Link tickets to related orders
+- Show order summary in ticket view
+- Allow ticket creation from customer account area
+- Do not recreate the support system; extend it
+DAY 42 — SUPPORT ADMIN CONTEXT
+Enhance the existing support admin UI with storefront context.
+
+Requirements:
+- Show linked customer info
+- Show recent orders for the customer
+- Show originating website/store
+- Add order selector/reference support in ticket details
+- Keep current helpdesk workflows intact
+DAY 43 — CUSTOMER SUPPORT PORTAL
+Build or extend the storefront customer support portal.
+
+Requirements:
+- Customer can create a ticket from their account
+- Customer can select a related order
+- Customer can view only their own tickets/messages
+- Customer can reply in the ticket thread
+- Secure isolation between customers
+DAY 44 — PUBLIC HELP CENTER
+Convert or extend the existing knowledge base into a storefront help center.
+
+Requirements:
+- Public help center route
+- Category listing
+- Article pages
+- Search within help articles
+- Theme-compatible storefront rendering
+- SEO-friendly article routes
+DAY 45 — SUPPORT EVENTS + NOTIFICATIONS
+Wire storefront support actions into notifications and events.
+
+Requirements:
+- Emit events for ticket created, replied, closed
+- Send customer notifications where configured
+- Add timeline/event propagation
+- Reuse the existing notification infrastructure
+DAY 46 — ACCOUNTING MAPPING FOR STOREFRONT ORDERS
+Extend the existing accounting module to support storefront orders.
+
+Requirements:
+- Map storefront paid orders into accounting entries
+- Handle revenue, tax, shipping, discounts
+- Link accounting references on order detail
+- Keep this modular and compatible with current accounting flows
+DAY 47 — INVOICES + CUSTOMER VIEW
+Extend existing invoicing/accounting features for storefront-linked customer use where appropriate.
+
+Requirements:
+- Allow invoice linkage to storefront customer/account when relevant
+- Add branded invoice display settings for storefront companies
+- Reuse current invoicing architecture
+- Do not break existing accounting invoice workflows
+DAY 48 — COMMERCE TO ACCOUNTING SYNC
+Complete the storefront commerce-to-accounting sync.
+
+Requirements:
+- Journal entry creation on paid storefront orders
+- Payment record linking
+- Order detail accounting panel
+- Refund/credit note placeholder flow
+- Event-driven sync structure
+DAY 49 — SHARED CATALOG + INVENTORY WITH POS
+Unify Storefronts with the existing POS/catalog/inventory architecture.
+
+Requirements:
+- Shared product catalog between POS and storefront
+- Shared inventory rules where possible
+- Location-aware stock behavior for online sales
+- Avoid duplicate product sources of truth
+- Keep POS functionality intact
+DAY 50 — POS + STOREFRONT BUSINESS OS SYNC
+Extend the existing POS flows so they sync into the same unified business OS timeline as storefront orders.
+
+Requirements:
+- POS sale timeline events
+- CRM updates from POS sale
+- Accounting sync from POS sale
+- Optional customer attachment to POS sales
+- Keep existing POS screens working
+DAY 51 — OPTIONAL HRM + OPERATIONS LINKING
+Extend the existing HRM/operations model only where needed for storefront operations.
+
+Requirements:
+- Optional staff assignment to order fulfillment
+- Optional staff assignment to support tickets
+- Reuse current users/employees structures
+- Do not overbuild HRM features that already exist
+DAY 52 — FULFILLMENT OPERATIONS
+Build minimal storefront fulfillment operations using existing SaaS structures.
+
+Requirements:
+- Assign staff to fulfillment tasks
+- Add internal order notes
+- Add fulfillment status updates
+- Add staff ownership where applicable
+- Reuse existing user/employee data
+DAY 53 — UNIFIED CUSTOMER TIMELINE
+Build the unified customer timeline across modules.
+
+Requirements:
+- Show one timeline view combining:
+  - form submissions
+  - CRM events
+  - storefront orders
+  - payments
+  - support tickets
+  - invoices
+  - POS purchases
+- Reuse existing CRM/contact/customer detail views if possible
+- Add clean event card UI
+DAY 54 — STOREFRONT ANALYTICS
+Build Storefronts analytics integrated with the existing dashboards system.
+
+Requirements:
+- Revenue
+- Order count
+- Average order value
+- New customers
+- Website lead count
+- Open support tickets from storefront customers
+- Top products
+- Date range filters
+- Company-scoped aggregation only
+DAY 55 — GLOBAL SEARCH ENHANCEMENTS
+Extend the existing global/platform search to include Storefronts entities.
+
+Requirements:
+- Search products
+- Search storefront orders
+- Search customers
+- Search storefront pages
+- Search themes
+- Search websites/domains
+- Group results by module
+- Keep strict organization scoping
+DAY 56 — MERCHANT ONBOARDING WIZARD
+Build the Storefronts merchant onboarding wizard.
+
+Requirements:
+- Create website
+- Pick starter theme
+- Configure branding
+- Create first products
+- Configure payments
+- Configure shipping
+- Configure taxes
+- Publish homepage
+- Enable customer accounts
+- Connect contact/support form
+- Show completion progress
+DAY 57 — SECURITY HARDENING
+Perform a security and permissions hardening pass for the Storefronts add-on.
+
+Requirements:
+- Verify tenant isolation everywhere
+- Verify customer isolation everywhere
+- Verify route/API permission checks
+- Verify webhook signature validation
+- Verify secure payment handling
+- Verify publish permissions
+- Verify order/ticket visibility boundaries
+- Patch weak points directly
+DAY 58 — PERFORMANCE PASS
+Perform a performance pass on the Storefronts add-on.
+
+Requirements:
+- Optimize storefront page resolution
+- Add missing indexes
+- Paginate heavy admin lists
+- Optimize product/catalog queries
+- Add caching where safe
+- Add loading skeletons
+- Optimize image usage
+- Lazy-load heavy editor components
+DAY 59 — E2E QA
+Create end-to-end testing coverage and a manual QA checklist for Storefronts.
+
+Cover:
+- add-on enablement
+- website creation
+- theme activation
+- homepage publish
+- product publish
+- cart to checkout to paid order
+- customer signup/login
+- form to CRM
+- support ticket from customer account
+- accounting sync
+- POS/catalog sync
+- analytics updates
+
+Patch all critical failures directly.
+DAY 60 — RELEASE PREP
+Prepare the Storefronts add-on for first release inside the SaaS.
+
+Requirements:
+- Demo tenant/storefront seed data
+- Sample theme
+- Sample pages
+- Sample products and collections
+- Final navigation cleanup
+- Success and empty states
+- Production environment documentation
+- Deployment checklist
+- Known v1 limitations document
+- Launch checklist

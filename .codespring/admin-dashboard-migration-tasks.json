@@ -1,0 +1,120 @@
+{
+  "projectId": "820d5217-892d-42fc-b0ca-c096d74836d0",
+  "projectName": "Paper Flight Dash",
+  "planName": "Admin Dashboard Migration to Next.js",
+  "description": "Section-by-section migration of the ADMIN (company admin) dashboard from Laravel/Inertia to Next.js.",
+  "sections": [
+    {
+      "id": "section-1-dashboard",
+      "title": "Section 1: Dashboard (Admin Home)",
+      "featureTitle": "Admin Dashboard Home",
+      "tasks": [
+        { "id": "1.1", "title": "Define admin dashboard data needs and API/server data loading", "status": "todo" },
+        { "id": "1.2", "title": "Implement admin dashboard layout with stat cards and shortcuts", "status": "todo" },
+        { "id": "1.3", "title": "Add i18n and permission-aware visibility for dashboard widgets", "status": "todo" }
+      ]
+    },
+    {
+      "id": "section-2-user-management",
+      "title": "Section 2: User Management (Roles & Users)",
+      "featureTitle": "User Management - Roles & Users",
+      "tasks": [
+        { "id": "2.1", "title": "Roles: Next.js pages (list, create, edit) and API routes for CRUD", "status": "todo" },
+        { "id": "2.2", "title": "Roles: Role-permission matrix UI and save logic", "status": "todo" },
+        { "id": "2.3", "title": "Users: Next.js pages (list, create, edit, show) and API routes", "status": "todo" },
+        { "id": "2.4", "title": "Users: Change-password and impersonation flows", "status": "todo" },
+        { "id": "2.5", "title": "Users: Login history (and optional all-logs) page", "status": "todo" },
+        { "id": "2.6", "title": "Permission checks on all User Management routes and components", "status": "todo" }
+      ]
+    },
+    {
+      "id": "section-3-proposal",
+      "title": "Section 3: Proposal (Sales Proposals)",
+      "featureTitle": "Sales Proposals",
+      "tasks": [
+        { "id": "3.1", "title": "Sales proposals list page with filters, pagination, actions", "status": "todo" },
+        { "id": "3.2", "title": "Create proposal page and form (line items, totals, client)", "status": "todo" },
+        { "id": "3.3", "title": "Edit proposal page reusing form logic", "status": "todo" },
+        { "id": "3.4", "title": "View proposal page (read-only) with print action", "status": "todo" },
+        { "id": "3.5", "title": "API routes for proposals CRUD and print", "status": "todo" }
+      ]
+    },
+    {
+      "id": "section-4-sales",
+      "title": "Section 4: Sales Invoice & Sales Returns",
+      "featureTitle": "Sales Invoices & Returns",
+      "tasks": [
+        { "id": "4.1", "title": "Sales invoices list with filters, post action, print", "status": "todo" },
+        { "id": "4.2", "title": "Sales invoice create/edit form (warehouse, products, services)", "status": "todo" },
+        { "id": "4.3", "title": "Sales invoice view and print", "status": "todo" },
+        { "id": "4.4", "title": "Sales returns list and create flow", "status": "todo" },
+        { "id": "4.5", "title": "Sales return show with approve/complete actions", "status": "todo" },
+        { "id": "4.6", "title": "API routes for sales invoices and returns", "status": "todo" }
+      ]
+    },
+    {
+      "id": "section-5-purchase",
+      "title": "Section 5: Purchase (Invoices, Returns, Warehouses, Transfers)",
+      "featureTitle": "Purchase & Inventory",
+      "tasks": [
+        { "id": "5.1", "title": "Purchase invoices list, create, edit, view, post, print", "status": "todo" },
+        { "id": "5.2", "title": "Purchase returns list, create, view, approval flow", "status": "todo" },
+        { "id": "5.3", "title": "Warehouses CRUD pages and API", "status": "todo" },
+        { "id": "5.4", "title": "Transfers list, create, show, delete", "status": "todo" },
+        { "id": "5.5", "title": "API routes for purchase, warehouses, transfers", "status": "todo" }
+      ]
+    },
+    {
+      "id": "section-6-media",
+      "title": "Section 6: Media Library",
+      "featureTitle": "Media Library",
+      "tasks": [
+        { "id": "6.1", "title": "Verify Media Library Next.js parity (upload, list, delete, filters)", "status": "todo" },
+        { "id": "6.2", "title": "Fix missing API or upload flow and permissions", "status": "todo" }
+      ]
+    },
+    {
+      "id": "section-7-messenger",
+      "title": "Section 7: Messenger",
+      "featureTitle": "Messenger",
+      "tasks": [
+        { "id": "7.1", "title": "Messenger layout (conversation list + thread view)", "status": "todo" },
+        { "id": "7.2", "title": "List conversations and load thread messages via API", "status": "todo" },
+        { "id": "7.3", "title": "Send message and real-time or polling updates", "status": "todo" },
+        { "id": "7.4", "title": "New conversation / user selector", "status": "todo" },
+        { "id": "7.5", "title": "API routes or proxy for messenger endpoints", "status": "todo" }
+      ]
+    },
+    {
+      "id": "section-8-helpdesk",
+      "title": "Section 8: Helpdesk",
+      "featureTitle": "Helpdesk",
+      "tasks": [
+        { "id": "8.1", "title": "Verify ticket list, create, view, reply, category CRUD parity", "status": "todo" },
+        { "id": "8.2", "title": "Permission checks and company-scoping for helpdesk", "status": "todo" }
+      ]
+    },
+    {
+      "id": "section-9-plan",
+      "title": "Section 9: Plan / Subscription (Plans, Coupons, Bank Transfer, Orders)",
+      "featureTitle": "Subscription & Orders",
+      "tasks": [
+        { "id": "9.1", "title": "Verify plans CRUD, subscribe, start-trial, assign-free, apply-coupon", "status": "todo" },
+        { "id": "9.2", "title": "Verify coupons CRUD and usage", "status": "todo" },
+        { "id": "9.3", "title": "Verify bank transfer list, approve, reject, update", "status": "todo" },
+        { "id": "9.4", "title": "Verify orders list and show", "status": "todo" },
+        { "id": "9.5", "title": "Company-scoped and permission checks for plan section", "status": "todo" }
+      ]
+    },
+    {
+      "id": "section-10-settings",
+      "title": "Section 10: Settings",
+      "featureTitle": "Settings",
+      "tasks": [
+        { "id": "10.1", "title": "Audit all Laravel settings tabs and map to Next.js", "status": "todo" },
+        { "id": "10.2", "title": "Ensure each settings tab has Next.js UI and API and permissions", "status": "todo" }
+      ]
+    }
+  ],
+  "syncInstructions": "Use CodeSpring get_project_features and create features per section, then get_tasks/update_task_status or add tasks via API. When sync_prd is available, sync PRD-Admin-Dashboard-Migration.md as the PRD content."
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "slug": "frozen-fortune-insider",
+    "name": "Frozen Fortune Insider",
+    "price": 19.99,
+    "billingPeriod": "month",
+    "tagline": "Perfect for entrepreneurs getting started and learning the foundations of the water ice business.",
+    "perks": [
+      "Monthly business tips & training",
+      "Community access",
+      "Beginner startup resources",
+      "Limited Canva templates",
+      "Basic vendor guidance",
+      "Monthly live Q&A sessions"
+    ],
+    "badge": null,
+    "ctaLabel": "Join",
+    "featured": false,
+    "published": true,
+    "sortOrder": 0
+  },
+  {
+    "slug": "vip-frozen-fortune-society",
+    "name": "VIP Frozen Fortune Society",
+    "price": 29.99,
+    "billingPeriod": "month",
+    "tagline": "Advanced mentorship, business growth systems, and priority opportunities for serious entrepreneurs looking to scale.",
+    "perks": [
+      "Everything in Insider",
+      "Advanced business trainings",
+      "Live coaching sessions",
+      "Pricing & profit systems",
+      "Full marketing template access",
+      "Wholesale & vendor discounts",
+      "Priority vending opportunities",
+      "VIP entrepreneur community access"
+    ],
+    "badge": "Most Popular",
+    "ctaLabel": "Join",
+    "featured": true,
+    "published": true,
+    "sortOrder": 1
+  }
+]

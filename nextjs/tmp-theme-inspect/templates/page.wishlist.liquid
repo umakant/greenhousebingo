@@ -1,0 +1,85 @@
+<div id="col-main" class="col-md-12 clearfix">
+  <div class="page page-wishlist">
+    <div class="page_content">
+      {{ page.content }}
+    </div>
+    {% if customer %}
+    <p class="alert alert-info infos hide">{{ 'wish_list.general.product_successfully_removed' | t }}</p>
+    <ul class="wishlist-items">
+      <li class="head">
+        <ul>
+          <li class="col-1">{{'wish_list.general.image' | t}}</li>
+          <li class="col-2">{{'wish_list.general.item' | t}}</li>
+          <li class="col-3">{{'wish_list.general.price' | t}}</li>
+          <li class="col-4">{{'wish_list.general.remove' | t}}</li>
+          <li class="col-5">{{'wish_list.general.add_to_cart' | t}}</li>
+        </ul>
+      </li>
+      <li class="tbody"><ul>
+        {%- assign wishlist_size = customer.metafields.wishlist | size -%}
+
+        {%- for metafield in customer.metafields.wishlist -%}
+        {%- assign product_handle = metafield | last -%}
+        {%- assign product = all_products[product_handle] -%}
+        {%- assign variant_tmp = product.selected_or_first_available_variant -%}
+        {%- assign featured_image = variant_tmp.featured_image | default:product.featured_image -%}
+        
+        <li class="item">
+          <ul>
+            <li class="col-1">
+              <a href="{{product.url | within: collection}}" class="product-image">
+                <img src="{{ featured_image | img_url:'150x' }}" alt="{{ product.title | escape }}" srcset="{{ featured_image | img_url:'150x' }} 150w, {{ featured_image | img_url:'235x' }} 235w, {{ featured_image | img_url:'768x' }} 768w" sizes="(max-width: 150px) 100vw, 150px" />
+              </a>
+            </li>
+            <li class="col-2"><a href="{{product.url | within: collection}}" class="product-title mtop">{{product.title}}{% if product.variants.size > 1 %} - {{variant_tmp.title}}{% endif %}</a></li>
+            <li class="col-3"><div class="product-price mtop">{{product.price | money}}</div></li>
+            <li class="col-4">
+              <div class="mtop2">
+                <form method="post" action="/contact" class="wishlist-form" enctype="multipart/form-data">
+                  <input type="hidden" name="customer" value="{{ customer.id }}" />
+                  <input type="hidden" name="shop" value="{{ shop.permanent_domain }}" />
+                  <input type="hidden" name="product" value="{{ product.id }}" />
+                  <button type="button" class="wl-remove remove-wishlist"><i class="zmdi zmdi-close"></i></button>
+                </form>
+              </div>
+            </li>
+            <li class="col-5">
+              <div class="mtop2">
+                {% if product.available %}
+                <form action="/cart/add" method="post" enctype="multipart/form-data">
+                  <input type="hidden" name="quantity" value="1" />
+                  <input type="hidden" name="id" value="{{variant_tmp.id}}" />
+                  <button type="submit" class="wl-add add-to-cart"><i class="zmdi zmdi-shopping-cart"></i></button>
+                </form>
+                {% else %}
+                <a href="{{ product.url | within: collection }}" class="wl-add"><i class="zmdi zmdi-shopping-cart"></i></a>
+                {% endif %}
+              </div>
+            </li>
+          </ul>
+        </li>
+        
+        {%- endfor -%}
+        </ul></li>
+    </ul>
+    {% if settings.allow_share_wishlist %}
+    {% capture subject %}My%20{{ shop.name | replace: " ","%20" }}%20Wish%20List{% endcapture %}
+    {% capture body %}I've%20added%20the%20following%20items%20to%20my%20wish%20list%20at%20{{ shop.name | replace: " ","%20" }}{% endcapture %}
+    {% capture body %}{{ body }}
+    {% for metafield in customer.metafields.wishlist %}
+    {% assign product_handle = metafield | last %}
+    {% assign my_product = all_products[product_handle] %}
+    %0A%0A{{ my_product.title | replace: " ","%20" }}%3A%20%20{{ shop.url }}{{ my_product.url }}
+    {% endfor %}
+    {% endcapture %}
+    <br/>
+    <p>
+      <a href="mailto:{{shop.email}}?subject={{ subject }}&amp;body={{ body }}"><i class="fa fa-envelope-o"></i> {{'wish_list.general.note' | t}}</a>
+    </p>
+    <br/>
+    {% endif %}
+    {% else %}
+    <p>{{'wish_list.general.to_create_a_wishlist_please' | t}} <a href='/account/login'>{{'wish_list.general.login' | t}}</a> {{'wish_list.general.or' | t}} <a href='/account/register'>{{'wish_list.general.register' | t}}</a>.</p>
+    {% endif %}
+  </div>
+</div>

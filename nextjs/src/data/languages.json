@@ -1,0 +1,18 @@
+[
+  { "code": "en", "name": "English", "countryCode": "GB", "enabled": true },
+  { "code": "es", "name": "Español", "countryCode": "ES", "enabled": false },
+  { "code": "ar", "name": "العربية", "countryCode": "SA", "enabled": false },
+  { "code": "da", "name": "Dansk", "countryCode": "DK", "enabled": false },
+  { "code": "de", "name": "Deutsch", "countryCode": "DE", "enabled": false },
+  { "code": "fr", "name": "Français", "countryCode": "FR", "enabled": false },
+  { "code": "he", "name": "עברית", "countryCode": "IL", "enabled": false },
+  { "code": "it", "name": "Italiano", "countryCode": "IT", "enabled": false },
+  { "code": "ja", "name": "日本語", "countryCode": "JP", "enabled": false },
+  { "code": "nl", "name": "Nederlands", "countryCode": "NL", "enabled": false },
+  { "code": "pl", "name": "Polski", "countryCode": "PL", "enabled": false },
+  { "code": "pt", "name": "Português", "countryCode": "PT", "enabled": false },
+  { "code": "pt-br", "name": "Português do Brasil", "countryCode": "BR", "enabled": false },
+  { "code": "ru", "name": "Русский", "countryCode": "RU", "enabled": false },
+  { "code": "tr", "name": "Türkçe", "countryCode": "TR", "enabled": false },
+  { "code": "zh", "name": "中文", "countryCode": "CN", "enabled": false }
+]
