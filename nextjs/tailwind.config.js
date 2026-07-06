@@ -17,7 +17,7 @@ module.exports = {
     extend: {
       fontFamily: {
         /* Water Ice Express public site: `font-display` headings */
-        display: ["Poppins", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["Fraunces", "Poppins", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -85,6 +85,21 @@ module.exports = {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        /** Greenhouse Bingo Hub landing palette */
+        leaf: {
+          DEFAULT: "hsl(var(--leaf))",
+          foreground: "hsl(var(--leaf-foreground))",
+        },
+        clay: {
+          DEFAULT: "hsl(var(--clay))",
+          foreground: "hsl(var(--clay-foreground))",
+        },
+        moss: "hsl(var(--moss))",
+        sand: "hsl(var(--sand))",
+      },
+      boxShadow: {
+        soft: "0 1px 2px oklch(0.3 0.05 150 / 0.06), 0 8px 24px oklch(0.3 0.05 150 / 0.06)",
+        lift: "0 2px 4px oklch(0.3 0.05 150 / 0.08), 0 20px 40px oklch(0.3 0.05 150 / 0.12)",
       },
       borderRadius: {
         lg: "var(--radius)",

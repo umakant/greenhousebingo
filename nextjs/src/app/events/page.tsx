@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
-import { WaterIceShell } from "@/components/waterice/waterice-shell";
-import { EventsClient } from "./events-client";
+import { Suspense } from "react";
+import { GhBingoShell } from "@/components/greenhouse-bingo/gh-bingo-shell";
+import { EventsPageContent } from "@/components/greenhouse-bingo/events-page";
 
 export const metadata: Metadata = {
-  title: "Events — Water Ice Express",
+  title: "All Plant Bingo Events — Greenhouse Bingo",
   description:
-    "Browse upcoming Water Ice Express events. Click any date for full details, time, and location.",
+    "Browse every upcoming plant bingo event from every rep, venue, and company.",
 };
 
 export default function EventsPage() {
   return (
-    <WaterIceShell>
-      <EventsClient />
-    </WaterIceShell>
+    <GhBingoShell>
+      <Suspense>
+        <EventsPageContent />
+      </Suspense>
+    </GhBingoShell>
   );
 }

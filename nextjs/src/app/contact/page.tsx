@@ -1,22 +1,17 @@
 import type { Metadata } from "next";
-import { WaterIceShell } from "@/components/waterice/waterice-shell";
-import { ContactClient } from "./contact-client";
+import { GhBingoShell } from "@/components/greenhouse-bingo/gh-bingo-shell";
+import { ContactPageContent } from "@/components/greenhouse-bingo/contact-page";
 
 export const metadata: Metadata = {
-  title: "Contact Us — Water Ice Express",
+  title: "Contact — Greenhouse Bingo",
   description:
-    "Get in touch with Water Ice Express LLC. Visit our Knoxville office, send a message, or text our after-hours support line.",
-  openGraph: {
-    title: "Contact Water Ice Express",
-    description:
-      "Reach the Water Ice Express team — message us, find us on the map, or text after hours.",
-  },
+    "Get in touch with Greenhouse Bingo about becoming a rep, hosting an event, or general support.",
 };
 
 export default function ContactPage() {
   return (
-    <WaterIceShell>
-      <ContactClient />
-    </WaterIceShell>
+    <GhBingoShell>
+      <ContactPageContent />
+    </GhBingoShell>
   );
 }

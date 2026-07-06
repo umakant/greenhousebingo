@@ -1,17 +1,23 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { GhBingoShell } from "@/components/greenhouse-bingo/gh-bingo-shell";
+import { GreenhouseBingoHome } from "@/components/greenhouse-bingo/greenhouse-bingo-home";
 
-export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Greenhouse Bingo — Find Plant Bingo Events Near You",
+  description:
+    "Discover plant bingo events, buy tickets, or start your own local Greenhouse Bingo platform. Everyone's a winner.",
+  openGraph: {
+    title: "Greenhouse Bingo",
+    description:
+      "Find plant bingo events near you or launch your own local rep platform.",
+    type: "website",
+  },
+};
 
-/** Landing page disabled — send visitors to login (or dashboard if already signed in). */
-export default async function HomePage() {
-  const store = await cookies();
-  const role = store.get("pf_role")?.value;
-  const rolesRaw = store.get("pf_roles")?.value;
-
-  if (role || (rolesRaw && rolesRaw !== "[]")) {
-    redirect("/dashboard");
-  }
-
-  redirect("/login");
+export default function HomePage() {
+  return (
+    <GhBingoShell>
+      <GreenhouseBingoHome />
+    </GhBingoShell>
+  );
 }

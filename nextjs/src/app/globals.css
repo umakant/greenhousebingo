@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -123,6 +123,103 @@ html.dark .wie-site {
 
 .wie-site {
   background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/*
+ * Greenhouse Bingo Hub landing (ported from Greenhouse Bingo Hub.zip).
+ * Scoped tokens mirror the Lovable/Tailwind v4 oklch palette as HSL for v3 utilities.
+ */
+.gh-bingo-site {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  --radius: 0.75rem;
+  --background: 48 33% 98%;
+  --foreground: 155 30% 18%;
+  --card: 0 0% 100%;
+  --card-foreground: 155 30% 18%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 155 30% 18%;
+  --primary: 155 45% 28%;
+  --primary-foreground: 48 33% 98%;
+  --secondary: 85 25% 92%;
+  --secondary-foreground: 155 35% 22%;
+  --muted: 48 20% 94%;
+  --muted-foreground: 155 14% 34%;
+  --accent: 25 65% 58%;
+  --accent-foreground: 48 33% 98%;
+  --destructive: 27 75% 50%;
+  --destructive-foreground: 48 33% 98%;
+  --border: 48 15% 88%;
+  --input: 48 15% 88%;
+  --ring: 155 35% 42%;
+  --leaf: 150 45% 48%;
+  --leaf-foreground: 48 33% 98%;
+  --clay: 25 65% 58%;
+  --clay-foreground: 48 33% 98%;
+  --moss: 145 35% 35%;
+  --sand: 85 25% 92%;
+}
+
+html.dark .gh-bingo-site {
+  color-scheme: light;
+  --radius: 0.75rem;
+  --background: 48 33% 98%;
+  --foreground: 155 30% 18%;
+  --card: 0 0% 100%;
+  --card-foreground: 155 30% 18%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 155 30% 18%;
+  --primary: 155 45% 28%;
+  --primary-foreground: 48 33% 98%;
+  --secondary: 85 25% 92%;
+  --secondary-foreground: 155 35% 22%;
+  --muted: 48 20% 94%;
+  --muted-foreground: 155 14% 34%;
+  --accent: 25 65% 58%;
+  --accent-foreground: 48 33% 98%;
+  --destructive: 27 75% 50%;
+  --destructive-foreground: 48 33% 98%;
+  --border: 48 15% 88%;
+  --input: 48 15% 88%;
+  --ring: 155 35% 42%;
+  --leaf: 150 45% 48%;
+  --leaf-foreground: 48 33% 98%;
+  --clay: 25 65% 58%;
+  --clay-foreground: 48 33% 98%;
+  --moss: 145 35% 35%;
+  --sand: 85 25% 92%;
+}
+
+.gh-bingo-site {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.gh-bingo-site :is(h1, h2, h3, h4, .font-display) {
+  font-family: Fraunces, ui-serif, Georgia, serif;
+  letter-spacing: -0.01em;
+}
+
+.gh-bingo-site .font-serif {
+  font-family: Fraunces, ui-serif, Georgia, serif;
+  letter-spacing: -0.01em;
+}
+
+.gh-bingo-site header nav a {
+  color: hsl(var(--foreground) / 0.72);
+}
+
+.gh-bingo-site header nav a:hover,
+.gh-bingo-site header nav a.bg-secondary {
+  color: hsl(var(--foreground));
+}
+
+.gh-bingo-site footer ul a {
+  color: hsl(var(--foreground) / 0.68);
+}
+
+.gh-bingo-site footer ul a:hover {
   color: hsl(var(--foreground));
 }
 
