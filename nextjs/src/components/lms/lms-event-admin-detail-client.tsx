@@ -2,7 +2,9 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Loader2, QrCode, Ticket, Users } from "lucide-react";
+import { Loader2, Pencil, QrCode, Ticket, Users } from "lucide-react";
+
+import { LmsEventFormSheet } from "@/components/lms/lms-event-form-sheet";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +14,7 @@ import {
   lmsEventAdminCheckInPath,
   lmsEventAdminTicketsPath,
 } from "@/lib/lms-events/paths";
-import type { LmsEvent, LmsEventAttendee, LmsEventTicket } from "@/lib/lms-events/types";
+import type { LmsEvent, LmsEventAttendee, LmsEventCategory, LmsEventTicket } from "@/lib/lms-events/types";
 
 export function LmsEventAdminDetailClient(props: { eventId: string }) {
   const [loading, setLoading] = React.useState(true);
@@ -20,36 +22,55 @@ export function LmsEventAdminDetailClient(props: { eventId: string }) {
   const [event, setEvent] = React.useState<LmsEvent | null>(null);
   const [tickets, setTickets] = React.useState<LmsEventTicket[]>([]);
   const [attendees, setAttendees] = React.useState<LmsEventAttendee[]>([]);
+  const [categories, setCategories] = React.useState<LmsEventCategory[]>([]);
+  const [sheetOpen, setSheetOpen] = React.useState(false);
+
+  const reload = React.useCallback(async () => {
+    const res = await fetch(`/api/lms/admin/events/${encodeURIComponent(props.eventId)}`, {
+      credentials: "include",
+      cache: "no-store",
+    });
+    const data = (await res.json().catch(() => null)) as {
+      ok?: boolean;
+      message?: string;
+      event?: LmsEvent;
+      tickets?: LmsEventTicket[];
+      attendees?: LmsEventAttendee[];
+    } | null;
+    if (!res.ok || !data?.ok || !data.event) {
+      setErr(data?.message ?? "Event not found.");
+      setEvent(null);
+      return false;
+    }
+    setEvent(data.event);
+    setTickets(data.tickets ?? []);
+    setAttendees(data.attendees ?? []);
+    setErr(null);
+    return true;
+  }, [props.eventId]);
 
   React.useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const res = await fetch(`/api/lms/admin/events/${encodeURIComponent(props.eventId)}`, {
-        credentials: "include",
-        cache: "no-store",
-      });
-      const data = (await res.json().catch(() => null)) as {
-        ok?: boolean;
-        message?: string;
-        event?: LmsEvent;
-        tickets?: LmsEventTicket[];
-        attendees?: LmsEventAttendee[];
-      } | null;
+      const [detailOk, catRes] = await Promise.all([
+        reload(),
+        fetch("/api/lms/admin/events", { credentials: "include", cache: "no-store" }),
+      ]);
       if (cancelled) return;
-      if (!res.ok || !data?.ok || !data.event) {
-        setErr(data?.message ?? "Event not found.");
-        setLoading(false);
-        return;
+      const catData = (await catRes.json().catch(() => null)) as {
+        ok?: boolean;
+        categories?: LmsEventCategory[];
+      } | null;
+      if (catRes.ok && catData?.ok) {
+        setCategories(catData.categories ?? []);
       }
-      setEvent(data.event);
-      setTickets(data.tickets ?? []);
-      setAttendees(data.attendees ?? []);
-      setLoading(false);
+      if (!detailOk) setLoading(false);
+      else setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [props.eventId]);
+  }, [reload]);
 
   if (loading) {
     return (
@@ -75,6 +96,10 @@ export function LmsEventAdminDetailClient(props: { eventId: string }) {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => setSheetOpen(true)}>
+            <Pencil className="h-4 w-4" />
+            Edit
+          </Button>
           <Button asChild variant="outline" size="sm" className="gap-1.5">
             <Link href={lmsEventAdminAttendeesPath(event.id)}>
               <Users className="h-4 w-4" />
@@ -193,6 +218,16 @@ export function LmsEventAdminDetailClient(props: { eventId: string }) {
           ) : null}
         </CardContent>
       </Card>
+
+      <LmsEventFormSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        mode="edit"
+        eventId={event.id}
+        eventTitle={event.title}
+        categories={categories}
+        onSaved={() => void reload()}
+      />
     </div>
   );
 }

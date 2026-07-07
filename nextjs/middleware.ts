@@ -100,11 +100,12 @@ function storefrontCustomerAccountResponse(req: NextRequest, pathname: string): 
 }
 
 export async function middleware(req: NextRequest) {
-  const storefrontRewrite = await maybeRewriteStorefrontCustomDomain(req);
-  if (storefrontRewrite) return storefrontRewrite;
-
+  /** Company marketing domains take precedence over storefront rewrites on the same host. */
   const companyWebsiteRewrite = await maybeRewriteCompanyWebsiteCustomDomain(req);
   if (companyWebsiteRewrite) return companyWebsiteRewrite;
+
+  const storefrontRewrite = await maybeRewriteStorefrontCustomDomain(req);
+  if (storefrontRewrite) return storefrontRewrite;
 
   const role = req.cookies.get("pf_role")?.value;
   const pathname = req.nextUrl.pathname;

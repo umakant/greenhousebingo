@@ -131,13 +131,17 @@ function StepIndicator({ current }: { current: number }) {
 }
 
 export function LmsEventCreateWizard(props: {
+  mode?: "create" | "edit";
   categories: LmsEventCategory[];
+  initialValues?: LmsEventCreateWizardInput;
   onSubmit: (values: LmsEventCreateWizardInput) => Promise<void>;
   onSavingChange?: (saving: boolean) => void;
 }) {
-  const { categories, onSubmit, onSavingChange } = props;
+  const { mode = "create", categories, initialValues, onSubmit, onSavingChange } = props;
   const [step, setStep] = React.useState(0);
-  const [values, setValues] = React.useState<LmsEventCreateWizardInput>(DEFAULT_VALUES);
+  const [values, setValues] = React.useState<LmsEventCreateWizardInput>(
+    initialValues ? { ...DEFAULT_VALUES, ...initialValues } : DEFAULT_VALUES,
+  );
   const [err, setErr] = React.useState<string | null>(null);
 
   function patch(partial: Partial<LmsEventCreateWizardInput>) {
@@ -798,7 +802,7 @@ export function LmsEventCreateWizard(props: {
         </Button>
         <Button type="submit">
           {step === STEPS.length - 1 ? (
-            "Create event"
+            mode === "edit" ? "Save changes" : "Create event"
           ) : (
             <>
               Next: {STEPS[step + 1] as StepId}

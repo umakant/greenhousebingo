@@ -25,11 +25,16 @@ export function rewriteCompanyThemeHtml(html: string, theme: CompanyNextjsTheme)
   let output = html;
 
   output = output.replace(
-    /((?:href|src)=["'])(?!https?:\/\/|\/\/|\/|#|mailto:|tel:|data:|javascript:)([^"']+)(["'])/gi,
+    /((?:href|src|srcset)=["'])(?!https?:\/\/|\/\/|\/|#|mailto:|tel:|data:|javascript:)([^"']+)(["'])/gi,
     (_match, prefix: string, url: string, suffix: string) => {
       const cleaned = url.replace(/^\.\//, "");
       return `${prefix}${assetPrefix}/${cleaned}${suffix}`;
     },
+  );
+
+  output = output.replace(
+    /((?:href|src)=["'])\/assets\/([^"']+)(["'])/gi,
+    `$1${assetPrefix}/assets/$2$3`,
   );
 
   output = output.replace(

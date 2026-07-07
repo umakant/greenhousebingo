@@ -147,6 +147,7 @@
     "db:seed:marketplace-notifications": "node ./scripts/seed-marketplace-notification-templates.js",
     "db:seed:partnership-email-templates": "node ./scripts/seed-partnership-email-templates.js",
     "db:ensure:company-themes": "node ./scripts/ensure-company-themes.js",
+    "db:fix:plant-bingo-asset-paths": "node ./scripts/fix-plant-bingo-bash-asset-paths.js",
     "db:patch:new-user-email": "node ./scripts/patch-new-user-email-template.js",
     "db:push": "node ./scripts/prisma-with-env.js db push",
     "db:migrate": "node ./scripts/prisma-with-env.js migrate dev",

@@ -206,6 +206,123 @@ export class LmsEventMockRepository {
     return { event, ticket };
   }
 
+  async updateAdminEvent(
+    eventId: string,
+    input: LmsEventCreateWizardInput,
+    actorUserId?: string,
+  ): Promise<{ event: LmsEvent; ticket: LmsEventTicket }> {
+    await delay();
+    const existing = await this.getEventById(eventId);
+    if (!existing) throw new Error("Event not found.");
+
+    const orgId = this.scope.organizationId;
+    const actor = actorUserId ?? this.scope.studentUserId ?? orgId;
+    const categories = await this.listCategories();
+    const category = categories.find((c) => c.id === input.categoryId);
+    const isFree = input.isFree || input.price <= 0;
+    const publishStatus = input.soldOut
+      ? "sold_out"
+      : input.status === "draft"
+        ? "draft"
+        : input.status || "registration_open";
+    const now = new Date().toISOString();
+
+    const event: LmsEvent = {
+      ...existing,
+      updatedAt: now,
+      updatedById: actor,
+      status: publishStatus,
+      title: input.title.trim(),
+      description: input.description?.trim() || null,
+      shortDescription: input.shortDescription?.trim() || null,
+      imageUrl: input.imageUrl?.trim() || null,
+      categoryId: input.categoryId,
+      categoryName: category?.name ?? null,
+      eventType: input.eventType,
+      deliveryMode: input.deliveryMode,
+      instructorName: input.instructorName?.trim() || null,
+      startsAt: new Date(input.startsAt).toISOString(),
+      endsAt: new Date(input.endsAt).toISOString(),
+      timezone: input.timezone || "America/New_York",
+      venueName: input.venueName?.trim() || null,
+      venueAddress: input.venueAddress?.trim() || null,
+      venueCity: input.venueCity?.trim() || null,
+      venueState: input.venueState?.trim() || null,
+      venuePostalCode: input.venuePostalCode?.trim() || null,
+      venueCountry: input.venueCountry?.trim() || null,
+      venueLat: input.venueLat ?? null,
+      venueLng: input.venueLng ?? null,
+      onlineMeetingUrl: input.onlineMeetingUrl?.trim() || null,
+      capacity: input.capacity ?? input.quantity ?? null,
+      seatsRemaining:
+        (input.capacity ?? input.quantity ?? null) != null
+          ? Math.max(0, (input.capacity ?? input.quantity ?? 0) - existing.registeredCount)
+          : null,
+      isPublic: input.isPublic,
+      isFree,
+      priceFrom: isFree ? 0 : input.price,
+      currency: input.currency || "USD",
+      certificationAvailable: input.certificationAvailable,
+      certificationName: input.certificationName?.trim() || null,
+      requirements: input.requirements?.trim() || null,
+      cancellationPolicy: input.cancellationPolicy?.trim() || null,
+      isFeatured: input.isFeatured ?? false,
+      ageRule: input.ageRule ?? null,
+      doorsOpen: input.doorsOpen?.trim() || null,
+      bingoStart: input.bingoStart?.trim() || null,
+      venueType: input.venueType ?? null,
+      cardsIncluded: input.cardsIncluded ?? null,
+      extraCardPrice: input.extraCardPrice ?? null,
+      foodAndDrinks: input.foodAndDrinks?.trim() || null,
+      attire: input.attire?.trim() || null,
+    };
+
+    const tickets = await this.listTickets(eventId);
+    const primary = tickets.find((t) => t.name !== "Extra bingo card") ?? tickets[0];
+    const ticket: LmsEventTicket = primary
+      ? {
+          ...primary,
+          updatedAt: now,
+          updatedById: actor,
+          name: input.ticketName.trim(),
+          description: input.ticketDescription?.trim() || null,
+          price: isFree ? 0 : input.price,
+          currency: input.currency || "USD",
+          quantity: input.quantity ?? null,
+          saleStartsAt: input.saleStartsAt || null,
+          saleEndsAt: input.saleEndsAt || null,
+          ticketStatus: input.ticketStatus || "available",
+          isFree,
+        }
+      : {
+          id: `tkt-${Date.now()}`,
+          organizationId: orgId,
+          eventId,
+          createdAt: now,
+          updatedAt: now,
+          createdById: actor,
+          updatedById: actor,
+          name: input.ticketName.trim(),
+          description: input.ticketDescription?.trim() || null,
+          price: isFree ? 0 : input.price,
+          currency: input.currency || "USD",
+          quantity: input.quantity ?? null,
+          soldCount: 0,
+          saleStartsAt: input.saleStartsAt || null,
+          saleEndsAt: input.saleEndsAt || null,
+          ticketStatus: input.ticketStatus || "available",
+          isFree,
+          accessRules: null,
+        };
+
+    eventStore = eventStore.map((e) => (e.id === eventId ? event : e));
+    ticketStore = primary
+      ? ticketStore.map((t) => (t.id === primary.id ? ticket : t))
+      : [...ticketStore, ticket];
+
+    return { event, ticket };
+  }
+
   async getEventById(id: string): Promise<LmsEvent | null> {
     await delay();
     return this.events().find((e) => e.id === id) ?? null;

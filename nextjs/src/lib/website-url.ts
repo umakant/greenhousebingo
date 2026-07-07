@@ -58,3 +58,19 @@ export function resolveCompanyVisitSiteHref(settings: {
   if (external) return normalizeWebsiteUrl(external);
   return resolveCompanyPublicSiteHref(settings);
 }
+
+/** In-app preview on the main app host (always served by Next.js). */
+export function resolveCompanyWebsitePreviewHref(company_slug?: string): string {
+  return resolveCompanyDefaultSitePath(company_slug);
+}
+
+/** Hostname of the deployed app (e.g. greenhousebingo.com). */
+export function appHostnameForDisplay(): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  try {
+    if (appUrl) return new URL(appUrl).hostname;
+  } catch {
+    /* ignore */
+  }
+  return companyWebsiteDnsTargetForDisplay();
+}

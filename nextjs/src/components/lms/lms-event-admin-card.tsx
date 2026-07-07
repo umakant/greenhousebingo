@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Calendar, Heart, MapPin, Monitor, User } from "lucide-react";
+import { Calendar, MapPin, Monitor, User } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { TableActionButton, type TableActionItem } from "@/components/ui/table-action-button";
 import { LMS_EVENT_TYPE_LABELS } from "@/lib/lms-events/constants";
 import { lmsEventAdminDetailPath } from "@/lib/lms-events/paths";
 import type { LmsEvent } from "@/lib/lms-events/types";
@@ -44,13 +45,37 @@ function instructorInitial(name: string | null): string {
   return name.trim().charAt(0).toUpperCase();
 }
 
-export function LmsEventAdminCard(props: { event: LmsEvent; className?: string }) {
-  const { event, className } = props;
+export function LmsEventAdminCard(props: {
+  event: LmsEvent;
+  canManage?: boolean;
+  onEdit?: () => void;
+  actionItems?: TableActionItem[];
+  className?: string;
+}) {
+  const { event, canManage = true, onEdit, actionItems = [], className } = props;
   const badge = TYPE_BADGE[event.eventType] ?? {
     label: LMS_EVENT_TYPE_LABELS[event.eventType],
     className: "bg-primary hover:bg-primary",
   };
   const seats = event.seatsRemaining ?? (event.capacity != null ? event.capacity - event.registeredCount : null);
+
+  const titleNode =
+    canManage && onEdit ? (
+      <button
+        type="button"
+        className="line-clamp-2 text-left text-base font-semibold leading-snug hover:text-primary"
+        onClick={onEdit}
+      >
+        {event.title}
+      </button>
+    ) : (
+      <Link
+        href={lmsEventAdminDetailPath(event.id)}
+        className="line-clamp-2 text-base font-semibold leading-snug hover:text-primary"
+      >
+        {event.title}
+      </Link>
+    );
 
   return (
     <Card className={cn("group flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md", className)}>
@@ -64,13 +89,6 @@ export function LmsEventAdminCard(props: { event: LmsEvent; className?: string }
           </div>
         )}
         <Badge className={cn("absolute left-3 top-3 text-xs text-white", badge.className)}>{badge.label}</Badge>
-        <button
-          type="button"
-          className="absolute right-3 top-3 rounded-full bg-background/80 p-1.5 text-muted-foreground opacity-0 transition group-hover:opacity-100"
-          aria-label="Save event"
-        >
-          <Heart className="h-4 w-4" aria-hidden />
-        </button>
         {seats != null && seats > 0 ? (
           <Badge className="absolute bottom-3 left-3 bg-emerald-600 text-xs hover:bg-emerald-600">
             {seats} Seats Left
@@ -79,9 +97,7 @@ export function LmsEventAdminCard(props: { event: LmsEvent; className?: string }
       </div>
 
       <CardContent className="flex flex-1 flex-col gap-3 p-4">
-        <Link href={lmsEventAdminDetailPath(event.id)} className="line-clamp-2 text-base font-semibold leading-snug hover:text-primary">
-          {event.title}
-        </Link>
+        {titleNode}
 
         <div className="space-y-2 text-sm text-muted-foreground">
           <div className="flex items-start gap-2">
@@ -110,15 +126,22 @@ export function LmsEventAdminCard(props: { event: LmsEvent; className?: string }
         </div>
       </CardContent>
 
-      <CardFooter className="mt-auto flex items-center justify-between border-t px-4 py-3">
-        {event.categoryName ? (
-          <Badge variant="outline" className="font-normal">
-            {event.categoryName}
-          </Badge>
+      <CardFooter className="mt-auto flex items-center justify-between border-t bg-muted/20 px-4 py-3">
+        <div className="flex min-w-0 flex-col gap-1">
+          {event.categoryName ? (
+            <Badge variant="outline" className="w-fit font-normal">
+              {event.categoryName}
+            </Badge>
+          ) : null}
+          <span className="text-base font-bold text-primary">{formatPrice(event)}</span>
+        </div>
+        {canManage && onEdit ? (
+          <TableActionButton label="Edit" onPrimaryClick={onEdit} items={actionItems} />
         ) : (
-          <span />
+          <Link href={lmsEventAdminDetailPath(event.id)} className="text-sm font-medium text-primary hover:underline">
+            View
+          </Link>
         )}
-        <span className="text-base font-bold text-primary">{formatPrice(event)}</span>
       </CardFooter>
     </Card>
   );

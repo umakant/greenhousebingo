@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import brandLogoUrl from "@/assets/social-greenhouse-dark.png";
-import poweredByLogoUrl from "@/assets/PB_GreenhouseBingo_dark.png";
+import poweredByLogoUrl from "@/assets/greenhouse-bingo-powered-by.png";
 import { Instagram, Facebook, Twitter, Youtube } from "lucide-react";
 
 export function SiteFooter() {
@@ -62,11 +62,11 @@ export function SiteFooter() {
                 Join
               </button>
             </form>
-            <div className="mt-6">
+            <div className="mt-6 flex items-center gap-3 border-l-2 border-white/20 pl-3">
               <img
                 src={poweredByLogoUrl}
                 alt="Powered by Greenhouse BINGO"
-                className="h-auto w-full max-w-[200px] object-contain"
+                className="h-auto w-full max-w-[220px] object-contain"
               />
             </div>
           </div>

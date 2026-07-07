@@ -45,6 +45,26 @@ function copyDir(src, dest) {
   }
 }
 
+function patchViteAllowedHosts(themeDir) {
+  const vitePath = path.join(themeDir, "vite.config.ts");
+  let source = fs.readFileSync(vitePath, "utf8");
+  if (source.includes("allowedHosts")) return;
+
+  source = source.replace(
+    "export default defineConfig({",
+    `export default defineConfig({
+  vite: {
+    server: {
+      allowedHosts: [".greenhousebingo.com", "localhost", "127.0.0.1"],
+    },
+    preview: {
+      allowedHosts: [".greenhousebingo.com", "localhost", "127.0.0.1"],
+    },
+  },`,
+  );
+  fs.writeFileSync(vitePath, source);
+}
+
 function patchLogoImports(themeDir) {
   const navPath = path.join(themeDir, "src", "components", "site-nav.tsx");
   const footerPath = path.join(themeDir, "src", "components", "site-footer.tsx");
@@ -81,14 +101,19 @@ function routeToRelativeFile(route) {
   return `${trimmed}/index.html`;
 }
 
-function normalizePrerenderedHtml(html) {
+function normalizePrerenderedHtml(html, themePublicPath = "/company-themes/plant-bingo-bash") {
   let out = html;
   out = out.replace(/<script\b[^>]*type=["']module["'][^>]*>[\s\S]*?<\/script>/gi, "");
   out = out.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
   out = out.replace(/<link\b[^>]*rel=["']modulepreload["'][^>]*>/gi, "");
-  out = out.replace(/(?:href|src)=["']\/assets\//gi, (m) => m.replace("/assets/", "assets/"));
-  out = out.replace(/url\(\s*(['"]?)\/assets\//gi, "url($1assets/");
-  out = out.replace(/\/__l5e\/assets-v1\/[^"']+/g, "assets/brand-logo.png");
+
+  const assetPrefix = themePublicPath.replace(/\/$/, "");
+  // Absolute theme asset URLs so pages work under /sites/{slug} without runtime rewrite.
+  out = out.replace(/(?:href|src)=["']assets\//gi, (m) => m.replace("assets/", `${assetPrefix}/assets/`));
+  out = out.replace(/(?:href|src)=["']\/assets\//gi, (m) => m.replace("/assets/", `${assetPrefix}/assets/`));
+  out = out.replace(/url\(\s*(['"]?)assets\//gi, `url($1${assetPrefix}/assets/`);
+  out = out.replace(/url\(\s*(['"]?)\/assets\//gi, `url($1${assetPrefix}/assets/`);
+  out = out.replace(/\/__l5e\/assets-v1\/[^"']+/g, `${assetPrefix}/assets/brand-logo.png`);
   return out;
 }
 
@@ -221,6 +246,7 @@ function writeRoutesManifest(eventSlugs) {
 
 async function main(themeDir) {
   console.log(`Building ${THEME_SLUG} from ${themeDir}...`);
+  patchViteAllowedHosts(themeDir);
   patchLogoImports(themeDir);
 
   console.log("  npm install...");

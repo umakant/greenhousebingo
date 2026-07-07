@@ -34,7 +34,7 @@ import { Switch } from "@/components/ui/switch";
 
 import { cn } from "@/lib/utils";
 
-import { resolveCompanyDefaultSitePath, resolveCompanyPublicSiteHref, companyWebsiteDnsTargetForDisplay, normalizeWebsiteUrl, websiteUrlToHostname } from "@/lib/website-url";
+import { resolveCompanyDefaultSitePath, companyWebsiteDnsTargetForDisplay, normalizeWebsiteUrl, websiteUrlToHostname, resolveCompanyWebsitePreviewHref, appHostnameForDisplay } from "@/lib/website-url";
 
 
 
@@ -159,14 +159,10 @@ export function CompanyWebsiteThemeSettingsSection({ canEdit, initial, onFlash }
 
 
   const defaultSitePath = resolveCompanyDefaultSitePath(initial.company_slug);
-
-  const publicSiteHref = resolveCompanyPublicSiteHref({
-
-    company_slug: initial.company_slug,
-
-    companyWebsite: customDomain.trim() ? normalizeWebsiteUrl(customDomain) : "",
-
-  });
+  const previewSiteHref = resolveCompanyWebsitePreviewHref(initial.company_slug);
+  const customDomainHref = customDomain.trim() ? normalizeWebsiteUrl(customDomain) : "";
+  const publicSiteHref = customDomainHref || previewSiteHref;
+  const appHostname = appHostnameForDisplay();
 
 
 
@@ -274,7 +270,7 @@ export function CompanyWebsiteThemeSettingsSection({ canEdit, initial, onFlash }
 
                 <a
 
-                  href={publicSiteHref}
+                  href={previewSiteHref}
 
                   target="_blank"
 
@@ -289,6 +285,18 @@ export function CompanyWebsiteThemeSettingsSection({ canEdit, initial, onFlash }
                   <ExternalLink className="h-3.5 w-3.5" />
 
                 </a>
+
+                {customDomainHref ? (
+                  <a
+                    href={customDomainHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+                  >
+                    Test custom domain
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                ) : null}
 
               </>
 
@@ -380,7 +388,11 @@ export function CompanyWebsiteThemeSettingsSection({ canEdit, initial, onFlash }
 
                   <code className="rounded bg-muted px-1 py-0.5">{companyWebsiteDnsTargetForDisplay()}</code>{" "}
 
-                  (A record for apex, or CNAME for www). After DNS propagates,{" "}
+                  (A record for apex, or CNAME for subdomains like <code className="rounded bg-muted px-1 py-0.5">socialgreenhouse.{appHostname}</code>).
+
+                  The domain must reach the same Next.js server as <code className="rounded bg-muted px-1 py-0.5">{appHostname}</code> — not a separate Vite/Lovable preview host.
+
+                  After DNS propagates,{" "}
 
                   <span className="font-medium text-foreground">{normalizeWebsiteUrl(customDomain)}</span> will show your
 
@@ -510,7 +522,7 @@ export function CompanyWebsiteThemeSettingsSection({ canEdit, initial, onFlash }
 
             embedded
 
-            publicSiteHref={publicSiteHref}
+            publicSiteHref={previewSiteHref}
 
           />
 

@@ -396,6 +396,181 @@ export class LmsEventDbRepository {
     };
   }
 
+  async updateAdminEvent(
+    eventId: string,
+    input: LmsEventCreateWizardInput,
+    actorUserId?: string,
+  ): Promise<{ event: LmsEvent; ticket: LmsEventTicket }> {
+    const orgId = this.orgId();
+    const actorId = actorUserId ? BigInt(actorUserId) : orgId;
+    let eventIdBig: bigint;
+    try {
+      eventIdBig = BigInt(eventId);
+    } catch {
+      throw new Error("Invalid event id.");
+    }
+
+    const existing = await prisma.lmsTrainingEvent.findFirst({
+      where: { id: eventIdBig, organizationId: orgId },
+      select: { id: true, slug: true },
+    });
+    if (!existing) throw new Error("Event not found.");
+
+    const startsAt = new Date(input.startsAt);
+    const endsAt = new Date(input.endsAt);
+    if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime())) {
+      throw new Error("Invalid schedule dates.");
+    }
+    if (endsAt <= startsAt) throw new Error("End time must be after start time.");
+
+    const isFree = input.isFree || input.price <= 0;
+    const priceFrom = isFree ? 0 : input.price;
+    const publishStatus = input.soldOut
+      ? "sold_out"
+      : input.status === "draft"
+        ? "draft"
+        : input.status || "registration_open";
+
+    const result = await prisma.$transaction(async (tx) => {
+      const eventRow = await tx.lmsTrainingEvent.update({
+        where: { id: eventIdBig },
+        data: {
+          title: input.title.trim(),
+          description: input.description?.trim() || null,
+          shortDescription: input.shortDescription?.trim() || null,
+          imageUrl: input.imageUrl?.trim() || null,
+          categoryId: BigInt(input.categoryId),
+          eventType: input.eventType,
+          deliveryMode: input.deliveryMode,
+          status: publishStatus,
+          instructorName: input.instructorName?.trim() || null,
+          startsAt,
+          endsAt,
+          timezone: input.timezone || "America/New_York",
+          venueName: input.deliveryMode === "online" ? null : input.venueName?.trim() || null,
+          venueAddress: input.deliveryMode === "online" ? null : input.venueAddress?.trim() || null,
+          venueCity: input.deliveryMode === "online" ? null : input.venueCity?.trim() || null,
+          venueState: input.deliveryMode === "online" ? null : input.venueState?.trim() || null,
+          venuePostalCode: input.deliveryMode === "online" ? null : input.venuePostalCode?.trim() || null,
+          venueCountry: input.deliveryMode === "online" ? null : input.venueCountry?.trim() || null,
+          venueLat: input.deliveryMode === "online" ? null : input.venueLat ?? null,
+          venueLng: input.deliveryMode === "online" ? null : input.venueLng ?? null,
+          onlineMeetingUrl:
+            input.deliveryMode === "in_person" ? null : input.onlineMeetingUrl?.trim() || null,
+          capacity: input.capacity ?? input.quantity ?? null,
+          isPublic: input.isPublic,
+          isFree,
+          priceFrom,
+          currency: input.currency || "USD",
+          certificationAvailable: input.certificationAvailable,
+          certificationName: input.certificationName?.trim() || null,
+          requirements: input.requirements?.trim() || null,
+          cancellationPolicy: input.cancellationPolicy?.trim() || null,
+          isFeatured: input.isFeatured ?? false,
+          ageRule: input.ageRule ?? null,
+          doorsOpen: input.doorsOpen?.trim() || null,
+          bingoStart: input.bingoStart?.trim() || null,
+          venueType: input.venueType ?? null,
+          cardsIncluded: input.cardsIncluded ?? null,
+          extraCardPrice:
+            input.extraCardPrice != null && input.extraCardPrice > 0 ? input.extraCardPrice : null,
+          foodAndDrinks: input.foodAndDrinks?.trim() || null,
+          attire: input.attire?.trim() || null,
+          updatedById: actorId,
+          updatedAt: new Date(),
+        },
+        include: { category: true },
+      });
+
+      const tickets = await tx.lmsEventTicket.findMany({
+        where: { organizationId: orgId, eventId: eventIdBig },
+        orderBy: { price: "asc" },
+      });
+      const primaryTicket =
+        tickets.find((t) => t.name !== "Extra bingo card") ?? tickets[0] ?? null;
+
+      let ticketRow;
+      if (primaryTicket) {
+        ticketRow = await tx.lmsEventTicket.update({
+          where: { id: primaryTicket.id },
+          data: {
+            name: input.ticketName.trim(),
+            description: input.ticketDescription?.trim() || null,
+            price: isFree ? 0 : input.price,
+            currency: input.currency || "USD",
+            quantity: input.quantity ?? null,
+            saleStartsAt: input.saleStartsAt ? new Date(input.saleStartsAt) : null,
+            saleEndsAt: input.saleEndsAt ? new Date(input.saleEndsAt) : null,
+            ticketStatus: input.ticketStatus || "available",
+            isFree,
+            updatedById: actorId,
+            updatedAt: new Date(),
+          },
+        });
+      } else {
+        ticketRow = await tx.lmsEventTicket.create({
+          data: {
+            organizationId: orgId,
+            eventId: eventIdBig,
+            name: input.ticketName.trim(),
+            description: input.ticketDescription?.trim() || null,
+            price: isFree ? 0 : input.price,
+            currency: input.currency || "USD",
+            quantity: input.quantity ?? null,
+            soldCount: 0,
+            saleStartsAt: input.saleStartsAt ? new Date(input.saleStartsAt) : null,
+            saleEndsAt: input.saleEndsAt ? new Date(input.saleEndsAt) : null,
+            ticketStatus: input.ticketStatus || "available",
+            isFree,
+            createdById: actorId,
+            updatedById: actorId,
+          },
+        });
+      }
+
+      const extraTicket = tickets.find((t) => t.name === "Extra bingo card");
+      if (input.extraCardPrice != null && input.extraCardPrice > 0) {
+        if (extraTicket) {
+          await tx.lmsEventTicket.update({
+            where: { id: extraTicket.id },
+            data: {
+              price: input.extraCardPrice,
+              currency: input.currency || "USD",
+              updatedById: actorId,
+              updatedAt: new Date(),
+            },
+          });
+        } else {
+          await tx.lmsEventTicket.create({
+            data: {
+              organizationId: orgId,
+              eventId: eventIdBig,
+              name: "Extra bingo card",
+              description: "Additional bingo card for the same event",
+              price: input.extraCardPrice,
+              currency: input.currency || "USD",
+              quantity: null,
+              soldCount: 0,
+              ticketStatus: "available",
+              isFree: false,
+              createdById: actorId,
+              updatedById: actorId,
+            },
+          });
+        }
+      } else if (extraTicket) {
+        await tx.lmsEventTicket.delete({ where: { id: extraTicket.id } });
+      }
+
+      return { eventRow, ticketRow };
+    });
+
+    return {
+      event: mapDbEvent(result.eventRow),
+      ticket: mapDbTicket(result.ticketRow),
+    };
+  }
+
   async getEventById(id: string): Promise<LmsEvent | null> {
     let eventId: bigint;
     try {

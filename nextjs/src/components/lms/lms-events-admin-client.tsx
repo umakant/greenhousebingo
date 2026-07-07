@@ -13,7 +13,7 @@ import {
 import { EventFilters } from "@/components/lms/events/event-filters";
 import { EventEmptyState } from "@/components/lms/events/event-empty-state";
 import { LmsEventAdminCard } from "@/components/lms/lms-event-admin-card";
-import { LmsEventFormSheet } from "@/components/lms/lms-event-form-sheet";
+import { LmsEventFormSheet, type LmsEventSheetMode } from "@/components/lms/lms-event-form-sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +33,12 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { LmsEventListFiltersInput } from "@/lib/lms-events/schemas";
-import { lmsEventAdminDetailPath } from "@/lib/lms-events/paths";
+import {
+  lmsEventAdminAttendeesPath,
+  lmsEventAdminCheckInPath,
+  lmsEventAdminDetailPath,
+  lmsEventAdminTicketsPath,
+} from "@/lib/lms-events/paths";
 import type { LmsEvent, LmsEventCategory } from "@/lib/lms-events/types";
 import { cn } from "@/lib/utils";
 
@@ -99,6 +104,45 @@ export function LmsEventsAdminClient() {
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState<(typeof PER_PAGE_OPTIONS)[number]>(6);
   const [sheetOpen, setSheetOpen] = React.useState(false);
+  const [sheetMode, setSheetMode] = React.useState<LmsEventSheetMode>("create");
+  const [sheetEventId, setSheetEventId] = React.useState<string | undefined>();
+  const [sheetEventTitle, setSheetEventTitle] = React.useState<string | undefined>();
+
+  const openCreateSheet = React.useCallback(() => {
+    setSheetMode("create");
+    setSheetEventId(undefined);
+    setSheetEventTitle(undefined);
+    setSheetOpen(true);
+  }, []);
+
+  const openEditSheet = React.useCallback((event: Pick<LmsEvent, "id" | "title">) => {
+    setSheetMode("edit");
+    setSheetEventId(event.id);
+    setSheetEventTitle(event.title);
+    setSheetOpen(true);
+  }, []);
+
+  const eventActionItems = React.useCallback(
+    (event: LmsEvent) => [
+      {
+        label: "Overview",
+        href: lmsEventAdminDetailPath(event.id),
+      },
+      {
+        label: "Attendees",
+        href: lmsEventAdminAttendeesPath(event.id),
+      },
+      {
+        label: "Tickets",
+        href: lmsEventAdminTicketsPath(event.id),
+      },
+      {
+        label: "Check-in",
+        href: lmsEventAdminCheckInPath(event.id),
+      },
+    ],
+    [],
+  );
 
   const load = React.useCallback(async (nextFilters: LmsEventListFiltersInput) => {
     setLoading(true);
@@ -189,7 +233,7 @@ export function LmsEventsAdminClient() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => setSheetOpen(true)}>New training event</DropdownMenuItem>
+            <DropdownMenuItem onSelect={openCreateSheet}>New training event</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -264,18 +308,29 @@ export function LmsEventsAdminClient() {
               title="No events yet"
               description="Create your first training event or adjust filters to see seeded demo data."
               actionLabel="Create Event"
-              onAction={() => setSheetOpen(true)}
+              onAction={openCreateSheet}
             />
           ) : view === "grid" ? (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
               {paged.map((event) => (
-                <LmsEventAdminCard key={event.id} event={event} />
+                <LmsEventAdminCard
+                  key={event.id}
+                  event={event}
+                  onEdit={() => openEditSheet(event)}
+                  actionItems={eventActionItems(event)}
+                />
               ))}
             </div>
           ) : (
             <div className="space-y-3">
               {paged.map((event) => (
-                <LmsEventAdminCard key={event.id} event={event} className="flex-row sm:flex-row" />
+                <LmsEventAdminCard
+                  key={event.id}
+                  event={event}
+                  className="flex-row sm:flex-row"
+                  onEdit={() => openEditSheet(event)}
+                  actionItems={eventActionItems(event)}
+                />
               ))}
             </div>
           )}
@@ -387,8 +442,11 @@ export function LmsEventsAdminClient() {
       <LmsEventFormSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
+        mode={sheetMode}
+        eventId={sheetEventId}
+        eventTitle={sheetEventTitle}
         categories={categories}
-        onCreated={() => void load(filters)}
+        onSaved={() => void load(filters)}
       />
     </div>
   );
