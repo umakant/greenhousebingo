@@ -138,7 +138,7 @@ const SCOPE_ROUTE_PREFIXES: [string, string][] = [
   ["/storefront", "storefront"],
   ["/expense-management", "expensemanagement"],
   ["/lms", "lms"],
-  ["/admin/event-platform", "lms"],
+  ["/admin/event-platform", "eventplatform"],
   ["/affiliate-business", "affiliatebusiness"],
   ["/compliance", "compliance"],
 ];
@@ -253,6 +253,7 @@ const DROPDOWN_SHOW_ALL_CHILDREN_NAMES = new Set([
   "whatsappchat",
   "compliance",
   "routing",
+  "event-platform",
 ]);
 
 /** Permissions that grant access to the Accounting menu (parent or any child). User needs at least one to see Accounting. */
@@ -335,7 +336,6 @@ function menuItemHasPermission(
   /** Event Platform — umbrella or any section permission. */
   if (permission === "manage-event-platform" && !href) {
     if (userPermissions.includes("manage-event-platform")) return true;
-    if (userPermissions.includes("manage-lms")) return true;
     return (
       userPermissions.includes("reports.view") ||
       userPermissions.includes("manage-lms-events") ||
@@ -372,7 +372,6 @@ function menuItemHasPermission(
     permission === "reports.view"
   ) {
     if (userPermissions.includes("manage-event-platform")) return true;
-    if (userPermissions.includes("manage-lms")) return true;
     return userPermissions.includes(permission);
   }
   /** LMS root nav: tenant admins, instructor portal, or student portal permissions. */

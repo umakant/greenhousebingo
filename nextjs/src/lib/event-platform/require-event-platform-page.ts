@@ -61,7 +61,7 @@ export async function requireEventPlatformPageAccessAny(
   const uidRaw = store.get("pf_user_id")?.value?.trim() ?? "";
   const activated = uidRaw ? await loadActivatedPackages(uidRaw, roles) : [];
 
-  if (!activated.includes("lms")) {
+  if (!activated.includes("eventplatform")) {
     await writeSaasAuditLog({
       eventType: "event_platform_access_denied",
       module: "EventPlatform",

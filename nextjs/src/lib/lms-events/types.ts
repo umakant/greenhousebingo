@@ -63,6 +63,15 @@ export type LmsEvent = LmsEventBaseFields & {
   certificationName: string | null;
   requirements: string | null;
   cancellationPolicy: string | null;
+  isFeatured: boolean;
+  ageRule: string | null;
+  doorsOpen: string | null;
+  bingoStart: string | null;
+  venueType: string | null;
+  cardsIncluded: number | null;
+  extraCardPrice: number | null;
+  foodAndDrinks: string | null;
+  attire: string | null;
   linkedCourseId: string | null;
   linkedLiveSessionId: string | null;
   revenueTotal: number;

@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { getImagePath } from "@/utils/image-path";
-import { resolveBrandLogoHeight, resolveBrandLogoWidth } from "@/lib/brand-logo-size";
+import { resolveBrandLogoHeight, resolveBrandLogoPosition, resolveBrandLogoWidth } from "@/lib/brand-logo-size";
 
 const NAVY_LEFT = "#0f172a";
 const NAVY_FORM = "#1e293b";
@@ -78,6 +78,7 @@ export function ThemeSettingsSection({ isSuperAdmin, canEdit, initial, onFlash }
   const logoLight = initial.logo_light ?? "";
   const logoWidth = resolveBrandLogoWidth(initial);
   const logoHeight = resolveBrandLogoHeight(initial);
+  const logoPosition = resolveBrandLogoPosition(initial);
   const loginImage = initial.loginImage ?? "";
   const titleText = initial.titleText ?? "WorkDo";
   const footerText = initial.footerText ?? "© WorkDo. All rights reserved.";
@@ -370,6 +371,7 @@ export function ThemeSettingsSection({ isSuperAdmin, canEdit, initial, onFlash }
                 logoLight={logoLight}
                 logoWidth={logoWidth}
                 logoHeight={logoHeight}
+                logoPosition={logoPosition}
                 themeColor={settings.themeColor}
                 customColor={settings.customColor}
                 sidebarVariant={settings.sidebarVariant}

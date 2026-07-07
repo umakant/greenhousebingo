@@ -2,7 +2,6 @@ import {
   Bell,
   Bot,
   Boxes,
-  Crown,
   Handshake,
   Headphones,
   Image,
@@ -96,13 +95,6 @@ export const getSuperAdminMenu = (): NavItem[] => [
       },
       { title: t("Settings"), href: "/marketplace/admin/settings", permission: "marketplace.settings.manage", order: 8 },
     ],
-  },
-  {
-    title: t("Memberships"),
-    href: "/memberships/manage",
-    icon: Crown,
-    permission: "manage-landing-page",
-    order: 2810,
   },
   {
     title: t("Store"),

@@ -8,11 +8,11 @@ import {
 } from "@/lib/event-platform/permissions";
 
 const GUARD_NAME = "web";
-const ADD_ON = "Lms";
+const ADD_ON = "EventPlatform";
 const MODULE = "EventPlatform";
 
 /**
- * Upserts Event Platform permissions (add_on = Lms, module = EventPlatform).
+ * Upserts Event Platform permissions (add_on = EventPlatform, module = EventPlatform).
  * Idempotent; safe on every server start.
  */
 export async function ensureEventPlatformPermissions(): Promise<void> {
@@ -78,5 +78,24 @@ export async function ensureEventPlatformPermissions(): Promise<void> {
 }
 
 export async function ensureEventPlatformSetup(): Promise<void> {
+  await prisma.addOn
+    .upsert({
+      where: { module: "EventPlatform" },
+      update: { isEnable: true },
+      create: {
+        module: "EventPlatform",
+        name: "Event Platform",
+        monthlyPrice: 0,
+        yearlyPrice: 0,
+        isEnable: true,
+        forAdmin: false,
+        packageName: "eventplatform",
+        priority: 77,
+      },
+    })
+    .catch((e: unknown) => {
+      console.error("[instrumentation] EventPlatform add_ons upsert failed:", e);
+    });
+
   await ensureEventPlatformPermissions();
 }

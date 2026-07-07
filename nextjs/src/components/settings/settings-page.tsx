@@ -5,6 +5,9 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
   Building,
   CalendarClock,
   Check,
@@ -129,6 +132,7 @@ import {
   DEFAULT_BRAND_LOGO_HEIGHT,
   DEFAULT_BRAND_LOGO_WIDTH,
   resolveBrandLogoHeight,
+  resolveBrandLogoPosition,
   resolveBrandLogoWidth,
   syncBrandLogoDimensions,
 } from "@/lib/brand-logo-size";
@@ -999,6 +1003,7 @@ function BrandSection({
       logo_dark: source.logo_dark?.trim() || "",
       logo_light: source.logo_light?.trim() || "",
       ...logoDimensions,
+      logo_position: resolveBrandLogoPosition(source),
       favicon: source.favicon?.trim() || source.logo_icon?.trim() || "",
       logo_icon: source.favicon?.trim() || source.logo_icon?.trim() || "",
       powered_by_light: source.powered_by_light?.trim() || "",
@@ -1056,6 +1061,7 @@ function BrandSection({
   const brandIcon = settings.favicon || settings.logo_icon;
   const logoWidth = settings.logo_dark_width;
   const logoHeight = settings.logo_dark_height;
+  const logoPosition = resolveBrandLogoPosition(settings);
 
   const handleLogoSizeChange = (field: "width" | "height", value: string) => {
     setSettings((prev) => {
@@ -1136,7 +1142,6 @@ function BrandSection({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <Label>Logo (Light Mode)</Label>
-                  <p className="text-xs text-muted-foreground">Recommended: 220px × 65px</p>
                   <div className="flex flex-col gap-3">
                     <div
                       className={`${BRAND_LOGO_PREVIEW_BOX} bg-muted/30`}
@@ -1171,7 +1176,6 @@ function BrandSection({
 
                 <div className="space-y-3">
                   <Label>Logo (Dark Mode)</Label>
-                  <p className="text-xs text-muted-foreground">Recommended: 220px × 65px</p>
                   <div className="flex flex-col gap-3">
                     <div
                       className={`${BRAND_LOGO_PREVIEW_BOX} bg-gray-800`}
@@ -1205,36 +1209,76 @@ function BrandSection({
                 </div>
 
                 <div className="space-y-3 md:col-span-2">
-                  <Label>Logo Size</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Applies to the sidebar logo area only. Recommended: 220px × 65px
-                  </p>
-                  <div className="grid grid-cols-2 gap-2 max-w-md">
-                    <div className="space-y-1">
-                      <Label htmlFor="logo_width" className="text-xs text-muted-foreground">
-                        Width (px)
-                      </Label>
-                      <Input
-                        id="logo_width"
-                        type="number"
-                        min={1}
-                        value={logoWidth}
-                        onChange={(e) => handleLogoSizeChange("width", e.target.value)}
-                        disabled={!canEdit}
-                      />
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:max-w-3xl">
+                    <div className="space-y-3">
+                      <Label>Logo Size</Label>
+                      <p className="text-xs text-muted-foreground">Applies to the sidebar logo area only.</p>
+                      <div className="flex flex-wrap gap-4">
+                        <div className="space-y-1">
+                          <Label htmlFor="logo_width" className="text-xs text-muted-foreground">
+                            Width (px)
+                          </Label>
+                          <Input
+                            id="logo_width"
+                            type="number"
+                            min={1}
+                            value={logoWidth}
+                            onChange={(e) => handleLogoSizeChange("width", e.target.value)}
+                            disabled={!canEdit}
+                            className="w-28"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="logo_height" className="text-xs text-muted-foreground">
+                            Height (px)
+                          </Label>
+                          <Input
+                            id="logo_height"
+                            type="number"
+                            min={1}
+                            value={logoHeight}
+                            onChange={(e) => handleLogoSizeChange("height", e.target.value)}
+                            disabled={!canEdit}
+                            className="w-28"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="logo_height" className="text-xs text-muted-foreground">
-                        Height (px)
-                      </Label>
-                      <Input
-                        id="logo_height"
-                        type="number"
-                        min={1}
-                        value={logoHeight}
-                        onChange={(e) => handleLogoSizeChange("height", e.target.value)}
-                        disabled={!canEdit}
-                      />
+
+                    <div className="space-y-3">
+                      <Label>Logo Position</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Horizontal alignment in the sidebar header.
+                      </p>
+                      <div className="inline-flex overflow-hidden rounded-md border">
+                        {(
+                          [
+                            { value: "left", label: "Left", Icon: AlignLeft },
+                            { value: "center", label: "Center", Icon: AlignCenter },
+                            { value: "right", label: "Right", Icon: AlignRight },
+                          ] as const
+                        ).map(({ value, label, Icon }) => {
+                          const active = logoPosition === value;
+                          return (
+                            <Button
+                              key={value}
+                              type="button"
+                              variant={active ? "default" : "ghost"}
+                              size="sm"
+                              className={cn(
+                                "h-9 rounded-none border-0 px-3",
+                                !active && "text-muted-foreground",
+                              )}
+                              aria-label={`Align logo ${label.toLowerCase()}`}
+                              aria-pressed={active}
+                              disabled={!canEdit}
+                              onClick={() => handleSelectChange("logo_position", value)}
+                            >
+                              <Icon className="h-4 w-4" />
+                            </Button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1780,6 +1824,7 @@ function BrandSection({
                 logoLight={settings.logo_light}
                 logoWidth={logoWidth}
                 logoHeight={logoHeight}
+                logoPosition={logoPosition}
                 themeColor={settings.themeColor}
                 customColor={settings.customColor}
                 sidebarVariant={settings.sidebarVariant}

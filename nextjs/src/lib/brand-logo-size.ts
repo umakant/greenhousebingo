@@ -3,6 +3,12 @@ import type { CSSProperties } from "react";
 export const DEFAULT_BRAND_LOGO_WIDTH = 220;
 export const DEFAULT_BRAND_LOGO_HEIGHT = 65;
 
+export type BrandLogoPosition = "left" | "center" | "right";
+
+export const DEFAULT_BRAND_LOGO_POSITION: BrandLogoPosition = "left";
+
+export const BRAND_LOGO_POSITIONS: BrandLogoPosition[] = ["left", "center", "right"];
+
 export function parseBrandLogoDimension(
   value: string | undefined | null,
   fallback: number,
@@ -64,4 +70,26 @@ export function syncBrandLogoDimensions(
     logo_light_width: width,
     logo_light_height: height,
   };
+}
+
+export function resolveBrandLogoPosition(
+  settings: Record<string, string | undefined | null> | null | undefined,
+): BrandLogoPosition {
+  const value = String(settings?.logo_position ?? "").trim().toLowerCase();
+  if (value === "center" || value === "right") return value;
+  return DEFAULT_BRAND_LOGO_POSITION;
+}
+
+export function brandLogoAlignClasses(position: BrandLogoPosition): {
+  container: string;
+  image: string;
+} {
+  switch (position) {
+    case "center":
+      return { container: "justify-center", image: "object-center" };
+    case "right":
+      return { container: "justify-end", image: "object-right" };
+    default:
+      return { container: "justify-start", image: "object-left" };
+  }
 }

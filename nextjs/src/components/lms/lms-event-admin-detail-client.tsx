@@ -129,6 +129,70 @@ export function LmsEventAdminDetailClient(props: { eventId: string }) {
           <CardContent className="text-sm text-muted-foreground whitespace-pre-wrap">{event.description}</CardContent>
         </Card>
       ) : null}
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Event experience</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2 text-sm">
+          {event.isFeatured ? (
+            <div>
+              <span className="text-muted-foreground">Featured</span>
+              <div className="font-medium">Yes</div>
+            </div>
+          ) : null}
+          {event.ageRule ? (
+            <div>
+              <span className="text-muted-foreground">Age rule</span>
+              <div className="font-medium">{event.ageRule}</div>
+            </div>
+          ) : null}
+          {event.venueType ? (
+            <div>
+              <span className="text-muted-foreground">Venue type</span>
+              <div className="font-medium">{event.venueType}</div>
+            </div>
+          ) : null}
+          {event.doorsOpen || event.bingoStart ? (
+            <div>
+              <span className="text-muted-foreground">Doors / Bingo</span>
+              <div className="font-medium">
+                {[event.doorsOpen, event.bingoStart].filter(Boolean).join(" · ")}
+              </div>
+            </div>
+          ) : null}
+          {event.cardsIncluded != null ? (
+            <div>
+              <span className="text-muted-foreground">Cards included</span>
+              <div className="font-medium">{event.cardsIncluded}</div>
+            </div>
+          ) : null}
+          {event.extraCardPrice != null ? (
+            <div>
+              <span className="text-muted-foreground">Extra card</span>
+              <div className="font-medium">${event.extraCardPrice}</div>
+            </div>
+          ) : null}
+          {event.foodAndDrinks ? (
+            <div>
+              <span className="text-muted-foreground">Food & drinks</span>
+              <div className="font-medium">{event.foodAndDrinks}</div>
+            </div>
+          ) : null}
+          {event.attire ? (
+            <div>
+              <span className="text-muted-foreground">Attire</span>
+              <div className="font-medium">{event.attire}</div>
+            </div>
+          ) : null}
+          {event.seatsRemaining != null ? (
+            <div>
+              <span className="text-muted-foreground">Remaining</span>
+              <div className="font-medium">{event.seatsRemaining}</div>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
     </div>
   );
 }

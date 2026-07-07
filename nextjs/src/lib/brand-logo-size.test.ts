@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  brandLogoAlignClasses,
   brandLogoImageStyle,
   DEFAULT_BRAND_LOGO_HEIGHT,
   DEFAULT_BRAND_LOGO_WIDTH,
   parseBrandLogoDimension,
   resolveBrandLogoHeight,
+  resolveBrandLogoPosition,
   resolveBrandLogoWidth,
   syncBrandLogoDimensions,
 } from "./brand-logo-size";
@@ -42,6 +44,28 @@ describe("brand-logo-size", () => {
       logo_dark_height: "50",
       logo_light_width: "200",
       logo_light_height: "50",
+    });
+  });
+
+  it("resolves logo position with left default", () => {
+    expect(resolveBrandLogoPosition({})).toBe("left");
+    expect(resolveBrandLogoPosition({ logo_position: "center" })).toBe("center");
+    expect(resolveBrandLogoPosition({ logo_position: "right" })).toBe("right");
+    expect(resolveBrandLogoPosition({ logo_position: "invalid" })).toBe("left");
+  });
+
+  it("maps logo position to alignment classes", () => {
+    expect(brandLogoAlignClasses("left")).toEqual({
+      container: "justify-start",
+      image: "object-left",
+    });
+    expect(brandLogoAlignClasses("center")).toEqual({
+      container: "justify-center",
+      image: "object-center",
+    });
+    expect(brandLogoAlignClasses("right")).toEqual({
+      container: "justify-end",
+      image: "object-right",
     });
   });
 });

@@ -25,6 +25,7 @@ export type GoogleAddressParsed = {
   city: string;
   state: string;
   country: string;
+  country_code: string;
   zip_code: string;
 };
 
@@ -44,6 +45,7 @@ export function parseGoogleAddressComponents(
       get("administrative_area_level_2"),
     state: get("administrative_area_level_1"),
     country: get("country"),
+    country_code: getShort("country"),
     zip_code: getShort("postal_code"),
   };
 }

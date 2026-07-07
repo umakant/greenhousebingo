@@ -27,6 +27,8 @@ export const ADDON_MODULE_BY_SCOPE: Record<string, string> = {
   "whatsapp-chat": "whatsappchat",
   storefront: "storefront",
   lms: "lms",
+  eventplatform: "eventplatform",
+  "event-platform": "eventplatform",
   expensemanagement: "expensemanagement",
   affiliatebusiness: "affiliatebusiness",
   "affiliate-business": "affiliatebusiness",

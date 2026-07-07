@@ -18,13 +18,20 @@ export function websiteUrlToHostname(url: string): string {
 }
 
 /** In-app public marketing site path (no sign-in) or external domain when configured. */
+export function resolveCompanyDefaultSitePath(company_slug?: string): string {
+  const slug = (company_slug ?? "").trim();
+  if (slug) return `/sites/${encodeURIComponent(slug)}`;
+  return "/company-website";
+}
+
+/** In-app public marketing site path (no sign-in) or external domain when configured. */
 export function resolveCompanyPublicSiteHref(settings: {
   companyWebsite?: string;
   company_slug?: string;
 }): string {
-  const slug = (settings.company_slug ?? "").trim();
-  if (slug) return `/sites/${encodeURIComponent(slug)}`;
-  return "/company-website";
+  const external = (settings.companyWebsite ?? "").trim();
+  if (external) return normalizeWebsiteUrl(external);
+  return resolveCompanyDefaultSitePath(settings.company_slug);
 }
 
 /** DNS target for company marketing domains (display in Settings). */

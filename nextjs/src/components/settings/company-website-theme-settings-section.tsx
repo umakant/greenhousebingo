@@ -6,7 +6,7 @@ import * as React from "react";
 
 import Link from "next/link";
 
-import { ExternalLink, Globe, Lock, Paintbrush } from "lucide-react";
+import { ExternalLink, Globe, Link2, Lock, Paintbrush } from "lucide-react";
 
 import { toast } from "sonner";
 
@@ -34,7 +34,7 @@ import { Switch } from "@/components/ui/switch";
 
 import { cn } from "@/lib/utils";
 
-import { resolveCompanyPublicSiteHref } from "@/lib/website-url";
+import { resolveCompanyDefaultSitePath, resolveCompanyPublicSiteHref, companyWebsiteDnsTargetForDisplay, normalizeWebsiteUrl, websiteUrlToHostname } from "@/lib/website-url";
 
 
 
@@ -90,11 +90,19 @@ async function saveCompanyWebsiteTheme(settings: Record<string, string>) {
 
 
 
+function displayWebsiteInput(url: string | undefined): string {
+  const trimmed = (url ?? "").trim();
+  if (!trimmed) return "";
+  return websiteUrlToHostname(trimmed) || trimmed.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+}
+
 export function CompanyWebsiteThemeSettingsSection({ canEdit, initial, onFlash }: Props) {
 
   const [saving, setSaving] = React.useState(false);
 
   const [slug, setSlug] = React.useState(initial.companyNextjsThemeSlug ?? "");
+
+  const [customDomain, setCustomDomain] = React.useState(displayWebsiteInput(initial.companyWebsite));
 
   const [passwordProtected, setPasswordProtected] = React.useState(
 
@@ -111,6 +119,12 @@ export function CompanyWebsiteThemeSettingsSection({ canEdit, initial, onFlash }
   const [hasAccessPassword, setHasAccessPassword] = React.useState(
     isEnabled(initial.companyWebsiteHasAccessPassword),
   );
+
+
+
+  React.useEffect(() => {
+    setCustomDomain(displayWebsiteInput(initial.companyWebsite));
+  }, [initial.companyWebsite]);
 
 
 
@@ -144,11 +158,13 @@ export function CompanyWebsiteThemeSettingsSection({ canEdit, initial, onFlash }
 
 
 
+  const defaultSitePath = resolveCompanyDefaultSitePath(initial.company_slug);
+
   const publicSiteHref = resolveCompanyPublicSiteHref({
 
     company_slug: initial.company_slug,
 
-    companyWebsite: initial.companyWebsite,
+    companyWebsite: customDomain.trim() ? normalizeWebsiteUrl(customDomain) : "",
 
   });
 
@@ -177,6 +193,8 @@ export function CompanyWebsiteThemeSettingsSection({ canEdit, initial, onFlash }
       await saveCompanyWebsiteTheme({
 
         companyNextjsThemeSlug: slug,
+
+        companyWebsite: normalizeWebsiteUrl(customDomain),
 
         companyWebsitePasswordProtected: passwordProtected ? "1" : "0",
 
@@ -220,7 +238,7 @@ export function CompanyWebsiteThemeSettingsSection({ canEdit, initial, onFlash }
 
       title="Company Website Theme"
 
-      description="Choose a marketing theme for your company’s public website. Optionally restrict the site with an access password for invited visitors only."
+      description="Choose a marketing theme, connect a custom domain, and optionally restrict the site with an access password."
 
       icon={Globe}
 
@@ -289,6 +307,106 @@ export function CompanyWebsiteThemeSettingsSection({ canEdit, initial, onFlash }
       }
 
     >
+
+      <div className="mb-6 rounded-xl border bg-card p-4 sm:p-5">
+
+        <div className="flex gap-3">
+
+          <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-muted">
+
+            <Link2 className="h-4 w-4 text-muted-foreground" />
+
+          </span>
+
+          <div className="min-w-0 flex-1 space-y-4">
+
+            <div>
+
+              <Label htmlFor="company-website-custom-domain" className="text-base font-medium">
+
+                Custom domain
+
+              </Label>
+
+              <p className="mt-1 text-sm text-muted-foreground">
+
+                Connect your own domain so visitors see your Plant Bingo site at your URL instead of{" "}
+
+                <code className="rounded bg-muted px-1 py-0.5 text-xs">{defaultSitePath}</code>.
+
+              </p>
+
+            </div>
+
+            <div className="max-w-md space-y-2">
+
+              <Label htmlFor="company-website-custom-domain" className="text-sm">
+
+                Domain name
+
+              </Label>
+
+              <Input
+
+                id="company-website-custom-domain"
+
+                disabled={!canEdit}
+
+                value={customDomain}
+
+                onChange={(e) => setCustomDomain(e.target.value)}
+
+                placeholder="thesocialgreenhouse.com"
+
+                autoComplete="off"
+
+              />
+
+              <p className="text-xs text-muted-foreground">
+
+                Enter your domain without https:// — it is added automatically when you save.
+
+              </p>
+
+            </div>
+
+            {customDomain.trim() ? (
+
+              <div className="rounded-lg border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground">
+
+                <p>
+
+                  Point DNS for <span className="font-medium text-foreground">{customDomain.trim()}</span> to{" "}
+
+                  <code className="rounded bg-muted px-1 py-0.5">{companyWebsiteDnsTargetForDisplay()}</code>{" "}
+
+                  (A record for apex, or CNAME for www). After DNS propagates,{" "}
+
+                  <span className="font-medium text-foreground">{normalizeWebsiteUrl(customDomain)}</span> will show your
+
+                  company website theme.
+
+                </p>
+
+                <p className="mt-2">
+
+                  The default preview URL <code className="rounded bg-muted px-1 py-0.5">{defaultSitePath}</code> will
+
+                  still work on this platform.
+
+                </p>
+
+              </div>
+
+            ) : null}
+
+          </div>
+
+        </div>
+
+      </div>
+
+
 
       <div className="mb-6 rounded-xl border bg-card p-4 sm:p-5">
 

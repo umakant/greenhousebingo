@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import { loadTenantActorUser, readLmsOrgEnabled, resolveTenantOrganizationId } from "@/lib/lms-organization";
+import { readEventPlatformOrgEnabled } from "@/lib/event-platform/event-platform-organization";
 import { readMarketplaceOrgEnabled } from "@/lib/marketplace-organization";
 
 /**
@@ -52,6 +53,9 @@ const PLAN_MODULE_TO_ADDON: Record<string, string> = {
   store_front: "storefront",
   Storefront: "storefront",
   lms: "lms",
+  eventplatform: "eventplatform",
+  event_platform: "eventplatform",
+  EventPlatform: "eventplatform",
   expensemanagement: "expensemanagement",
   expense_management: "expensemanagement",
   ExpenseManagement: "expensemanagement",
@@ -81,7 +85,8 @@ export async function getActivatedPackagesForUser(
 
   const withOrgGates = async (pkgs: string[]) => {
     const afterLms = await filterLmsByOrgSetting(userId, false, pkgs);
-    return filterMarketplaceByOrgSetting(userId, false, afterLms);
+    const afterEventPlatform = await filterEventPlatformByOrgSetting(userId, false, afterLms);
+    return filterMarketplaceByOrgSetting(userId, false, afterEventPlatform);
   };
 
   try {
@@ -144,6 +149,26 @@ async function filterLmsByOrgSetting(
   const on = await readLmsOrgEnabled(orgId);
   if (on) return packages;
   return packages.filter((p) => p.toLowerCase() !== "lms");
+}
+
+/**
+ * Event Platform is globally and plan-gated like other add-ons, then optionally gated by per-company
+ * opt-out (`saas_event_platform_enabled` on `settings` for the tenant organization).
+ * Missing/empty setting = enabled.
+ */
+async function filterEventPlatformByOrgSetting(
+  userId: bigint,
+  isSuperadmin: boolean,
+  packages: string[],
+): Promise<string[]> {
+  if (isSuperadmin) return packages;
+  if (!packages.some((p) => p.toLowerCase() === "eventplatform")) return packages;
+  const user = await loadTenantActorUser(userId);
+  const orgId = user ? resolveTenantOrganizationId(user) : null;
+  if (!orgId) return packages.filter((p) => p.toLowerCase() !== "eventplatform");
+  const on = await readEventPlatformOrgEnabled(orgId);
+  if (on) return packages;
+  return packages.filter((p) => p.toLowerCase() !== "eventplatform");
 }
 
 /**

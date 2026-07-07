@@ -6497,6 +6497,15 @@ model LmsTrainingEvent {
   certificationName     String?   @map("certification_name") @db.VarChar(255)
   requirements          String?   @db.Text
   cancellationPolicy    String?   @map("cancellation_policy") @db.Text
+  isFeatured            Boolean   @default(false) @map("is_featured")
+  ageRule               String?   @map("age_rule") @db.VarChar(32)
+  doorsOpen             String?   @map("doors_open") @db.VarChar(32)
+  bingoStart            String?   @map("bingo_start") @db.VarChar(32)
+  venueType             String?   @map("venue_type") @db.VarChar(64)
+  cardsIncluded         Int?      @map("cards_included")
+  extraCardPrice        Decimal?  @map("extra_card_price") @db.Decimal(12, 2)
+  foodAndDrinks         String?   @map("food_and_drinks") @db.Text
+  attire                String?   @db.VarChar(128)
   linkedCourseId        BigInt?   @map("linked_course_id")
   linkedLiveSessionId   BigInt?   @map("linked_live_session_id")
   revenueTotal          Decimal   @default(0) @map("revenue_total") @db.Decimal(14, 2)

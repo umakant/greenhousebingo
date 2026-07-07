@@ -52,7 +52,7 @@ function patchLogoImports(themeDir) {
   let nav = fs.readFileSync(navPath, "utf8");
   nav = nav.replace(
     /import logoAsset from "@\/assets\/social-greenhouse-light\.png\.asset\.json";/,
-    'import logoUrl from "@/assets/logo.png";',
+    'import logoUrl from "@/assets/the-social-greenhouse-logo.png";',
   );
   nav = nav.replace(/logoAsset\.url/g, "logoUrl");
   fs.writeFileSync(navPath, nav);
@@ -60,10 +60,10 @@ function patchLogoImports(themeDir) {
   let footer = fs.readFileSync(footerPath, "utf8");
   footer = footer.replace(
     /import logoAsset from "@\/assets\/social-greenhouse-dark\.png\.asset\.json";\s*\nimport poweredByAsset from "@\/assets\/PB_GreenhouseBingo_dark\.png\.asset\.json";/,
-    'import logoUrl from "@/assets/logo.png";',
+    'import brandLogoUrl from "@/assets/social-greenhouse-dark.png";\nimport poweredByLogoUrl from "@/assets/PB_GreenhouseBingo_dark.png";',
   );
-  footer = footer.replace(/logoAsset\.url/g, "logoUrl");
-  footer = footer.replace(/poweredByAsset\.url/g, "logoUrl");
+  footer = footer.replace(/logoAsset\.url/g, "brandLogoUrl");
+  footer = footer.replace(/poweredByAsset\.url/g, "poweredByLogoUrl");
   fs.writeFileSync(footerPath, footer);
 }
 
@@ -144,9 +144,26 @@ function copyBuildAssets(themeDir) {
   const assetsDest = path.join(DEST_PUBLIC, "assets");
   copyDir(assetsSrc, assetsDest);
 
-  const logoSrc = path.join(themeDir, "src", "assets", "logo.png");
-  if (fs.existsSync(logoSrc)) {
-    fs.copyFileSync(logoSrc, path.join(assetsDest, "brand-logo.png"));
+  const logoSrc = path.join(themeDir, "src", "assets", "the-social-greenhouse-logo.png");
+  const logoFallback = path.join(themeDir, "src", "assets", "logo.png");
+  const resolvedLogo = fs.existsSync(logoSrc) ? logoSrc : logoFallback;
+  if (fs.existsSync(resolvedLogo)) {
+    fs.copyFileSync(resolvedLogo, path.join(assetsDest, "brand-logo.png"));
+  }
+
+  const poweredBySrc = path.join(themeDir, "src", "assets", "greenhouse-bingo-powered-by.png");
+  if (fs.existsSync(poweredBySrc)) {
+    fs.copyFileSync(poweredBySrc, path.join(assetsDest, "greenhouse-bingo-powered-by.png"));
+  }
+
+  const footerBrandSrc = path.join(themeDir, "src", "assets", "social-greenhouse-dark.png");
+  if (fs.existsSync(footerBrandSrc)) {
+    fs.copyFileSync(footerBrandSrc, path.join(assetsDest, "the-social-greenhouse-logo-footer.png"));
+  }
+
+  const footerPoweredBySrc = path.join(themeDir, "src", "assets", "PB_GreenhouseBingo_dark.png");
+  if (fs.existsSync(footerPoweredBySrc)) {
+    fs.copyFileSync(footerPoweredBySrc, path.join(assetsDest, "greenhouse-bingo-powered-by.png"));
   }
 
   const faviconSrc = path.join(themeDir, ".output", "public", "favicon.ico");

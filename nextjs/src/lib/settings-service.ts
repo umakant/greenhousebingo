@@ -50,6 +50,7 @@ export const BRAND_MERGE_KEYS = [
   "logo_dark_height",
   "logo_light_width",
   "logo_light_height",
+  "logo_position",
   "favicon",
   "logo_icon",
   "powered_by_light",

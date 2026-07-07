@@ -8,7 +8,7 @@ import { ImageWithFallback } from "@/components/image-with-fallback";
 import { resolveCompanySidebarIconPaths } from "@/lib/company-user-avatar";
 import { useIsDark } from "@/hooks/use-is-dark";
 import { resolveBrandPrimaryHex } from "@/lib/brand-theme";
-import { brandLogoImageStyle, resolveBrandLogoHeight, resolveBrandLogoWidth } from "@/lib/brand-logo-size";
+import { brandLogoAlignClasses, brandLogoImageStyle, resolveBrandLogoHeight, resolveBrandLogoPosition, resolveBrandLogoWidth } from "@/lib/brand-logo-size";
 import { cn } from "@/lib/utils";
 
 import {
@@ -83,6 +83,7 @@ export function AppSidebar({
     resolveBrandLogoWidth(settings),
     resolveBrandLogoHeight(settings),
   );
+  const logoAlign = brandLogoAlignClasses(resolveBrandLogoPosition(settings));
   const sidebarIconPaths = React.useMemo(
     () => resolveCompanySidebarIconPaths(settings),
     [settings],
@@ -172,17 +173,26 @@ export function AppSidebar({
         <div className="flex flex-col gap-2 p-2">
           <div className="w-full min-w-0 px-1 group-data-[collapsible=icon]:hidden">
             {logo ? (
-              <div className="flex w-full items-center overflow-hidden rounded-md py-1">
+              <div className={cn("flex w-full items-center overflow-hidden rounded-md py-1", logoAlign.container)}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={getImagePath(logo)}
                   alt={titleText}
-                  className="w-auto max-w-full object-contain object-left"
+                  className={cn("w-auto max-w-full object-contain", logoAlign.image)}
                   style={logoStyle}
                 />
               </div>
             ) : (
-              <div className="flex min-h-12 items-center justify-center rounded-md px-2 py-3 text-lg font-semibold tracking-tight">
+              <div
+                className={cn(
+                  "flex min-h-12 items-center rounded-md px-2 py-3 text-lg font-semibold tracking-tight",
+                  logoAlign.container === "justify-center"
+                    ? "justify-center"
+                    : logoAlign.container === "justify-end"
+                      ? "justify-end"
+                      : "justify-start",
+                )}
+              >
                 <span className="truncate">{titleText}</span>
               </div>
             )}

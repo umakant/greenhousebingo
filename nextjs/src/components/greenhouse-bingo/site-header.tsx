@@ -33,10 +33,10 @@ export function SiteHeader() {
         <Link href="/" className="flex items-center justify-self-start">
           <Image
             src={GH_BINGO_LOGO_SRC}
-            alt="Greenhouse Bingo"
-            width={160}
-            height={44}
-            className="h-10 w-auto md:h-11"
+            alt="Greenhouse BINGO"
+            width={200}
+            height={72}
+            className="h-10 w-auto max-w-[200px] object-contain md:h-11"
             priority
             unoptimized
           />

@@ -80,6 +80,12 @@ export const getCompanyMenu = (): NavItem[] => [
       },
       { title: t("LMS Dashboard"), href: "/lms/dashboard", permission: "manage-lms-dashboard", dashboardScope: "lms" },
       {
+        title: t("Event Platform Dashboard"),
+        href: "/admin/event-platform",
+        permission: "reports.view",
+        dashboardScope: "eventplatform",
+      },
+      {
         title: t("My Learning"),
         href: "/lms/my-learning",
         permission: "view-lms-student-dashboard",
@@ -589,7 +595,7 @@ export const getCompanyMenu = (): NavItem[] => [
     permission: "manage-event-platform",
     name: "event-platform",
     order: 2965,
-    dashboardScope: "lms",
+    dashboardScope: "eventplatform",
     children: [
       { title: t("Dashboard"), href: "/admin/event-platform", permission: "reports.view" },
       { title: t("Events"), href: "/admin/event-platform/events", permission: "manage-lms-events" },

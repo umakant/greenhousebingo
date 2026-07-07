@@ -12,6 +12,7 @@ import { hasPermission } from "@/lib/authz";
 import type { CompanyPlanDetailsPayload } from "@/components/companies/company-billing-plan-panel";
 import type { UserSubscriptionInfo } from "@/components/plans/subscription-setting";
 import { getCompany } from "@/lib/greenhouse-bingo/mock";
+import { readEventPlatformOrgEnabled } from "@/lib/event-platform/event-platform-organization";
 import { readLmsOrgEnabled } from "@/lib/lms-organization";
 import { readMarketplaceOrgEnabled } from "@/lib/marketplace-organization";
 import { prisma } from "@/lib/prisma";
@@ -177,6 +178,7 @@ export default async function CompanyDetailsPage({ params }: { params: Promise<{
   const canDeletePlans = hasPermission(permissions, "delete-plans");
 
   const lmsOrgEnabled = await readLmsOrgEnabled(companyId);
+  const eventPlatformOrgEnabled = await readEventPlatformOrgEnabled(companyId);
   const marketplaceOrgEnabled = await readMarketplaceOrgEnabled(companyId);
 
   return (
@@ -210,6 +212,7 @@ export default async function CompanyDetailsPage({ params }: { params: Promise<{
             canDeletePlans={canDeletePlans}
             companyPlanDetails={companyPlanDetails}
             lmsOrgEnabled={lmsOrgEnabled}
+            eventPlatformOrgEnabled={eventPlatformOrgEnabled}
             marketplaceOrgEnabled={marketplaceOrgEnabled}
             avatar={company.avatar}
           />

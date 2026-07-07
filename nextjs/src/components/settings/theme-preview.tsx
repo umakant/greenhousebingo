@@ -2,7 +2,8 @@
 
 import * as React from "react";
 
-import { brandLogoImageStyle } from "@/lib/brand-logo-size";
+import { brandLogoAlignClasses, brandLogoImageStyle, type BrandLogoPosition } from "@/lib/brand-logo-size";
+import { cn } from "@/lib/utils";
 import { getImagePath } from "@/utils/image-path";
 
 type ThemePreviewProps = {
@@ -10,6 +11,7 @@ type ThemePreviewProps = {
   logoLight?: string;
   logoWidth?: string;
   logoHeight?: string;
+  logoPosition?: BrandLogoPosition;
   themeColor?: string;
   customColor?: string;
   sidebarVariant?: string;
@@ -23,6 +25,7 @@ export function ThemePreview({
   logoLight,
   logoWidth,
   logoHeight,
+  logoPosition = "left",
   themeColor = "green",
   customColor = "#10b981",
   sidebarVariant = "inset",
@@ -57,6 +60,7 @@ export function ThemePreview({
 
   const currentLogo = isDark ? logoLight : logoDark;
   const currentLogoStyle = brandLogoImageStyle(logoWidth, logoHeight);
+  const logoAlign = brandLogoAlignClasses(logoPosition);
 
   return (
     <div
@@ -88,13 +92,13 @@ export function ThemePreview({
           }`}
           style={getSidebarBackground()}
         >
-          <div className="mb-2 flex w-full justify-center px-1">
+          <div className={cn("mb-2 flex w-full px-1", logoAlign.container)}>
             {currentLogo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={getImagePath(currentLogo)}
                 alt="Logo"
-                className="w-full max-w-full object-contain object-center"
+                className={cn("w-full max-w-full object-contain", logoAlign.image)}
                 style={currentLogoStyle}
               />
             ) : (

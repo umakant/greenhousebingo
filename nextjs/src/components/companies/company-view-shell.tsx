@@ -36,6 +36,7 @@ import CompanyEstimatesSection from "@/components/companies/company-estimates-se
 import CompanyInvoicesSection from "@/components/companies/company-invoices-section";
 import { CompanyBillingPaymentMethodsCard } from "@/components/companies/company-billing-payment-methods-card";
 import { CompanyBillingPlanPanel, type CompanyPlanDetailsPayload } from "@/components/companies/company-billing-plan-panel";
+import { CompanyEventPlatformOrgCard } from "@/components/companies/company-event-platform-org-card";
 import { CompanyLmsOrgCard } from "@/components/companies/company-lms-org-card";
 import { CompanyMarketplaceOrgCard } from "@/components/companies/company-marketplace-org-card";
 import CompanyProjectsSection from "@/components/companies/company-projects-section";
@@ -147,6 +148,8 @@ export type CompanyViewShellProps = {
   companyPlanDetails?: CompanyPlanDetailsPayload;
   /** LMS add-on opt-in for this company (`saas_lms_enabled` setting). */
   lmsOrgEnabled?: boolean;
+  /** Event Platform add-on opt-in for this company (`saas_event_platform_enabled` setting). */
+  eventPlatformOrgEnabled?: boolean;
   /** Marketplace add-on opt-in for this company (`saas_marketplace_enabled` setting). */
   marketplaceOrgEnabled?: boolean;
   /** Synced user avatar — matches companies list column. */
@@ -222,6 +225,7 @@ export default function CompanyViewShell(props: CompanyViewShellProps) {
     canDeletePlans = false,
     companyPlanDetails = null,
     lmsOrgEnabled = false,
+    eventPlatformOrgEnabled = false,
     marketplaceOrgEnabled = false,
     avatar = null,
   } = props;
@@ -358,6 +362,8 @@ export default function CompanyViewShell(props: CompanyViewShellProps) {
               </div>
 
               <CompanyLmsOrgCard companyId={companyId} initialEnabled={lmsOrgEnabled} />
+
+              <CompanyEventPlatformOrgCard companyId={companyId} initialEnabled={eventPlatformOrgEnabled} />
 
               <CompanyMarketplaceOrgCard companyId={companyId} initialEnabled={marketplaceOrgEnabled} />
 

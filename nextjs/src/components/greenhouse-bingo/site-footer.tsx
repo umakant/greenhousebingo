@@ -16,10 +16,10 @@ export function SiteFooter() {
           <div>
             <Image
               src={GH_BINGO_LOGO_SRC}
-              alt="Greenhouse Bingo"
-              width={170}
-              height={56}
-              className="h-auto w-[170px] max-w-full"
+              alt="Greenhouse BINGO"
+              width={200}
+              height={72}
+              className="h-auto w-full max-w-[200px] object-contain"
               unoptimized
             />
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
@@ -130,10 +130,10 @@ export function SiteFooter() {
             <div className="mt-4">
               <Image
                 src={GH_BINGO_POWERED_BY_SRC}
-                alt="Powered by Greenhouse BINGO!"
-                width={150}
-                height={36}
-                className="h-auto w-[150px] max-w-full"
+                alt="Powered by Greenhouse BINGO"
+                width={220}
+                height={80}
+                className="h-auto w-full max-w-[220px] object-contain"
                 unoptimized
               />
             </div>

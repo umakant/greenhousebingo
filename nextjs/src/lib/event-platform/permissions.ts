@@ -49,7 +49,7 @@ export const EVENT_PLATFORM_PERMISSION_LABELS: Record<EventPlatformPermission, s
   "reports.view": "View Event Platform Reports",
 };
 
-/** Permissions granted to company/staff roles when LMS add-on is active. */
+/** Permissions granted to company/staff roles when Event Platform add-on is active. */
 export const EVENT_PLATFORM_COMPANY_DEFAULT_PERMISSIONS: readonly EventPlatformPermission[] = [
   "manage-event-platform",
   "events.view",
@@ -75,7 +75,6 @@ export function userHasEventPlatformPermission(
 ): boolean {
   if (permissions.includes("*")) return true;
   if (permissions.includes(EVENT_PLATFORM_UMBRELLA)) return true;
-  if (permissions.includes("manage-lms")) return true;
   if (
     permissions.includes("manage-lms-events") &&
     (required === "events.view" ||

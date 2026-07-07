@@ -86,6 +86,21 @@ export const LMS_EVENT_DELIVERY_MODES = ["online", "in_person", "hybrid"] as con
 
 export type LmsEventDeliveryMode = (typeof LMS_EVENT_DELIVERY_MODES)[number];
 
+/** Plant Bingo / community event age restrictions shown on public event pages. */
+export const LMS_EVENT_AGE_RULES = ["21+", "Family", "All ages"] as const;
+export type LmsEventAgeRule = (typeof LMS_EVENT_AGE_RULES)[number];
+
+/** Venue category badge (Brewery, Greenhouse, etc.). */
+export const LMS_EVENT_VENUE_TYPES = [
+  "Brewery",
+  "Greenhouse",
+  "Cidery",
+  "Taproom",
+  "Nursery",
+  "Beer Hall",
+] as const;
+export type LmsEventVenueType = (typeof LMS_EVENT_VENUE_TYPES)[number];
+
 /** Future RBAC — seeded in Phase 5. */
 export const LMS_EVENT_PERMISSIONS = {
   view: "view-lms-events",

@@ -35,6 +35,7 @@ export async function register() {
       await ensureRoutingSetup(prisma);
       const { ensureEventPlatformSetup } = await import("@/lib/event-platform/event-platform-permissions");
       await ensureEventPlatformSetup();
+      await ensureEventPlatformPlanMigration(prisma);
       const { ensureMarketplaceSetup } = await import("@/lib/marketplace-permissions");
       await ensureMarketplaceSetup();
       await ensurePlanModulesIncludeAddons(prisma);
@@ -86,6 +87,29 @@ async function ensurePlanModulesIncludeAddons(prisma: any) {
     }
   } catch (err) {
     console.error("[instrumentation] ensurePlanModulesIncludeAddons failed:", err);
+  }
+}
+
+/**
+ * Plans that include LMS historically bundled Event Platform access. Add EventPlatform to those
+ * plans so existing tenants keep access until a superadmin removes it from the plan.
+ */
+async function ensureEventPlatformPlanMigration(prisma: any) {
+  try {
+    const plans = await prisma.plan.findMany({ select: { id: true, name: true, modules: true } });
+    for (const plan of plans) {
+      const existing: string[] = Array.isArray(plan.modules) ? plan.modules : [];
+      if (existing.length === 0) continue;
+      const existingLower = existing.map((m: string) => m.toLowerCase());
+      const hasLms = existingLower.some((m) => m === "lms");
+      const hasEventPlatform = existingLower.some((m) => m === "eventplatform");
+      if (!hasLms || hasEventPlatform) continue;
+      const updated = [...existing, "EventPlatform"];
+      await prisma.plan.update({ where: { id: plan.id }, data: { modules: updated } });
+      console.log(`[instrumentation] plan "${plan.name}": added EventPlatform (LMS bundle migration)`);
+    }
+  } catch (err) {
+    console.error("[instrumentation] ensureEventPlatformPlanMigration failed:", err);
   }
 }
 

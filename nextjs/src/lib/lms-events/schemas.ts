@@ -2,9 +2,11 @@ import { z } from "zod";
 
 import {
   LMS_BOOKING_STATUSES,
+  LMS_EVENT_AGE_RULES,
   LMS_EVENT_DELIVERY_MODES,
   LMS_EVENT_STATUSES,
   LMS_EVENT_TYPES,
+  LMS_EVENT_VENUE_TYPES,
   LMS_TICKET_STATUSES,
 } from "@/lib/lms-events/constants";
 
@@ -71,7 +73,22 @@ export const lmsEventLocationSchema = z.object({
   venueState: z.string().trim().optional(),
   venuePostalCode: z.string().trim().optional(),
   venueCountry: z.string().trim().optional(),
+  venueLat: z.coerce.number().optional().nullable(),
+  venueLng: z.coerce.number().optional().nullable(),
   onlineMeetingUrl: z.string().url().optional().or(z.literal("")),
+});
+
+/** Plant Bingo / community event experience fields (public detail page). */
+export const lmsEventExperienceSchema = z.object({
+  isFeatured: z.boolean().default(false),
+  ageRule: z.enum(LMS_EVENT_AGE_RULES).optional().nullable(),
+  doorsOpen: z.string().trim().max(32).optional(),
+  bingoStart: z.string().trim().max(32).optional(),
+  venueType: z.enum(LMS_EVENT_VENUE_TYPES).optional().nullable(),
+  cardsIncluded: z.coerce.number().int().positive().optional().nullable(),
+  extraCardPrice: z.coerce.number().min(0).optional().nullable(),
+  foodAndDrinks: z.string().trim().optional(),
+  attire: z.string().trim().max(128).optional(),
 });
 
 export const lmsEventTicketFormSchema = z.object({
@@ -94,9 +111,32 @@ export const lmsEventSettingsSchema = z.object({
   status: z.enum(LMS_EVENT_STATUSES).default("draft"),
 });
 
+/** Plant Bingo public event page content (hero, host, sponsor, FAQs, rounds). */
+export const lmsEventPageContentSchema = z.object({
+  regionTag: z.string().trim().max(32).optional(),
+  heroTagline: z.string().trim().optional(),
+  descriptionTitle: z.string().trim().optional(),
+  bingoEnd: z.string().trim().max(32).optional(),
+  venuePhone: z.string().trim().max(32).optional(),
+  agePolicyText: z.string().trim().optional(),
+  cardFeePercent: z.coerce.number().min(0).max(100).optional().nullable(),
+  soldOut: z.boolean().default(false),
+  hostName: z.string().trim().optional(),
+  hostBio: z.string().trim().optional(),
+  hostImageUrl: z.string().trim().url().optional().or(z.literal("")),
+  sponsorName: z.string().trim().optional(),
+  sponsorAddress: z.string().trim().optional(),
+  sponsorPhone: z.string().trim().max(32).optional(),
+  sponsorPerk: z.string().trim().optional(),
+  whatsIncludedText: z.string().trim().optional(),
+  checkInStepsText: z.string().trim().optional(),
+});
+
 export const lmsEventCreateWizardSchema = lmsEventBasicInfoSchema
   .merge(lmsEventScheduleSchema)
   .merge(lmsEventLocationSchema)
+  .merge(lmsEventExperienceSchema)
+  .merge(lmsEventPageContentSchema)
   .merge(lmsEventTicketFormSchema)
   .merge(lmsEventSettingsSchema);
 

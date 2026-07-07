@@ -107,6 +107,15 @@ export function mapDbEvent(row: DbEvent): LmsEvent {
     certificationName: row.certificationName,
     requirements: row.requirements,
     cancellationPolicy: row.cancellationPolicy,
+    isFeatured: row.isFeatured,
+    ageRule: row.ageRule,
+    doorsOpen: row.doorsOpen,
+    bingoStart: row.bingoStart,
+    venueType: row.venueType,
+    cardsIncluded: row.cardsIncluded,
+    extraCardPrice: row.extraCardPrice != null ? num(row.extraCardPrice) : null,
+    foodAndDrinks: row.foodAndDrinks,
+    attire: row.attire,
     linkedCourseId: row.linkedCourseId ? idStr(row.linkedCourseId) : null,
     linkedLiveSessionId: row.linkedLiveSessionId ? idStr(row.linkedLiveSessionId) : null,
     revenueTotal: num(row.revenueTotal),
@@ -309,6 +318,8 @@ export class LmsEventDbRepository {
           venueState: input.deliveryMode === "online" ? null : input.venueState?.trim() || null,
           venuePostalCode: input.deliveryMode === "online" ? null : input.venuePostalCode?.trim() || null,
           venueCountry: input.deliveryMode === "online" ? null : input.venueCountry?.trim() || null,
+          venueLat: input.deliveryMode === "online" ? null : input.venueLat ?? null,
+          venueLng: input.deliveryMode === "online" ? null : input.venueLng ?? null,
           onlineMeetingUrl:
             input.deliveryMode === "in_person" ? null : input.onlineMeetingUrl?.trim() || null,
           capacity: input.capacity ?? input.quantity ?? null,
@@ -321,6 +332,16 @@ export class LmsEventDbRepository {
           certificationName: input.certificationName?.trim() || null,
           requirements: input.requirements?.trim() || null,
           cancellationPolicy: input.cancellationPolicy?.trim() || null,
+          isFeatured: input.isFeatured ?? false,
+          ageRule: input.ageRule ?? null,
+          doorsOpen: input.doorsOpen?.trim() || null,
+          bingoStart: input.bingoStart?.trim() || null,
+          venueType: input.venueType ?? null,
+          cardsIncluded: input.cardsIncluded ?? null,
+          extraCardPrice:
+            input.extraCardPrice != null && input.extraCardPrice > 0 ? input.extraCardPrice : null,
+          foodAndDrinks: input.foodAndDrinks?.trim() || null,
+          attire: input.attire?.trim() || null,
           revenueTotal: 0,
           createdById: actorId,
           updatedById: actorId,
@@ -346,6 +367,25 @@ export class LmsEventDbRepository {
           updatedById: actorId,
         },
       });
+
+      if (input.extraCardPrice != null && input.extraCardPrice > 0) {
+        await tx.lmsEventTicket.create({
+          data: {
+            organizationId: orgId,
+            eventId: eventRow.id,
+            name: "Extra bingo card",
+            description: "Additional bingo card for the same event",
+            price: input.extraCardPrice,
+            currency: input.currency || "USD",
+            quantity: null,
+            soldCount: 0,
+            ticketStatus: "available",
+            isFree: false,
+            createdById: actorId,
+            updatedById: actorId,
+          },
+        });
+      }
 
       return { eventRow, ticketRow };
     });

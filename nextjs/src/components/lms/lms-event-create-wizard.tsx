@@ -15,13 +15,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
+import { GoogleBusinessInput } from "@/components/account/google-business-input";
 import {
+  LMS_EVENT_AGE_RULES,
   LMS_EVENT_DELIVERY_MODES,
   LMS_EVENT_STATUS_LABELS,
   LMS_EVENT_TYPES,
   LMS_EVENT_TYPE_LABELS,
+  LMS_EVENT_VENUE_TYPES,
 } from "@/lib/lms-events/constants";
 import type { LmsEventCreateWizardInput } from "@/lib/lms-events/schemas";
+import { DEFAULT_HERO_TAGLINE } from "@/lib/lms-events/event-detail-content";
 import type { LmsEventCategory } from "@/lib/lms-events/types";
 import { cn } from "@/lib/utils";
 
@@ -53,7 +58,35 @@ const DEFAULT_VALUES: LmsEventCreateWizardInput = {
   venueState: "",
   venuePostalCode: "",
   venueCountry: "US",
+  venueLat: null,
+  venueLng: null,
   onlineMeetingUrl: "",
+  isFeatured: false,
+  ageRule: "21+",
+  doorsOpen: "",
+  bingoStart: "",
+  venueType: "Brewery",
+  cardsIncluded: 2,
+  extraCardPrice: 5,
+  foodAndDrinks: "",
+  attire: "Casual",
+  regionTag: "",
+  heroTagline: DEFAULT_HERO_TAGLINE,
+  descriptionTitle: "",
+  bingoEnd: "",
+  venuePhone: "",
+  agePolicyText: "",
+  cardFeePercent: 3.5,
+  soldOut: false,
+  hostName: "",
+  hostBio: "",
+  hostImageUrl: "",
+  sponsorName: "",
+  sponsorAddress: "",
+  sponsorPhone: "",
+  sponsorPerk: "",
+  whatsIncludedText: "",
+  checkInStepsText: "",
   ticketName: "General admission",
   ticketDescription: "",
   price: 0,
@@ -281,6 +314,60 @@ export function LmsEventCreateWizard(props: {
               placeholder="https://…"
             />
           </div>
+
+          <div className="rounded-lg border bg-muted/20 p-4 space-y-4">
+            <p className="text-sm font-medium">Plant Bingo / community event details</p>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="ev-featured"
+                checked={values.isFeatured}
+                onCheckedChange={(v) => patch({ isFeatured: v === true })}
+              />
+              <Label htmlFor="ev-featured" className="font-normal">
+                Featured on events page
+              </Label>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Age rule</Label>
+                <Select
+                  value={values.ageRule ?? undefined}
+                  onValueChange={(v) => patch({ ageRule: v as LmsEventCreateWizardInput["ageRule"] })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select age rule" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LMS_EVENT_AGE_RULES.map((rule) => (
+                      <SelectItem key={rule} value={rule}>
+                        {rule}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {values.deliveryMode !== "online" ? (
+                <div className="space-y-2">
+                  <Label>Venue type</Label>
+                  <Select
+                    value={values.venueType ?? undefined}
+                    onValueChange={(v) => patch({ venueType: v as LmsEventCreateWizardInput["venueType"] })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Brewery, Greenhouse…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LMS_EVENT_VENUE_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
       ) : null}
 
@@ -319,15 +406,85 @@ export function LmsEventCreateWizard(props: {
             <Input id="ev-tz" value={values.timezone} onChange={(e) => patch({ timezone: e.target.value })} />
           </div>
 
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="ev-doors">Doors open</Label>
+              <Input
+                id="ev-doors"
+                value={values.doorsOpen ?? ""}
+                onChange={(e) => patch({ doorsOpen: e.target.value })}
+                placeholder="6:00 PM"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ev-bingo">Bingo starts</Label>
+              <Input
+                id="ev-bingo"
+                value={values.bingoStart ?? ""}
+                onChange={(e) => patch({ bingoStart: e.target.value })}
+                placeholder="7:00 PM"
+              />
+            </div>
+          </div>
+
           {values.deliveryMode !== "online" ? (
             <>
               <div className="space-y-2">
                 <Label htmlFor="ev-venue">Venue name</Label>
-                <Input id="ev-venue" value={values.venueName ?? ""} onChange={(e) => patch({ venueName: e.target.value })} />
+                <GoogleBusinessInput
+                  id="ev-venue"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-50"
+                  value={values.venueName ?? ""}
+                  onChange={(v) => patch({ venueName: v })}
+                  onBusinessSelected={(result) => {
+                    const addr = result.address;
+                    patch({
+                      venueName: result.name || values.venueName,
+                      venueAddress:
+                        addr?.address_line_1 || result.formattedAddress || values.venueAddress,
+                      venueCity: addr?.city || values.venueCity,
+                      venueState: addr?.state || values.venueState,
+                      venuePostalCode: addr?.zip_code || values.venuePostalCode,
+                      venueCountry: addr?.country_code || values.venueCountry,
+                      venueLat: result.latitude ?? values.venueLat,
+                      venueLng: result.longitude ?? values.venueLng,
+                    });
+                  }}
+                  placeholder="Search for a venue or business…"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Search Google Places to pick a brewery, nursery, or other venue — address and map coordinates fill in automatically.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="ev-address">Address</Label>
-                <Input id="ev-address" value={values.venueAddress ?? ""} onChange={(e) => patch({ venueAddress: e.target.value })} />
+                <AddressAutocomplete
+                  id="ev-address"
+                  value={values.venueAddress ?? ""}
+                  onChange={(v) => patch({ venueAddress: v })}
+                  onPlaceSelect={(parsed) => {
+                    patch({
+                      venueAddress: parsed.street || parsed.formattedAddress || values.venueAddress,
+                      venueCity: parsed.city || values.venueCity,
+                      venueState: parsed.state || values.venueState,
+                      venuePostalCode: parsed.zip || values.venuePostalCode,
+                      venueCountry: parsed.countryCode || values.venueCountry,
+                      venueLat:
+                        parsed.latitude != null && Number.isFinite(parsed.latitude)
+                          ? parsed.latitude
+                          : values.venueLat,
+                      venueLng:
+                        parsed.longitude != null && Number.isFinite(parsed.longitude)
+                          ? parsed.longitude
+                          : values.venueLng,
+                    });
+                  }}
+                  placeholder="Start typing an address…"
+                  inputProps={{ autoComplete: "off" }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Or search by street address — city, state, ZIP, and coordinates update when you pick a suggestion.
+                </p>
               </div>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-2">
@@ -341,6 +498,30 @@ export function LmsEventCreateWizard(props: {
                 <div className="space-y-2">
                   <Label htmlFor="ev-zip">Postal code</Label>
                   <Input id="ev-zip" value={values.venuePostalCode ?? ""} onChange={(e) => patch({ venuePostalCode: e.target.value })} />
+                </div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="ev-lat">Venue latitude</Label>
+                  <Input
+                    id="ev-lat"
+                    type="number"
+                    step="any"
+                    value={values.venueLat ?? ""}
+                    onChange={(e) => patch({ venueLat: e.target.value ? Number(e.target.value) : null })}
+                    placeholder="44.998"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ev-lng">Venue longitude</Label>
+                  <Input
+                    id="ev-lng"
+                    type="number"
+                    step="any"
+                    value={values.venueLng ?? ""}
+                    onChange={(e) => patch({ venueLng: e.target.value ? Number(e.target.value) : null })}
+                    placeholder="-93.246"
+                  />
                 </div>
               </div>
             </>
@@ -426,6 +607,51 @@ export function LmsEventCreateWizard(props: {
               value={values.ticketDescription ?? ""}
               onChange={(e) => patch({ ticketDescription: e.target.value })}
             />
+          </div>
+
+          <div className="rounded-lg border bg-muted/20 p-4 space-y-4">
+            <p className="text-sm font-medium">Ticket inclusions & experience</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="ev-cards">Bingo cards included</Label>
+                <Input
+                  id="ev-cards"
+                  type="number"
+                  min={1}
+                  value={values.cardsIncluded ?? ""}
+                  onChange={(e) => patch({ cardsIncluded: e.target.value ? Number(e.target.value) : null })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ev-extra-card">Extra card price (USD)</Label>
+                <Input
+                  id="ev-extra-card"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={values.extraCardPrice ?? ""}
+                  onChange={(e) => patch({ extraCardPrice: e.target.value ? Number(e.target.value) : null })}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ev-food">Food & drinks</Label>
+              <Input
+                id="ev-food"
+                value={values.foodAndDrinks ?? ""}
+                onChange={(e) => patch({ foodAndDrinks: e.target.value })}
+                placeholder="Wood-fired pizza + full bar"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ev-attire">Attire</Label>
+              <Input
+                id="ev-attire"
+                value={values.attire ?? ""}
+                onChange={(e) => patch({ attire: e.target.value })}
+                placeholder="Casual"
+              />
+            </div>
           </div>
         </div>
       ) : null}
@@ -535,6 +761,32 @@ export function LmsEventCreateWizard(props: {
                 {values.ticketName} · {values.isFree ? "Free" : `$${values.price.toFixed(2)}`}
               </dd>
             </div>
+            {values.ageRule ? (
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Age / venue</dt>
+                <dd className="text-right">
+                  {values.ageRule}
+                  {values.venueType ? ` · ${values.venueType}` : ""}
+                </dd>
+              </div>
+            ) : null}
+            {values.doorsOpen || values.bingoStart ? (
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Doors / Bingo</dt>
+                <dd className="text-right">
+                  {[values.doorsOpen, values.bingoStart].filter(Boolean).join(" · ")}
+                </dd>
+              </div>
+            ) : null}
+            {values.cardsIncluded != null ? (
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Included / extra card</dt>
+                <dd className="text-right">
+                  {values.cardsIncluded} cards
+                  {values.extraCardPrice != null ? ` · extra $${values.extraCardPrice}` : ""}
+                </dd>
+              </div>
+            ) : null}
           </dl>
         </div>
       ) : null}

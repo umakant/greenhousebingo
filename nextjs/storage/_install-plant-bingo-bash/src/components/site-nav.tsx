@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import logoUrl from "@/assets/logo.png";
+import logoUrl from "@/assets/the-social-greenhouse-logo.png";
 import {
   Menu,
   X,
@@ -26,7 +26,11 @@ export function SiteNav() {
       <div className="glass border-b border-white/40">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
           <Link to="/" className="flex items-center">
-            <img src={logoUrl} alt="Greenhouse Bingo" className="h-14 w-auto md:h-16" />
+            <img
+              src={logoUrl}
+              alt="The Social Greenhouse"
+              className="h-10 w-auto max-w-[min(100%,200px)] object-contain md:h-11"
+            />
           </Link>
 
           <nav className="hidden items-center gap-1 lg:flex">

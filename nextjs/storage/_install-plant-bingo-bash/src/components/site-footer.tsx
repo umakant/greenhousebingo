@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import logoUrl from "@/assets/logo.png";
+import brandLogoUrl from "@/assets/social-greenhouse-dark.png";
+import poweredByLogoUrl from "@/assets/PB_GreenhouseBingo_dark.png";
 import { Instagram, Facebook, Twitter, Youtube } from "lucide-react";
 
 export function SiteFooter() {
@@ -10,7 +11,11 @@ export function SiteFooter() {
       <div className="relative mx-auto max-w-7xl px-6 py-16 lg:px-8">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div>
-            <img src={logoUrl} alt="Greenhouse Bingo" className="h-14 w-auto" />
+            <img
+              src={brandLogoUrl}
+              alt="The Social Greenhouse"
+              className="h-auto w-full max-w-[220px] object-contain"
+            />
             <p className="mt-4 text-sm text-cream/70 max-w-xs">
               Play Bingo. Win Plants. Every registered guest goes home with something beautiful.
             </p>
@@ -58,7 +63,11 @@ export function SiteFooter() {
               </button>
             </form>
             <div className="mt-6">
-              <img src={logoUrl} alt="Greenhouse Bingo" className="h-16 w-auto" />
+              <img
+                src={poweredByLogoUrl}
+                alt="Powered by Greenhouse BINGO"
+                className="h-auto w-full max-w-[200px] object-contain"
+              />
             </div>
           </div>
         </div>

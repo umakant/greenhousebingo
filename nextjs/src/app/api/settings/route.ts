@@ -15,7 +15,9 @@ import {
 } from "@/lib/settings-service";
 import { getSettingsPageDataForUserEmail } from "@/lib/settings-page-data";
 import { companyWebsiteOwnerId } from "@/lib/company-themes/company-website-access";
+import { findCompanyOwnerIdByWebsiteHostname } from "@/lib/company-themes/company-website-host-resolver";
 import { syncCompanyUserAvatarFromSettings } from "@/lib/company-user-avatar";
+import { normalizeWebsiteUrl, websiteUrlToHostname } from "@/lib/website-url";
 
 function appUrlFromReq(req: NextRequest): string {
   const env = (process.env.NEXT_PUBLIC_APP_URL ?? "").trim();
@@ -117,6 +119,7 @@ const SECTION_KEYS: Record<Section, string[]> = {
   "logo_dark_height",
   "logo_light_width",
   "logo_light_height",
+  "logo_position",
   "favicon",
     "logo_icon",
     "powered_by_light",
@@ -136,6 +139,7 @@ const SECTION_KEYS: Record<Section, string[]> = {
   "company-website-theme": [
     "companyNextjsThemeSlug",
     "companyNextjsThemeCustomizer",
+    "companyWebsite",
     "companyWebsitePasswordProtected",
     "companyWebsiteAccessPassword",
   ],
@@ -359,6 +363,20 @@ export async function POST(req: NextRequest) {
       payload.companyWebsitePasswordProtected = "0";
     } else {
       payload.companyWebsitePasswordProtected = "1";
+    }
+    if (Object.prototype.hasOwnProperty.call(payload, "companyWebsite")) {
+      const normalized = normalizeWebsiteUrl(normalizeValue(payload.companyWebsite));
+      payload.companyWebsite = normalized;
+      if (normalized) {
+        const host = websiteUrlToHostname(normalized);
+        const existingOwner = await findCompanyOwnerIdByWebsiteHostname(host);
+        if (existingOwner != null && existingOwner !== ownerId) {
+          return NextResponse.json(
+            { ok: false, message: "That domain is already connected to another company." },
+            { status: 400 },
+          );
+        }
+      }
     }
   }
 

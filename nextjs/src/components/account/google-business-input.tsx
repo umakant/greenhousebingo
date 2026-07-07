@@ -21,6 +21,8 @@ export type GoogleBusinessResult = {
   phone: string;
   formattedAddress: string;
   address: GoogleAddressParsed | null;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 function ensurePacContainerOnTop() {
@@ -84,7 +86,14 @@ export function GoogleBusinessInput({
 
       const opts: google.maps.places.AutocompleteOptions = {
         types: ["establishment"],
-        fields: ["name", "formatted_address", "address_components", "formatted_phone_number", "international_phone_number"],
+        fields: [
+          "name",
+          "formatted_address",
+          "address_components",
+          "formatted_phone_number",
+          "international_phone_number",
+          "geometry.location",
+        ],
       };
       if (COUNTRY_RESTRICTION) {
         opts.componentRestrictions = { country: COUNTRY_RESTRICTION };
@@ -99,12 +108,26 @@ export function GoogleBusinessInput({
           ? parseGoogleAddressComponents(place.address_components)
           : null;
         const phone = place.formatted_phone_number ?? place.international_phone_number ?? "";
+        const loc = place.geometry?.location;
+        let latitude: number | null = null;
+        let longitude: number | null = null;
+        if (loc && typeof loc.lat === "function" && typeof loc.lng === "function") {
+          try {
+            latitude = loc.lat();
+            longitude = loc.lng();
+          } catch {
+            latitude = null;
+            longitude = null;
+          }
+        }
         if (name) onChangeRef.current(name);
         onSelectedRef.current({
           name,
           phone,
           formattedAddress: place.formatted_address ?? "",
           address,
+          latitude,
+          longitude,
         });
       });
     };

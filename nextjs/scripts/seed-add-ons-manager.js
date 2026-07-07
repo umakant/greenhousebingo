@@ -23,6 +23,7 @@ const ADDONS = [
   { module: "Appointment", name: "Appointment", packageName: "appointment", priority: 70, forAdmin: false },
   { module: "Storefront", name: "Storefronts", packageName: "storefront", priority: 75, forAdmin: false },
   { module: "Lms", name: "LMS", packageName: "lms", priority: 76, forAdmin: false },
+  { module: "EventPlatform", name: "Event Platform", packageName: "eventplatform", priority: 77, forAdmin: false },
   { module: "Routing", name: "Routing", packageName: "routing", priority: 52, forAdmin: false },
   { module: "AffiliateBusiness", name: "Affiliate Business", packageName: "affiliatebusiness", priority: 77, forAdmin: false },
   { module: "Compliance", name: "Compliance", packageName: "compliance", priority: 78, forAdmin: false },

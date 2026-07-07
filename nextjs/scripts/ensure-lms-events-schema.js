@@ -105,6 +105,21 @@ async function main() {
         ON lms_events(organization_id, status, starts_at);
     `);
 
+    const experienceColumns = [
+      "ALTER TABLE lms_events ADD COLUMN IF NOT EXISTS is_featured BOOLEAN NOT NULL DEFAULT false",
+      "ALTER TABLE lms_events ADD COLUMN IF NOT EXISTS age_rule VARCHAR(32) NULL",
+      "ALTER TABLE lms_events ADD COLUMN IF NOT EXISTS doors_open VARCHAR(32) NULL",
+      "ALTER TABLE lms_events ADD COLUMN IF NOT EXISTS bingo_start VARCHAR(32) NULL",
+      "ALTER TABLE lms_events ADD COLUMN IF NOT EXISTS venue_type VARCHAR(64) NULL",
+      "ALTER TABLE lms_events ADD COLUMN IF NOT EXISTS cards_included INTEGER NULL",
+      "ALTER TABLE lms_events ADD COLUMN IF NOT EXISTS extra_card_price DECIMAL(12,2) NULL",
+      "ALTER TABLE lms_events ADD COLUMN IF NOT EXISTS food_and_drinks TEXT NULL",
+      "ALTER TABLE lms_events ADD COLUMN IF NOT EXISTS attire VARCHAR(128) NULL",
+    ];
+    for (const sql of experienceColumns) {
+      await pg.query(`${sql};`);
+    }
+
     await pg.query(`
       CREATE TABLE IF NOT EXISTS lms_event_tickets (
         id BIGSERIAL PRIMARY KEY,

@@ -15,6 +15,7 @@ export type CompanyNextjsTheme = {
 const LEGACY_THEME_SLUGS: Record<string, string> = {
   "crimson-consulting": "plant-bingo-bash",
   "win-with-barlow-securx": "plant-bingo-bash",
+  "DN-0001-CO-26": "plant-bingo-bash",
 };
 
 const PLANT_BINGO_BASH_THEME: CompanyNextjsTheme = {
