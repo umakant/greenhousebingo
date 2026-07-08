@@ -1,5 +1,10 @@
 import "server-only";
 
+import {
+  defaultEventPlatformEventFormSettings,
+  mergeEventFormSettings,
+  type EventPlatformEventFormSettings,
+} from "@/lib/event-platform/event-form-options";
 import { getSettingsForOwner, upsertOwnerSettings } from "@/lib/settings-service";
 
 /** Settings keys stored in tenant `settings` table (owner = organizationId). */
@@ -50,6 +55,7 @@ export const EP_SETTINGS_KEYS = {
   emailTemplatesJson: "ep_email_templates_json",
   languagesJson: "ep_languages_json",
   translationsJson: "ep_translations_json",
+  eventFormOptionsJson: "ep_event_form_options_json",
 } as const;
 
 export type EventPlatformCurrencySettings = {
@@ -427,6 +433,29 @@ export async function writeEventPlatformTranslations(
 ): Promise<void> {
   await upsertOwnerSettings(organizationId, [
     { key: EP_SETTINGS_KEYS.translationsJson, value: JSON.stringify(translations) },
+  ]);
+}
+
+export async function readEventPlatformEventFormSettings(
+  organizationId: bigint,
+): Promise<EventPlatformEventFormSettings> {
+  const s = await getSettingsForOwner(organizationId);
+  const raw = s[EP_SETTINGS_KEYS.eventFormOptionsJson]?.trim();
+  if (!raw) return defaultEventPlatformEventFormSettings();
+  try {
+    const parsed = JSON.parse(raw) as Partial<EventPlatformEventFormSettings>;
+    return mergeEventFormSettings(parsed);
+  } catch {
+    return defaultEventPlatformEventFormSettings();
+  }
+}
+
+export async function writeEventPlatformEventFormSettings(
+  organizationId: bigint,
+  settings: EventPlatformEventFormSettings,
+): Promise<void> {
+  await upsertOwnerSettings(organizationId, [
+    { key: EP_SETTINGS_KEYS.eventFormOptionsJson, value: JSON.stringify(settings) },
   ]);
 }
 

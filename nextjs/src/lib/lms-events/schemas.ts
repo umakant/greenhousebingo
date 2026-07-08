@@ -2,25 +2,21 @@ import { z } from "zod";
 
 import {
   LMS_BOOKING_STATUSES,
-  LMS_EVENT_AGE_RULES,
-  LMS_EVENT_DELIVERY_MODES,
   LMS_EVENT_STATUSES,
-  LMS_EVENT_TYPES,
-  LMS_EVENT_VENUE_TYPES,
   LMS_TICKET_STATUSES,
 } from "@/lib/lms-events/constants";
 
 export const lmsEventListFiltersSchema = z.object({
   search: z.string().trim().optional(),
   categoryId: z.string().trim().optional(),
-  eventType: z.enum(LMS_EVENT_TYPES).optional(),
+  eventType: z.string().trim().min(1).optional(),
   dateFrom: z.string().trim().optional(),
   dateTo: z.string().trim().optional(),
   location: z.string().trim().optional(),
   freeOnly: z.coerce.boolean().optional(),
   paidOnly: z.coerce.boolean().optional(),
   certificationOnly: z.coerce.boolean().optional(),
-  deliveryMode: z.enum(LMS_EVENT_DELIVERY_MODES).optional(),
+  deliveryMode: z.string().trim().min(1).optional(),
   status: z.union([z.enum(LMS_EVENT_STATUSES), z.array(z.enum(LMS_EVENT_STATUSES))]).optional(),
 });
 
@@ -49,10 +45,10 @@ export const lmsEventBasicInfoSchema = z.object({
   slug: z.string().trim().min(2).optional(),
   description: z.string().trim().optional(),
   shortDescription: z.string().trim().max(150).optional(),
-  imageUrl: z.string().trim().url().optional().or(z.literal("")),
+  imageUrl: z.string().trim().max(2048).optional().or(z.literal("")),
   categoryId: z.string().min(1, "Category is required"),
-  eventType: z.enum(LMS_EVENT_TYPES),
-  deliveryMode: z.enum(LMS_EVENT_DELIVERY_MODES),
+  eventType: z.string().trim().min(1, "Event type is required"),
+  deliveryMode: z.string().trim().min(1, "Format is required"),
   instructorName: z.string().trim().optional(),
   isPublic: z.boolean().default(true),
   certificationAvailable: z.boolean().default(false),
@@ -81,10 +77,10 @@ export const lmsEventLocationSchema = z.object({
 /** Plant Bingo / community event experience fields (public detail page). */
 export const lmsEventExperienceSchema = z.object({
   isFeatured: z.boolean().default(false),
-  ageRule: z.enum(LMS_EVENT_AGE_RULES).optional().nullable(),
+  ageRule: z.string().trim().optional().nullable(),
   doorsOpen: z.string().trim().max(32).optional(),
   bingoStart: z.string().trim().max(32).optional(),
-  venueType: z.enum(LMS_EVENT_VENUE_TYPES).optional().nullable(),
+  venueType: z.string().trim().optional().nullable(),
   cardsIncluded: z.coerce.number().int().positive().optional().nullable(),
   extraCardPrice: z.coerce.number().min(0).optional().nullable(),
   foodAndDrinks: z.string().trim().optional(),
@@ -123,7 +119,7 @@ export const lmsEventPageContentSchema = z.object({
   soldOut: z.boolean().default(false),
   hostName: z.string().trim().optional(),
   hostBio: z.string().trim().optional(),
-  hostImageUrl: z.string().trim().url().optional().or(z.literal("")),
+  hostImageUrl: z.string().trim().max(2048).optional().or(z.literal("")),
   sponsorName: z.string().trim().optional(),
   sponsorAddress: z.string().trim().optional(),
   sponsorPhone: z.string().trim().max(32).optional(),

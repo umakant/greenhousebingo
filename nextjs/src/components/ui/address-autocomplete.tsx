@@ -93,6 +93,11 @@ export interface AddressAutocompleteProps {
    * Pass `""` to disable restriction (worldwide).
    */
   countryRestriction?: string;
+  /**
+   * Google Places `types` for Autocomplete (default street addresses).
+   * Use `["geocode"]` for cities, regions, and addresses (e.g. event location search).
+   */
+  placeTypes?: string[];
 }
 
 function resolvePlacesCountry(prop: string | undefined): string {
@@ -123,6 +128,7 @@ export function AddressAutocomplete({
   disabled,
   apiKey: apiKeyProp,
   countryRestriction,
+  placeTypes = ["address"],
   inputProps,
 }: AddressAutocompleteProps) {
   const effectiveCountry = resolvePlacesCountry(countryRestriction);
@@ -198,7 +204,7 @@ export function AddressAutocomplete({
         fields: string[];
         componentRestrictions?: { country: string };
       } = {
-        types: ["address"],
+        types: placeTypes.length ? placeTypes : ["address"],
         fields: ["address_components", "formatted_address", "geometry.location"],
       };
       if (effectiveCountry) opts.componentRestrictions = { country: effectiveCountry };
@@ -243,7 +249,7 @@ export function AddressAutocomplete({
       }
       autocompleteRef.current = null;
     };
-  }, [scriptLoaded, effectiveCountry]);
+  }, [scriptLoaded, effectiveCountry, placeTypes]);
 
   if (!apiKey || noKey) {
     return (

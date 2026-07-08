@@ -200,7 +200,7 @@ export function LmsDashboard() {
       label: tr("Gross Revenue"),
       value: fmtMoney(stats.total_revenue),
       sub: `${stats.total_instructors} ${tr("instructors")}`,
-      href: "/admin/event-platform/subscriptions",
+      href: "/lms/analytics",
       icon: <DollarSign className="h-8 w-8" />,
       
       

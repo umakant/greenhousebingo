@@ -12,7 +12,7 @@ export default async function EventPlatformPaymentsOfflinePage() {
       permission="payments.manage"
       path="/admin/event-platform/payments/offline"
       title="Offline Methods"
-      breadcrumbs={[{ label: "Payment Gateways", url: "/admin/event-platform/payments" }, { label: "Offline" }]}
+      breadcrumbs={[{ label: "Settings", url: "/admin/event-platform/settings" }, { label: "Offline" }]}
     >
       <EventPlatformPaymentsOfflineAdmin />
     </EventPlatformPage>

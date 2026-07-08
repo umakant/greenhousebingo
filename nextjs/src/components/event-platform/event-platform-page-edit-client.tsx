@@ -44,7 +44,7 @@ export function EventPlatformPageEditClient({ pageId }: { pageId: string }) {
       } | null;
       if (!res.ok || !data?.ok || !data.item) {
         toast.error(data?.message ?? "Page not found.");
-        router.push(EVENT_PLATFORM_PATHS.pages);
+        router.push(EVENT_PLATFORM_PATHS.settings);
         return;
       }
       setForm({
@@ -94,7 +94,7 @@ export function EventPlatformPageEditClient({ pageId }: { pageId: string }) {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Edit page</CardTitle>
         <Button variant="ghost" size="sm" asChild>
-          <Link href={EVENT_PLATFORM_PATHS.pages}>← Pages</Link>
+          <Link href={EVENT_PLATFORM_PATHS.settings}>← Settings</Link>
         </Button>
       </CardHeader>
       <CardContent>

@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { EVENT_PLATFORM_PATHS } from "@/lib/event-platform/paths";
-
+/** Subscription plans are managed in superadmin at /plans. */
 export default function LmsSubscriptionsRedirectPage() {
-  redirect(EVENT_PLATFORM_PATHS.subscriptions);
+  redirect("/plans");
 }

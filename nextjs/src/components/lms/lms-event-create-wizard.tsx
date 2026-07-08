@@ -16,14 +16,15 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
+import { DatePickerInput } from "@/components/ui/date-picker-input";
+import { TimeInput12h } from "@/components/ui/time-input-12h";
 import { GoogleBusinessInput } from "@/components/account/google-business-input";
+import MediaPicker from "@/components/MediaPicker";
+import { useAppSettingsOptional } from "@/contexts/app-settings-context";
+import { useEventFormOptions } from "@/hooks/use-event-form-options";
 import {
-  LMS_EVENT_AGE_RULES,
-  LMS_EVENT_DELIVERY_MODES,
   LMS_EVENT_STATUS_LABELS,
-  LMS_EVENT_TYPES,
-  LMS_EVENT_TYPE_LABELS,
-  LMS_EVENT_VENUE_TYPES,
+  LMS_EVENT_STATUSES,
 } from "@/lib/lms-events/constants";
 import type { LmsEventCreateWizardInput } from "@/lib/lms-events/schemas";
 import { DEFAULT_HERO_TAGLINE } from "@/lib/lms-events/event-detail-content";
@@ -99,12 +100,35 @@ const DEFAULT_VALUES: LmsEventCreateWizardInput = {
   status: "registration_open",
 };
 
-function toLocalDatetimeInput(iso: string): string {
-  if (!iso) return "";
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+/** ISO timestamp → separate date (`YYYY-MM-DD`) and time (`HH:MM`) for themed pickers. */
+function splitIsoForControls(iso: string): { date: string; time: string } {
+  if (!iso) return { date: "", time: "" };
   const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return { date: "", time: "" };
+  return {
+    date: `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`,
+    time: `${pad2(d.getHours())}:${pad2(d.getMinutes())}`,
+  };
+}
+
+function combineDateTimeToIso(date: string, time: string): string {
+  if (!date.trim()) return "";
+  const safeTime = time.trim() || "00:00";
+  const [h, m] = safeTime.split(":").map((s) => Number.parseInt(s, 10) || 0);
+  const [yy, mm, dd] = date.split("-").map((s) => Number.parseInt(s, 10) || 0);
+  if (!yy || !mm || !dd) return "";
+  const d = new Date(yy, mm - 1, dd, h, m, 0, 0);
   if (Number.isNaN(d.getTime())) return "";
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return d.toISOString();
+}
+
+function patchEventDatetime(iso: string, patch: { date?: string; time?: string }): string {
+  const { date, time } = splitIsoForControls(iso);
+  return combineDateTimeToIso(patch.date ?? date, patch.time ?? time);
 }
 
 function StepIndicator({ current }: { current: number }) {
@@ -138,6 +162,10 @@ export function LmsEventCreateWizard(props: {
   onSavingChange?: (saving: boolean) => void;
 }) {
   const { mode = "create", categories, initialValues, onSubmit, onSavingChange } = props;
+  const appSettings = useAppSettingsOptional();
+  const googleMapsApiKey =
+    (appSettings?.settings?.googleMapsApiKey ?? "").trim() || undefined;
+  const formOptions = useEventFormOptions();
   const [step, setStep] = React.useState(0);
   const [values, setValues] = React.useState<LmsEventCreateWizardInput>(
     initialValues ? { ...DEFAULT_VALUES, ...initialValues } : DEFAULT_VALUES,
@@ -241,14 +269,14 @@ export function LmsEventCreateWizard(props: {
             </div>
             <div className="space-y-2">
               <Label>Event type</Label>
-              <Select value={values.eventType} onValueChange={(v) => patch({ eventType: v as LmsEventCreateWizardInput["eventType"] })}>
+              <Select value={values.eventType} onValueChange={(v) => patch({ eventType: v })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {LMS_EVENT_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {LMS_EVENT_TYPE_LABELS[t]}
+                  {formOptions.eventTypes.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -259,17 +287,17 @@ export function LmsEventCreateWizard(props: {
           <div className="space-y-2">
             <Label>Format</Label>
             <div className="grid gap-2 sm:grid-cols-2">
-              {LMS_EVENT_DELIVERY_MODES.map((mode) => (
+              {formOptions.deliveryModes.map((mode) => (
                 <button
-                  key={mode}
+                  key={mode.value}
                   type="button"
                   className={cn(
                     "rounded-lg border px-4 py-3 text-left text-sm transition",
-                    values.deliveryMode === mode ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/50",
+                    values.deliveryMode === mode.value ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/50",
                   )}
-                  onClick={() => patch({ deliveryMode: mode })}
+                  onClick={() => patch({ deliveryMode: mode.value })}
                 >
-                  <span className="font-medium capitalize">{mode.replace(/_/g, " ")}</span>
+                  <span className="font-medium">{mode.label}</span>
                 </button>
               ))}
             </div>
@@ -309,15 +337,13 @@ export function LmsEventCreateWizard(props: {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="ev-image">Event image URL</Label>
-            <Input
-              id="ev-image"
-              value={values.imageUrl ?? ""}
-              onChange={(e) => patch({ imageUrl: e.target.value })}
-              placeholder="https://…"
-            />
-          </div>
+          <MediaPicker
+            id="ev-image"
+            label="Event image"
+            value={values.imageUrl ?? ""}
+            onChange={(v) => patch({ imageUrl: typeof v === "string" ? v : v[0] ?? "" })}
+            placeholder="Select or upload an image…"
+          />
 
           <div className="rounded-lg border bg-muted/20 p-4 space-y-4">
             <p className="text-sm font-medium">Plant Bingo / community event details</p>
@@ -336,15 +362,15 @@ export function LmsEventCreateWizard(props: {
                 <Label>Age rule</Label>
                 <Select
                   value={values.ageRule ?? undefined}
-                  onValueChange={(v) => patch({ ageRule: v as LmsEventCreateWizardInput["ageRule"] })}
+                  onValueChange={(v) => patch({ ageRule: v })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select age rule" />
                   </SelectTrigger>
                   <SelectContent>
-                    {LMS_EVENT_AGE_RULES.map((rule) => (
-                      <SelectItem key={rule} value={rule}>
-                        {rule}
+                    {formOptions.ageRules.map((rule) => (
+                      <SelectItem key={rule.value} value={rule.value}>
+                        {rule.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -355,15 +381,15 @@ export function LmsEventCreateWizard(props: {
                   <Label>Venue type</Label>
                   <Select
                     value={values.venueType ?? undefined}
-                    onValueChange={(v) => patch({ venueType: v as LmsEventCreateWizardInput["venueType"] })}
+                    onValueChange={(v) => patch({ venueType: v })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Brewery, Greenhouse…" />
                     </SelectTrigger>
                     <SelectContent>
-                      {LMS_EVENT_VENUE_TYPES.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
+                      {formOptions.venueTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -379,35 +405,43 @@ export function LmsEventCreateWizard(props: {
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="ev-start">
+              <Label htmlFor="ev-start-date">
                 Starts <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="ev-start"
-                type="datetime-local"
-                value={toLocalDatetimeInput(values.startsAt)}
-                onChange={(e) =>
-                  patch({ startsAt: e.target.value ? new Date(e.target.value).toISOString() : "" })
-                }
-              />
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_minmax(0,220px)]">
+                <DatePickerInput
+                  id="ev-start-date"
+                  value={splitIsoForControls(values.startsAt).date}
+                  onChange={(e) => patch({ startsAt: patchEventDatetime(values.startsAt, { date: e.target.value }) })}
+                  placeholder="Pick start date"
+                />
+                <TimeInput12h
+                  id="ev-start-time"
+                  value={splitIsoForControls(values.startsAt).time}
+                  onChange={(time) => patch({ startsAt: patchEventDatetime(values.startsAt, { time }) })}
+                  aria-label="Start time"
+                />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ev-end">
+              <Label htmlFor="ev-end-date">
                 Ends <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="ev-end"
-                type="datetime-local"
-                value={toLocalDatetimeInput(values.endsAt)}
-                onChange={(e) =>
-                  patch({ endsAt: e.target.value ? new Date(e.target.value).toISOString() : "" })
-                }
-              />
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_minmax(0,220px)]">
+                <DatePickerInput
+                  id="ev-end-date"
+                  value={splitIsoForControls(values.endsAt).date}
+                  onChange={(e) => patch({ endsAt: patchEventDatetime(values.endsAt, { date: e.target.value }) })}
+                  placeholder="Pick end date"
+                />
+                <TimeInput12h
+                  id="ev-end-time"
+                  value={splitIsoForControls(values.endsAt).time}
+                  onChange={(time) => patch({ endsAt: patchEventDatetime(values.endsAt, { time }) })}
+                  aria-label="End time"
+                />
+              </div>
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="ev-tz">Timezone</Label>
-            <Input id="ev-tz" value={values.timezone} onChange={(e) => patch({ timezone: e.target.value })} />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -464,6 +498,7 @@ export function LmsEventCreateWizard(props: {
                 <Label htmlFor="ev-address">Address</Label>
                 <AddressAutocomplete
                   id="ev-address"
+                  apiKey={googleMapsApiKey}
                   value={values.venueAddress ?? ""}
                   onChange={(v) => patch({ venueAddress: v })}
                   onPlaceSelect={(parsed) => {
@@ -487,7 +522,7 @@ export function LmsEventCreateWizard(props: {
                   inputProps={{ autoComplete: "off" }}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Or search by street address — city, state, ZIP, and coordinates update when you pick a suggestion.
+                  Search by street address — city, state, ZIP, and coordinates update when you pick a Google suggestion.
                 </p>
               </div>
               <div className="grid gap-4 sm:grid-cols-3">
@@ -527,6 +562,14 @@ export function LmsEventCreateWizard(props: {
                     placeholder="-93.246"
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ev-tz">Timezone</Label>
+                <Input
+                  id="ev-tz"
+                  value={values.timezone}
+                  onChange={(e) => patch({ timezone: e.target.value })}
+                />
               </div>
             </>
           ) : null}

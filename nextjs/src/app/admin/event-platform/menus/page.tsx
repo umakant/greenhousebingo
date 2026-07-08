@@ -1,15 +1,7 @@
-import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
 
-import { EventPlatformPage } from "@/components/event-platform/event-platform-page";
+import { EVENT_PLATFORM_PATHS } from "@/lib/event-platform/paths";
 
-const EventPlatformMenusAdmin = dynamic(() =>
-  import("@/components/event-platform/event-platform-menus-admin").then((m) => m.EventPlatformMenusAdmin),
-);
-
-export default async function EventPlatformMenusPage() {
-  return (
-    <EventPlatformPage permission="menus.manage" path="/admin/event-platform/menus" title="Menu Builder">
-      <EventPlatformMenusAdmin />
-    </EventPlatformPage>
-  );
+export default function EventPlatformMenusRedirectPage() {
+  redirect(EVENT_PLATFORM_PATHS.settings);
 }

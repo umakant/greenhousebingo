@@ -31,6 +31,10 @@ export const LMS_EVENT_TYPE_LABELS: Record<LmsEventType, string> = {
   medical_training: "Medical training",
 };
 
+export function lmsEventTypeLabel(eventType: string): string {
+  return LMS_EVENT_TYPE_LABELS[eventType as LmsEventType] ?? eventType;
+}
+
 export const LMS_EVENT_STATUSES = [
   "draft",
   "published",

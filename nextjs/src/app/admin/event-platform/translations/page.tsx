@@ -1,17 +1,7 @@
-import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
 
-import { EventPlatformPage } from "@/components/event-platform/event-platform-page";
+import { EVENT_PLATFORM_PATHS } from "@/lib/event-platform/paths";
 
-const EventPlatformTranslationsAdmin = dynamic(() =>
-  import("@/components/event-platform/event-platform-translations-admin").then(
-    (m) => m.EventPlatformTranslationsAdmin,
-  ),
-);
-
-export default async function EventPlatformTranslationsPage() {
-  return (
-    <EventPlatformPage permission="settings.manage" path="/admin/event-platform/translations" title="Translations">
-      <EventPlatformTranslationsAdmin />
-    </EventPlatformPage>
-  );
+export default function EventPlatformTranslationsRedirectPage() {
+  redirect(EVENT_PLATFORM_PATHS.settings);
 }

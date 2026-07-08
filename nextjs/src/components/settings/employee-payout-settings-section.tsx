@@ -28,6 +28,7 @@ import {
   type EmployeePayoutDefaults,
 } from "@/lib/employee-payout-settings";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { parseJsonResponse } from "@/lib/safe-fetch-json";
 
 type ProjectOption = { id: number; name: string };
 type StaffOption = { user_id: number; name: string; email: string; roles: string[] };
@@ -97,7 +98,7 @@ export function EmployeePayoutSettingsSection({
   const loadRates = React.useCallback(async (projectId?: string) => {
     const qs = projectId && projectId !== "all" ? `?project_id=${projectId}` : "";
     const res = await fetch(`/api/settings/employee-payout${qs}`, { credentials: "include" });
-    const data = await res.json();
+    const data = await parseJsonResponse<{ defaults?: EmployeePayoutDefaults; rates?: EmployeePayRateRow[]; error?: string }>(res);
     if (!res.ok) throw new Error(data.error ?? "Failed to load pay rates");
     setDefaults(data.defaults ?? parseEmployeePayoutDefaults(initial.employee_payout_defaults));
     setRates(Array.isArray(data.rates) ? data.rates : []);
@@ -112,7 +113,9 @@ export function EmployeePayoutSettingsSection({
     setLoading(true);
     Promise.all([
       loadRates(projectFilter !== "all" ? projectFilter : undefined),
-      fetch("/api/project/list?per_page=100", { credentials: "include" }).then((r) => r.json()),
+      fetch("/api/project/list?per_page=100", { credentials: "include" }).then((r) =>
+        parseJsonResponse<{ data?: { id: number; name: string }[] }>(r),
+      ),
     ])
       .then(([, projectList]) => {
         if (cancelled) return;
@@ -136,7 +139,7 @@ export function EmployeePayoutSettingsSection({
       return;
     }
     fetch(`/api/project/${draftProjectId}/sow`, { credentials: "include" })
-      .then((r) => r.json())
+      .then((r) => parseJsonResponse<{ data?: StaffOption[] }>(r))
       .then((d) => {
         const rows = Array.isArray(d.data) ? d.data : [];
         setStaff(
@@ -168,7 +171,7 @@ export function EmployeePayoutSettingsSection({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ defaults }),
       });
-      const data = await res.json();
+      const data = await parseJsonResponse<{ error?: string }>(res);
       if (!res.ok) throw new Error(data.error ?? "Save failed");
       onFlash({ type: "success", message: "Default pay rates saved." });
       toast.success("Default pay rates saved.");
@@ -203,7 +206,7 @@ export function EmployeePayoutSettingsSection({
           },
         }),
       });
-      const data = await res.json();
+      const data = await parseJsonResponse<{ error?: string }>(res);
       if (!res.ok) throw new Error(data.error ?? "Save failed");
       await loadRates(projectFilter !== "all" ? projectFilter : undefined);
       toast.success("Project pay rate saved.");
@@ -225,7 +228,7 @@ export function EmployeePayoutSettingsSection({
         `/api/settings/employee-payout?project_id=${row.project_id}&user_id=${row.user_id}`,
         { method: "DELETE", credentials: "include" },
       );
-      const data = await res.json();
+      const data = await parseJsonResponse<{ error?: string }>(res);
       if (!res.ok) throw new Error(data.error ?? "Delete failed");
       setRates((prev) => prev.filter((r) => !(r.project_id === row.project_id && r.user_id === row.user_id)));
       toast.success("Pay rate removed.");

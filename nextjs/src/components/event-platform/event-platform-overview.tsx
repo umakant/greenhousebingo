@@ -14,7 +14,6 @@ import {
   Loader2,
   Mail,
   Map,
-  Palette,
   Plus,
   Settings,
   Store,
@@ -70,7 +69,7 @@ const QUICK_ACTIONS = [
   { label: "Categories", href: EVENT_PLATFORM_PATHS.events, icon: LayoutGrid },
   { label: "Commission", href: EVENT_PLATFORM_PATHS.commissions, icon: TrendingUp },
   { label: "Payouts", href: EVENT_PLATFORM_PATHS.payouts, icon: Wallet },
-  { label: "Payments", href: EVENT_PLATFORM_PATHS.payments, icon: DollarSign },
+  { label: "Payments", href: "/settings?tab=payment-settings", icon: DollarSign },
   { label: "Settings", href: EVENT_PLATFORM_PATHS.settings, icon: Settings },
 ];
 
@@ -642,19 +641,10 @@ export function EventPlatformOverview() {
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" asChild>
-                <Link href={EVENT_PLATFORM_PATHS.appearance}>
-                  <Palette className="mr-1 h-3.5 w-3.5" />
-                  Appearance
-                </Link>
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <Link href={EVENT_PLATFORM_PATHS.email}>
+                <Link href="/settings?tab=email">
                   <Mail className="mr-1 h-3.5 w-3.5" />
                   Email
                 </Link>
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <Link href={EVENT_PLATFORM_PATHS.popups}>Popups</Link>
               </Button>
             </CardContent>
           </Card>

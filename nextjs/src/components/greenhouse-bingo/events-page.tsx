@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { companies, events, venues } from "@/lib/greenhouse-bingo/mock";
 import { EventCard } from "@/components/greenhouse-bingo/event-card";
@@ -17,11 +17,22 @@ import {
 export function EventsPageContent() {
   const searchParams = useSearchParams();
   const companyParam = searchParams?.get("company");
+  const qParam = searchParams?.get("q") ?? "";
+  const stateParam = searchParams?.get("state");
+  const cityParam = searchParams?.get("city");
 
-  const [q, setQ] = useState("");
-  const [state, setState] = useState<string>("all");
+  const [q, setQ] = useState(qParam);
+  const [state, setState] = useState<string>(stateParam?.trim() ? stateParam : "all");
   const [company, setCompany] = useState<string>(companyParam ?? "all");
   const [age, setAge] = useState<string>("all");
+  const [cityFilter, setCityFilter] = useState(cityParam?.trim() ?? "");
+
+  useEffect(() => {
+    setQ(qParam);
+    setState(stateParam?.trim() ? stateParam : "all");
+    setCityFilter(cityParam?.trim() ?? "");
+    if (companyParam) setCompany(companyParam);
+  }, [qParam, stateParam, cityParam, companyParam]);
 
   const states = Array.from(new Set(venues.map((v) => v.state))).sort();
 
@@ -30,6 +41,7 @@ export function EventsPageContent() {
       const v = venues.find((x) => x.id === e.venueId);
       const c = companies.find((x) => x.slug === e.companySlug);
       if (state !== "all" && v?.state !== state) return false;
+      if (cityFilter && v?.city?.toLowerCase() !== cityFilter.toLowerCase()) return false;
       if (company !== "all" && e.companySlug !== company) return false;
       if (age !== "all" && e.ageRule !== age) return false;
       if (q) {
@@ -38,7 +50,7 @@ export function EventsPageContent() {
       }
       return true;
     });
-  }, [q, state, company, age]);
+  }, [q, state, company, age, cityFilter]);
 
   return (
     <>

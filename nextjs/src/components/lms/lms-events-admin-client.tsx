@@ -315,6 +315,7 @@ export function LmsEventsAdminClient() {
               {paged.map((event) => (
                 <LmsEventAdminCard
                   key={event.id}
+                  variant="grid"
                   event={event}
                   onEdit={() => openEditSheet(event)}
                   actionItems={eventActionItems(event)}
@@ -326,8 +327,8 @@ export function LmsEventsAdminClient() {
               {paged.map((event) => (
                 <LmsEventAdminCard
                   key={event.id}
+                  variant="list"
                   event={event}
-                  className="flex-row sm:flex-row"
                   onEdit={() => openEditSheet(event)}
                   actionItems={eventActionItems(event)}
                 />

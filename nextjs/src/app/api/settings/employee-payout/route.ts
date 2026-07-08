@@ -41,69 +41,77 @@ async function requireCompanyProjectManager(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = await requireCompanyProjectManager(req);
-  if ("error" in auth) return auth.error;
+  try {
+    const auth = await requireCompanyProjectManager(req);
+    if ("error" in auth) return auth.error;
 
-  const merged = await getMergedSettingsForUserEmail(
-    req.cookies.get("pf_email")?.value ?? "",
-    req.nextUrl.origin,
-  );
-  const defaults = parseEmployeePayoutDefaults(merged.employee_payout_defaults);
+    const merged = await getMergedSettingsForUserEmail(
+      req.cookies.get("pf_email")?.value ?? "",
+      req.nextUrl.origin,
+    );
+    const defaults = parseEmployeePayoutDefaults(merged.employee_payout_defaults);
 
-  const projectFilter = req.nextUrl.searchParams.get("project_id");
-  const filterProjectId = projectFilter ? BigInt(projectFilter) : null;
+    const projectFilter = req.nextUrl.searchParams.get("project_id");
+    const filterProjectId = projectFilter ? BigInt(projectFilter) : null;
 
-  const companyProjects = await prisma.project.findMany({
-    where: { createdBy: auth.companyId },
-    select: { id: true, name: true },
-  });
-  const companyProjectIds = companyProjects.map((p) => p.id);
-  if (!companyProjectIds.length) {
-    return NextResponse.json({ defaults, rates: [] });
+    const companyProjects = await prisma.project.findMany({
+      where: { createdBy: auth.companyId },
+      select: { id: true, name: true },
+    });
+    const companyProjectIds = companyProjects.map((p) => p.id);
+    if (!companyProjectIds.length) {
+      return NextResponse.json({ defaults, rates: [] });
+    }
+
+    if (filterProjectId && !companyProjectIds.some((id) => id === filterProjectId)) {
+      return NextResponse.json({ defaults, rates: [] });
+    }
+
+    const rateRows = await prisma.projectEmployeePayRate.findMany({
+      where: {
+        projectId: filterProjectId ?? { in: companyProjectIds },
+      },
+      orderBy: [{ projectId: "asc" }, { userId: "asc" }],
+    });
+
+    const userIds = [...new Set(rateRows.map((r) => r.userId))];
+
+    const projectMap = new Map(companyProjects.map((p) => [p.id, p.name]));
+    const users = userIds.length
+      ? await prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, name: true, email: true },
+        })
+      : [];
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    return NextResponse.json({
+      defaults,
+      rates: rateRows.map((r) => {
+        const u = userMap.get(r.userId);
+        return {
+          id: Number(r.id),
+          project_id: Number(r.projectId),
+          project_name: projectMap.get(r.projectId) ?? "Project",
+          user_id: Number(r.userId),
+          user_name: u?.name ?? u?.email ?? "Employee",
+          user_email: u?.email ?? "",
+          role: r.role,
+          rate_type: r.rateType,
+          pay_rate: String(Number(r.payRate)),
+          half_day_rate: r.halfDayRate != null ? String(Number(r.halfDayRate)) : null,
+          notes: r.notes,
+        };
+      }),
+    });
+  } catch (e) {
+    console.error("[employee-payout] GET failed:", e);
+    const message =
+      e instanceof Error && /project_employee_pay_rates|does not exist/i.test(e.message)
+        ? "Employee payout database table is missing. Run npm run build (prebuild) or node scripts/ensure-project-employee-pay-rates-schema.js on the server."
+        : "Failed to load employee payout settings";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  if (filterProjectId && !companyProjectIds.some((id) => id === filterProjectId)) {
-    return NextResponse.json({ defaults, rates: [] });
-  }
-
-  const rateRows = await prisma.projectEmployeePayRate.findMany({
-    where: {
-      projectId: filterProjectId ?? { in: companyProjectIds },
-    },
-    orderBy: [{ projectId: "asc" }, { userId: "asc" }],
-  });
-
-  const projectIds = [...new Set(rateRows.map((r) => r.projectId))];
-  const userIds = [...new Set(rateRows.map((r) => r.userId))];
-
-  const projectMap = new Map(companyProjects.map((p) => [p.id, p.name]));
-  const users = userIds.length
-    ? await prisma.user.findMany({
-        where: { id: { in: userIds } },
-        select: { id: true, name: true, email: true },
-      })
-    : [];
-  const userMap = new Map(users.map((u) => [u.id, u]));
-
-  return NextResponse.json({
-    defaults,
-    rates: rateRows.map((r) => {
-      const u = userMap.get(r.userId);
-      return {
-        id: Number(r.id),
-        project_id: Number(r.projectId),
-        project_name: projectMap.get(r.projectId) ?? "Project",
-        user_id: Number(r.userId),
-        user_name: u?.name ?? u?.email ?? "Employee",
-        user_email: u?.email ?? "",
-        role: r.role,
-        rate_type: r.rateType,
-        pay_rate: String(Number(r.payRate)),
-        half_day_rate: r.halfDayRate != null ? String(Number(r.halfDayRate)) : null,
-        notes: r.notes,
-      };
-    }),
-  });
 }
 
 export async function PUT(req: NextRequest) {

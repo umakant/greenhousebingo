@@ -17,7 +17,7 @@ import { CalendarAddButton } from "@/components/lms/events/calendar-add-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LMS_EVENT_TYPE_LABELS } from "@/lib/lms-events/constants";
+import { lmsEventTypeLabel } from "@/lib/lms-events/constants";
 import {
   lmsEventStudentRegisterPath,
   lmsEventStudentTicketPath,
@@ -124,7 +124,7 @@ export function LmsEventDetailClient(props: { eventId: string }) {
         </div>
         <div className="space-y-4 p-6 lg:p-8">
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">{LMS_EVENT_TYPE_LABELS[event.eventType]}</Badge>
+            <Badge variant="secondary">{lmsEventTypeLabel(event.eventType)}</Badge>
             {event.certificationAvailable ? (
               <Badge className="gap-1 bg-amber-500 hover:bg-amber-500">
                 <Award className="h-3 w-3" aria-hidden />

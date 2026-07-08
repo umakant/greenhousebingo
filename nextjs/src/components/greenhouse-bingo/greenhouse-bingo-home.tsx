@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { companies, events } from "@/lib/greenhouse-bingo/mock";
 import { CompanyCard } from "@/components/greenhouse-bingo/company-card";
 import { EventCard } from "@/components/greenhouse-bingo/event-card";
+import { GreenhouseHeroLocationSearch } from "@/components/greenhouse-bingo/greenhouse-hero-location-search";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,21 +52,7 @@ export function GreenhouseBingoHome() {
               friends, take home a houseplant.
             </p>
 
-            <form
-              className="mt-8 flex max-w-lg overflow-hidden rounded-full border border-border bg-card shadow-soft"
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <div className="flex flex-1 items-center gap-2 pl-5">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by city, state, venue, or date"
-                  className="border-0 bg-transparent shadow-none focus-visible:ring-0"
-                />
-              </div>
-              <Button asChild size="lg" className="m-1 rounded-full">
-                <Link href="/events">Search</Link>
-              </Button>
-            </form>
+            <GreenhouseHeroLocationSearch />
 
             <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild size="lg">

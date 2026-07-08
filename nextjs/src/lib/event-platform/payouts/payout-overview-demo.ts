@@ -1,0 +1,138 @@
+import type { PayoutOverviewPayload } from "@/lib/event-platform/payouts/payout-overview-types";
+
+function trend(amount: number, change: number, suffix = "vs last month") {
+  const sign = change > 0 ? "+" : "";
+  return {
+    amount,
+    value: amount,
+    change,
+    changeLabel: change === 0 ? `0% ${suffix}` : `${sign}${change}% ${suffix}`,
+    direction: change > 0 ? ("up" as const) : change < 0 ? ("down" as const) : ("flat" as const),
+  };
+}
+
+/** Static overview data matching the Event Platform payouts mockup. */
+export function payoutOverviewDemo(): PayoutOverviewPayload {
+  return {
+    ok: true,
+    isDemo: true,
+    periodLabel: "May 1 – May 31, 2026",
+    kpis: {
+      totalPayouts: trend(48762.4, 18.7),
+      pendingPayouts: { ...trend(12345.5, 0, ""), batchCount: 8, changeLabel: "8 batches" },
+      paidThisMonth: { ...trend(23456.9, 0, ""), payoutCount: 12, changeLabel: "12 payouts" },
+      vendorsPaid: { value: 24, count: 24, change: 0, changeLabel: "This month", direction: "flat" },
+      nextPayout: { date: "2026-06-15", label: "Jun 15, 2026", daysRemaining: 3 },
+    },
+    batches: [
+      {
+        id: "demo-8",
+        batchId: "PB-2026-0008",
+        dateCreated: "2026-05-10",
+        periodLabel: "May 1 – May 10, 2026",
+        vendorCount: 6,
+        amount: "8245.60",
+        currency: "USD",
+        status: "pending",
+        payoutMethod: "Bank Transfer",
+      },
+      {
+        id: "demo-7",
+        batchId: "PB-2026-0007",
+        dateCreated: "2026-05-01",
+        periodLabel: "Apr 16 – Apr 30, 2026",
+        vendorCount: 8,
+        amount: "12345.50",
+        currency: "USD",
+        status: "paid",
+        payoutMethod: "Bank Transfer",
+      },
+      {
+        id: "demo-6",
+        batchId: "PB-2026-0006",
+        dateCreated: "2026-04-15",
+        periodLabel: "Apr 1 – Apr 15, 2026",
+        vendorCount: 7,
+        amount: "9876.30",
+        currency: "USD",
+        status: "paid",
+        payoutMethod: "PayPal",
+      },
+      {
+        id: "demo-5",
+        batchId: "PB-2026-0005",
+        dateCreated: "2026-04-01",
+        periodLabel: "Mar 16 – Mar 31, 2026",
+        vendorCount: 5,
+        amount: "7654.20",
+        currency: "USD",
+        status: "paid",
+        payoutMethod: "Bank Transfer",
+      },
+      {
+        id: "demo-4",
+        batchId: "PB-2026-0004",
+        dateCreated: "2026-03-15",
+        periodLabel: "Mar 1 – Mar 15, 2026",
+        vendorCount: 4,
+        amount: "6640.80",
+        currency: "USD",
+        status: "paid",
+        payoutMethod: "PayPal",
+      },
+      {
+        id: "demo-3",
+        batchId: "PB-2026-0003",
+        dateCreated: "2026-03-01",
+        periodLabel: "Feb 16 – Feb 28, 2026",
+        vendorCount: 5,
+        amount: "5890.00",
+        currency: "USD",
+        status: "processing",
+        payoutMethod: "Bank Transfer",
+      },
+      {
+        id: "demo-2",
+        batchId: "PB-2026-0002",
+        dateCreated: "2026-02-15",
+        periodLabel: "Feb 1 – Feb 15, 2026",
+        vendorCount: 3,
+        amount: "4320.00",
+        currency: "USD",
+        status: "failed",
+        payoutMethod: "PayPal",
+      },
+      {
+        id: "demo-1",
+        batchId: "PB-2026-0001",
+        dateCreated: "2026-02-01",
+        periodLabel: "Jan 16 – Jan 31, 2026",
+        vendorCount: 4,
+        amount: "3790.00",
+        currency: "USD",
+        status: "cancelled",
+        payoutMethod: "Bank Transfer",
+      },
+    ],
+    batchTotal: 8,
+    statusTotal: 48762.4,
+    statusOverview: [
+      { status: "paid", label: "Paid", amount: 23456.9, percent: 48.1 },
+      { status: "pending", label: "Pending", amount: 12345.5, percent: 25.3 },
+      { status: "processing", label: "Processing", amount: 5890, percent: 12.1 },
+      { status: "failed", label: "Failed", amount: 4320, percent: 8.9 },
+      { status: "cancelled", label: "Cancelled", amount: 50, percent: 0.1 },
+    ],
+    topVendors: [
+      { rank: 1, vendorName: "Metro CPR Training Co", amount: "9876.50" },
+      { rank: 2, vendorName: "Coastal Medical Workshops", amount: "8245.60" },
+      { rank: 3, vendorName: "SafeGuard Event Services", amount: "6789.20" },
+      { rank: 4, vendorName: "Tri-State Training LLC", amount: "5432.10" },
+      { rank: 5, vendorName: "Phoenix Safety Group", amount: "4321.00" },
+    ],
+    upcomingPayouts: [
+      { id: "up-1", date: "2026-06-15", vendorCount: 3, amount: "7230.00", status: "scheduled" },
+      { id: "up-2", date: "2026-06-29", vendorCount: 5, amount: "8765.50", status: "scheduled" },
+    ],
+  };
+}

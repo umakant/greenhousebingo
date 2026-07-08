@@ -12,7 +12,7 @@ export default async function EventPlatformPaymentsOnlinePage() {
       permission="payments.manage"
       path="/admin/event-platform/payments/online"
       title="Online Gateways"
-      breadcrumbs={[{ label: "Payment Gateways", url: "/admin/event-platform/payments" }, { label: "Online" }]}
+      breadcrumbs={[{ label: "Settings", url: "/admin/event-platform/settings" }, { label: "Online" }]}
     >
       <EventPlatformPaymentsOnlineAdmin />
     </EventPlatformPage>

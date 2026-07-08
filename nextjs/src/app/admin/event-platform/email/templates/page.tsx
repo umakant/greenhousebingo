@@ -1,6 +1,7 @@
 import dynamic from "next/dynamic";
 
 import { EventPlatformPage } from "@/components/event-platform/event-platform-page";
+import { EVENT_PLATFORM_PATHS } from "@/lib/event-platform/paths";
 
 const EventPlatformEmailTemplatesAdmin = dynamic(() =>
   import("@/components/event-platform/event-platform-email-templates-admin").then(
@@ -16,7 +17,7 @@ export default async function EventPlatformEmailTemplatesPage() {
       title="Email Templates"
       breadcrumbs={[
         { label: "Event Platform", url: "/admin/event-platform" },
-        { label: "Email", url: "/admin/event-platform/email" },
+        { label: "Settings", url: EVENT_PLATFORM_PATHS.settings },
         { label: "Templates" },
       ]}
     >

@@ -1,15 +1,7 @@
-import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
 
-import { EventPlatformPage } from "@/components/event-platform/event-platform-page";
+import { EVENT_PLATFORM_PATHS } from "@/lib/event-platform/paths";
 
-const EventPlatformIntegrationsAdmin = dynamic(() =>
-  import("@/components/event-platform/event-platform-integrations-admin").then((m) => m.EventPlatformIntegrationsAdmin),
-);
-
-export default async function EventPlatformIntegrationsPage() {
-  return (
-    <EventPlatformPage permission="integrations.manage" path="/admin/event-platform/integrations" title="Integrations">
-      <EventPlatformIntegrationsAdmin />
-    </EventPlatformPage>
-  );
+export default function EventPlatformIntegrationsRedirectPage() {
+  redirect(EVENT_PLATFORM_PATHS.settings);
 }

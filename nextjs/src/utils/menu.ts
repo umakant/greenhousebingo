@@ -339,7 +339,6 @@ function menuItemHasPermission(
     return (
       userPermissions.includes("reports.view") ||
       userPermissions.includes("manage-lms-events") ||
-      userPermissions.includes("manage-lms-subscriptions") ||
       userPermissions.includes("vendors.view") ||
       userPermissions.includes("vendors.manage") ||
       userPermissions.includes("commissions.manage") ||

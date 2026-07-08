@@ -1,15 +1,6 @@
-import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
 
-import { EventPlatformPage } from "@/components/event-platform/event-platform-page";
-
-const EventPlatformAppearanceAdmin = dynamic(() =>
-  import("@/components/event-platform/event-platform-appearance-admin").then((m) => m.EventPlatformAppearanceAdmin),
-);
-
-export default async function EventPlatformAppearancePage() {
-  return (
-    <EventPlatformPage permission="settings.manage" path="/admin/event-platform/appearance" title="Appearance">
-      <EventPlatformAppearanceAdmin />
-    </EventPlatformPage>
-  );
+/** Appearance branding is managed in company Settings → Brand. */
+export default function EventPlatformAppearanceRedirectPage() {
+  redirect("/settings?tab=brand");
 }

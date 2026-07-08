@@ -1,10 +1,8 @@
 import type {
   LmsEventBookingStatus,
   LmsEventCertificateStatus,
-  LmsEventDeliveryMode,
   LmsEventStatus,
   LmsEventTicketStatus,
-  LmsEventType,
 } from "@/lib/lms-events/constants";
 
 export type LmsAuditableRow = {
@@ -36,8 +34,8 @@ export type LmsEvent = LmsEventBaseFields & {
   imageUrl: string | null;
   categoryId: string | null;
   categoryName: string | null;
-  eventType: LmsEventType;
-  deliveryMode: LmsEventDeliveryMode;
+  eventType: string;
+  deliveryMode: string;
   instructorName: string | null;
   instructorUserId: string | null;
   startsAt: string;
@@ -232,7 +230,7 @@ export type LmsEventListFilters = {
   freeOnly?: boolean;
   paidOnly?: boolean;
   certificationOnly?: boolean;
-  deliveryMode?: LmsEventDeliveryMode;
+  deliveryMode?: string;
   status?: LmsEventStatus | LmsEventStatus[];
 };
 

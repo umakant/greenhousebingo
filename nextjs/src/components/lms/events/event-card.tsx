@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { LMS_EVENT_TYPE_LABELS } from "@/lib/lms-events/constants";
+import { lmsEventTypeLabel } from "@/lib/lms-events/constants";
 import { lmsEventStudentDetailPath } from "@/lib/lms-events/paths";
 import type { LmsEventCardModel } from "@/lib/lms-events/types";
 import { cn } from "@/lib/utils";
@@ -62,12 +62,12 @@ export function EventCard(props: {
 
   return (
     <Card className={cn("flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md", className)}>
-      <div className="relative aspect-[16/9] bg-muted">
+      <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden bg-muted">
         {event.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={event.imageUrl} alt="" className="h-full w-full object-cover" />
+          <img src={event.imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-sky-50 to-indigo-50 text-indigo-400">
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-sky-50 to-indigo-50 text-indigo-400">
             <Calendar className="h-10 w-10 opacity-60" aria-hidden />
           </div>
         )}
@@ -88,7 +88,7 @@ export function EventCard(props: {
 
       <CardHeader className="space-y-2 pb-2">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {LMS_EVENT_TYPE_LABELS[event.eventType]}
+          {lmsEventTypeLabel(event.eventType)}
         </p>
         <CardTitle className="line-clamp-2 text-lg leading-snug">
           <Link href={href} className="hover:text-primary">

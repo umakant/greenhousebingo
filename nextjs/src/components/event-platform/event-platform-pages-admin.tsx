@@ -131,7 +131,7 @@ export function EventPlatformPagesAdmin() {
                     <TableCell><Badge variant="secondary" className="capitalize">{p.status}</Badge></TableCell>
                     <TableCell className="text-right">
                       <Button variant="outline" size="sm" asChild>
-                        <Link href={EVENT_PLATFORM_PATHS.pageEdit(p.id)}>Edit</Link>
+                        <Link href={EVENT_PLATFORM_PATHS.settings}>Edit</Link>
                       </Button>
                     </TableCell>
                   </TableRow>

@@ -1,15 +1,7 @@
-import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
 
-import { EventPlatformPage } from "@/components/event-platform/event-platform-page";
+import { EVENT_PLATFORM_PATHS } from "@/lib/event-platform/paths";
 
-const EventPlatformPopupsAdmin = dynamic(() =>
-  import("@/components/event-platform/event-platform-popups-admin").then((m) => m.EventPlatformPopupsAdmin),
-);
-
-export default async function EventPlatformPopupsPage() {
-  return (
-    <EventPlatformPage permission="cms.manage" path="/admin/event-platform/popups" title="Popups">
-      <EventPlatformPopupsAdmin />
-    </EventPlatformPage>
-  );
+export default function EventPlatformPopupsRedirectPage() {
+  redirect(EVENT_PLATFORM_PATHS.settings);
 }

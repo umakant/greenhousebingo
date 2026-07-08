@@ -1,15 +1,7 @@
-import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
 
-import { EventPlatformPage } from "@/components/event-platform/event-platform-page";
+import { EVENT_PLATFORM_PATHS } from "@/lib/event-platform/paths";
 
-const EventPlatformCurrencyAdmin = dynamic(() =>
-  import("@/components/event-platform/event-platform-currency-admin").then((m) => m.EventPlatformCurrencyAdmin),
-);
-
-export default async function EventPlatformCurrencyPage() {
-  return (
-    <EventPlatformPage permission="payments.manage" path="/admin/event-platform/currency" title="Currency">
-      <EventPlatformCurrencyAdmin />
-    </EventPlatformPage>
-  );
+export default function EventPlatformCurrencyRedirectPage() {
+  redirect(EVENT_PLATFORM_PATHS.settings);
 }
