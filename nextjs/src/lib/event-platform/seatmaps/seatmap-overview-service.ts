@@ -27,14 +27,15 @@ function rowFromDb(row: {
   archivedAt: Date | null;
 }): SeatmapTemplateRow {
   const layout = row.layoutJson as SeatmapLayout;
-  const mapType = inferMapType(row.name);
+  const mapType = layout.meta?.mapType ?? inferMapType(row.name);
+  const category = layout.meta?.category ?? inferCategory(row.name);
   const seatCount = countSeatsInLayout(layout);
   return {
     id: row.id.toString(),
     name: row.name,
     updatedAt: (row.updatedAt ?? row.createdAt).toISOString().slice(0, 10),
     createdAt: row.createdAt.toISOString().slice(0, 10),
-    category: inferCategory(row.name),
+    category,
     mapType,
     seatCount: seatCount || 0,
     usedInEvents: 0,

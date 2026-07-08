@@ -34,6 +34,7 @@ export function LmsInstructorsAdminClient({ permissions }: { permissions: string
   const canCreate =
     permissions.includes("*") ||
     permissions.includes("manage-lms-instructors") ||
+    permissions.includes("manage-lms-events") ||
     permissions.includes("manage-lms");
   const { impersonate, isLoading: impersonateLoading } = usePortalImpersonate({
     returnPath: "/lms/instructors",

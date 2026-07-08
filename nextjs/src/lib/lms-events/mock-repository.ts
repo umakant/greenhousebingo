@@ -144,7 +144,7 @@ export class LmsEventMockRepository {
       eventType: input.eventType,
       deliveryMode: input.deliveryMode,
       instructorName: input.instructorName?.trim() || null,
-      instructorUserId: null,
+      instructorUserId: input.instructorUserId?.trim() || null,
       startsAt: new Date(input.startsAt).toISOString(),
       endsAt: new Date(input.endsAt).toISOString(),
       timezone: input.timezone || "America/New_York",
@@ -180,6 +180,7 @@ export class LmsEventMockRepository {
       linkedCourseId: null,
       linkedLiveSessionId: null,
       revenueTotal: 0,
+      detailContent: null,
     };
     const ticket: LmsEventTicket = {
       id: `tkt-${Date.now()}`,
@@ -241,6 +242,7 @@ export class LmsEventMockRepository {
       eventType: input.eventType,
       deliveryMode: input.deliveryMode,
       instructorName: input.instructorName?.trim() || null,
+      instructorUserId: input.instructorUserId?.trim() || null,
       startsAt: new Date(input.startsAt).toISOString(),
       endsAt: new Date(input.endsAt).toISOString(),
       timezone: input.timezone || "America/New_York",

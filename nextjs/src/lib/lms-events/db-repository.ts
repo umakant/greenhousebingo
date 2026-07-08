@@ -1,6 +1,10 @@
 import type { Prisma } from "@prisma/client";
 
 import type { LmsEventCreateWizardInput, LmsEventListFiltersInput } from "@/lib/lms-events/schemas";
+import {
+  buildDetailContentFromWizardInput,
+  parseDetailContent,
+} from "@/lib/lms-events/event-detail-content";
 import type {
   LmsEvent,
   LmsEventAttendee,
@@ -119,6 +123,7 @@ export function mapDbEvent(row: DbEvent): LmsEvent {
     linkedCourseId: row.linkedCourseId ? idStr(row.linkedCourseId) : null,
     linkedLiveSessionId: row.linkedLiveSessionId ? idStr(row.linkedLiveSessionId) : null,
     revenueTotal: num(row.revenueTotal),
+    detailContent: parseDetailContent(row.detailContent),
   };
 }
 
@@ -294,6 +299,7 @@ export class LmsEventDbRepository {
     const isFree = input.isFree || input.price <= 0;
     const priceFrom = isFree ? 0 : input.price;
     const publishStatus = input.status === "draft" ? "draft" : input.status || "registration_open";
+    const detailContent = buildDetailContentFromWizardInput(input);
 
     const result = await prisma.$transaction(async (tx) => {
       const eventRow = await tx.lmsTrainingEvent.create({
@@ -309,6 +315,7 @@ export class LmsEventDbRepository {
           deliveryMode: input.deliveryMode,
           status: publishStatus,
           instructorName: input.instructorName?.trim() || null,
+          instructorUserId: input.instructorUserId?.trim() ? BigInt(input.instructorUserId.trim()) : null,
           startsAt,
           endsAt,
           timezone: input.timezone || "America/New_York",
@@ -342,6 +349,7 @@ export class LmsEventDbRepository {
             input.extraCardPrice != null && input.extraCardPrice > 0 ? input.extraCardPrice : null,
           foodAndDrinks: input.foodAndDrinks?.trim() || null,
           attire: input.attire?.trim() || null,
+          detailContent: detailContent as Prisma.InputJsonValue,
           revenueTotal: 0,
           createdById: actorId,
           updatedById: actorId,
@@ -430,6 +438,7 @@ export class LmsEventDbRepository {
       : input.status === "draft"
         ? "draft"
         : input.status || "registration_open";
+    const detailContent = buildDetailContentFromWizardInput(input);
 
     const result = await prisma.$transaction(async (tx) => {
       const eventRow = await tx.lmsTrainingEvent.update({
@@ -444,6 +453,7 @@ export class LmsEventDbRepository {
           deliveryMode: input.deliveryMode,
           status: publishStatus,
           instructorName: input.instructorName?.trim() || null,
+          instructorUserId: input.instructorUserId?.trim() ? BigInt(input.instructorUserId.trim()) : null,
           startsAt,
           endsAt,
           timezone: input.timezone || "America/New_York",
@@ -476,6 +486,7 @@ export class LmsEventDbRepository {
             input.extraCardPrice != null && input.extraCardPrice > 0 ? input.extraCardPrice : null,
           foodAndDrinks: input.foodAndDrinks?.trim() || null,
           attire: input.attire?.trim() || null,
+          detailContent: detailContent as Prisma.InputJsonValue,
           updatedById: actorId,
           updatedAt: new Date(),
         },

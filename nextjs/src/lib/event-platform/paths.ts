@@ -9,6 +9,7 @@ export const EVENT_PLATFORM_PATHS = {
   settings: `${EVENT_PLATFORM_BASE}/settings`,
   vendors: `${EVENT_PLATFORM_BASE}/vendors`,
   vendorDetail: (id: string) => `${EVENT_PLATFORM_BASE}/vendors/${id}`,
+  instructors: `${EVENT_PLATFORM_BASE}/instructors`,
   commissions: `${EVENT_PLATFORM_BASE}/commissions`,
   payouts: `${EVENT_PLATFORM_BASE}/payouts`,
   seatmaps: `${EVENT_PLATFORM_BASE}/seatmaps`,

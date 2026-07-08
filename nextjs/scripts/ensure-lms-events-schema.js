@@ -115,6 +115,7 @@ async function main() {
       "ALTER TABLE lms_events ADD COLUMN IF NOT EXISTS extra_card_price DECIMAL(12,2) NULL",
       "ALTER TABLE lms_events ADD COLUMN IF NOT EXISTS food_and_drinks TEXT NULL",
       "ALTER TABLE lms_events ADD COLUMN IF NOT EXISTS attire VARCHAR(128) NULL",
+      "ALTER TABLE lms_events ADD COLUMN IF NOT EXISTS detail_content JSONB NULL",
     ];
     for (const sql of experienceColumns) {
       await pg.query(`${sql};`);

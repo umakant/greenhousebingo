@@ -177,8 +177,8 @@ export function buildDetailContentFromWizardInput(input: LmsEventCreateWizardInp
     sponsor,
     whatsIncluded: whatsIncluded.length > 0 ? whatsIncluded : [...DEFAULT_WHATS_INCLUDED],
     checkInSteps: checkInSteps.length > 0 ? checkInSteps : [...DEFAULT_CHECKIN_STEPS],
-    bingoRounds: [...DEFAULT_BINGO_ROUNDS],
-    faqs: [...DEFAULT_EVENT_FAQS],
+    bingoRounds: input.bingoRounds?.length ? input.bingoRounds : [...DEFAULT_BINGO_ROUNDS],
+    faqs: input.faqs?.length ? input.faqs : [...DEFAULT_EVENT_FAQS],
   };
 }
 
@@ -235,6 +235,8 @@ export function detailContentToWizardFields(content: LmsEventDetailContent | nul
     sponsorPerk: content.sponsor?.perk ?? "",
     whatsIncludedText: (content.whatsIncluded ?? []).join("\n"),
     checkInStepsText: (content.checkInSteps ?? []).join("\n"),
+    bingoRounds: content.bingoRounds?.length ? content.bingoRounds : [...DEFAULT_BINGO_ROUNDS],
+    faqs: content.faqs?.length ? content.faqs : [...DEFAULT_EVENT_FAQS],
   };
 }
 

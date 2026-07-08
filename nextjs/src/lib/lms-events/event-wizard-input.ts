@@ -1,4 +1,4 @@
-import { DEFAULT_HERO_TAGLINE } from "@/lib/lms-events/event-detail-content";
+import { DEFAULT_HERO_TAGLINE, DEFAULT_BINGO_ROUNDS, DEFAULT_EVENT_FAQS, detailContentToWizardFields } from "@/lib/lms-events/event-detail-content";
 import type { LmsEventCreateWizardInput } from "@/lib/lms-events/schemas";
 import type { LmsEvent, LmsEventTicket } from "@/lib/lms-events/types";
 
@@ -12,6 +12,7 @@ export function pickPrimaryEventTicket(tickets: LmsEventTicket[]): LmsEventTicke
 export function eventToWizardInput(event: LmsEvent, tickets: LmsEventTicket[] = []): LmsEventCreateWizardInput {
   const primary = pickPrimaryEventTicket(tickets);
   const extraFromTicket = tickets.find((t) => t.name === EXTRA_BINGO_CARD_TICKET_NAME);
+  const pageFields = detailContentToWizardFields(event.detailContent ?? null);
 
   return {
     title: event.title,
@@ -23,6 +24,7 @@ export function eventToWizardInput(event: LmsEvent, tickets: LmsEventTicket[] = 
     eventType: event.eventType,
     deliveryMode: event.deliveryMode,
     instructorName: event.instructorName ?? "",
+    instructorUserId: event.instructorUserId ?? "",
     isPublic: event.isPublic,
     certificationAvailable: event.certificationAvailable,
     certificationName: event.certificationName ?? "",
@@ -48,23 +50,25 @@ export function eventToWizardInput(event: LmsEvent, tickets: LmsEventTicket[] = 
     extraCardPrice: event.extraCardPrice ?? extraFromTicket?.price ?? 5,
     foodAndDrinks: event.foodAndDrinks ?? "",
     attire: event.attire ?? "Casual",
-    regionTag: "",
-    heroTagline: DEFAULT_HERO_TAGLINE,
-    descriptionTitle: "",
-    bingoEnd: "",
-    venuePhone: "",
-    agePolicyText: "",
-    cardFeePercent: 3.5,
-    soldOut: event.status === "sold_out",
-    hostName: "",
-    hostBio: "",
-    hostImageUrl: "",
-    sponsorName: "",
-    sponsorAddress: "",
-    sponsorPhone: "",
-    sponsorPerk: "",
-    whatsIncludedText: "",
-    checkInStepsText: "",
+    regionTag: pageFields.regionTag ?? "",
+    heroTagline: pageFields.heroTagline ?? DEFAULT_HERO_TAGLINE,
+    descriptionTitle: pageFields.descriptionTitle ?? "",
+    bingoEnd: pageFields.bingoEnd ?? "",
+    venuePhone: pageFields.venuePhone ?? "",
+    agePolicyText: pageFields.agePolicyText ?? "",
+    cardFeePercent: pageFields.cardFeePercent ?? 3.5,
+    soldOut: pageFields.soldOut ?? event.status === "sold_out",
+    hostName: pageFields.hostName ?? "",
+    hostBio: pageFields.hostBio ?? "",
+    hostImageUrl: pageFields.hostImageUrl ?? "",
+    sponsorName: pageFields.sponsorName ?? "",
+    sponsorAddress: pageFields.sponsorAddress ?? "",
+    sponsorPhone: pageFields.sponsorPhone ?? "",
+    sponsorPerk: pageFields.sponsorPerk ?? "",
+    whatsIncludedText: pageFields.whatsIncludedText ?? "",
+    checkInStepsText: pageFields.checkInStepsText ?? "",
+    bingoRounds: pageFields.bingoRounds ?? [...DEFAULT_BINGO_ROUNDS],
+    faqs: pageFields.faqs ?? [...DEFAULT_EVENT_FAQS],
     ticketName: primary?.name ?? "General admission",
     ticketDescription: primary?.description ?? "",
     price: primary?.price ?? event.priceFrom ?? 0,

@@ -73,6 +73,7 @@ export type LmsEvent = LmsEventBaseFields & {
   linkedCourseId: string | null;
   linkedLiveSessionId: string | null;
   revenueTotal: number;
+  detailContent?: import("@/lib/lms-events/event-detail-content").LmsEventDetailContent | null;
 };
 
 export type LmsEventTicket = LmsAuditableRow & {

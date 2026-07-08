@@ -601,6 +601,7 @@ export const getCompanyMenu = (): NavItem[] => [
       { title: t("Events"), href: "/admin/event-platform/events", permission: "manage-lms-events" },
       { title: t("Workshops"), href: "/admin/event-platform/workshops", permission: "manage-lms-events" },
       { title: t("Vendors"), href: "/admin/event-platform/vendors", permission: "vendors.view" },
+      { title: t("Instructors"), href: "/admin/event-platform/instructors", permission: "manage-lms-events" },
       { title: t("Commission"), href: "/admin/event-platform/commissions", permission: "commissions.manage" },
       { title: t("Payouts"), href: "/admin/event-platform/payouts", permission: "payouts.manage" },
       { title: t("Seat Maps"), href: "/admin/event-platform/seatmaps", permission: "cms.manage" },

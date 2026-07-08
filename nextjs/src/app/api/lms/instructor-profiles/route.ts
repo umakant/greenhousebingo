@@ -27,7 +27,10 @@ export async function GET(req: NextRequest) {
     !perms.includes("*") &&
     !hasPermission(perms, "manage-lms-instructors") &&
     !hasPermission(perms, "manage-lms-courses") &&
-    !hasPermission(perms, "manage-lms")
+    !hasPermission(perms, "manage-lms") &&
+    !hasPermission(perms, "manage-lms-events") &&
+    !hasPermission(perms, "events.create") &&
+    !hasPermission(perms, "events.view")
   ) {
     return NextResponse.json({ ok: false, message: "Forbidden." }, { status: 403 });
   }

@@ -19,6 +19,12 @@ import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { DatePickerInput } from "@/components/ui/date-picker-input";
 import { TimeInput12h } from "@/components/ui/time-input-12h";
 import { GoogleBusinessInput } from "@/components/account/google-business-input";
+import { EventInstructorField } from "@/components/lms/event-instructor-field";
+import {
+  LmsEventGamesFaqFields,
+  LmsEventHostSponsorFields,
+  LmsEventPublicPageFields,
+} from "@/components/lms/lms-event-page-sections";
 import MediaPicker from "@/components/MediaPicker";
 import { useAppSettingsOptional } from "@/contexts/app-settings-context";
 import { useEventFormOptions } from "@/hooks/use-event-form-options";
@@ -27,13 +33,22 @@ import {
   LMS_EVENT_STATUSES,
 } from "@/lib/lms-events/constants";
 import type { LmsEventCreateWizardInput } from "@/lib/lms-events/schemas";
-import { DEFAULT_HERO_TAGLINE } from "@/lib/lms-events/event-detail-content";
+import { DEFAULT_HERO_TAGLINE, DEFAULT_BINGO_ROUNDS, DEFAULT_EVENT_FAQS } from "@/lib/lms-events/event-detail-content";
 import type { LmsEventCategory } from "@/lib/lms-events/types";
 import { cn } from "@/lib/utils";
 
 export const LMS_EVENT_CREATE_FORM_ID = "lms-event-create-form";
 
-const STEPS = ["Details", "Schedule", "Tickets", "Settings", "Review"] as const;
+const STEPS = [
+  "Details",
+  "Schedule",
+  "Public page",
+  "Host & sponsor",
+  "Tickets",
+  "Games & FAQ",
+  "Settings",
+  "Review",
+] as const;
 
 type StepId = (typeof STEPS)[number];
 
@@ -46,6 +61,7 @@ const DEFAULT_VALUES: LmsEventCreateWizardInput = {
   eventType: "live_workshop",
   deliveryMode: "in_person",
   instructorName: "",
+  instructorUserId: "",
   isPublic: true,
   certificationAvailable: false,
   certificationName: "",
@@ -88,6 +104,8 @@ const DEFAULT_VALUES: LmsEventCreateWizardInput = {
   sponsorPerk: "",
   whatsIncludedText: "",
   checkInStepsText: "",
+  bingoRounds: [...DEFAULT_BINGO_ROUNDS],
+  faqs: [...DEFAULT_EVENT_FAQS],
   ticketName: "General admission",
   ticketDescription: "",
   price: 0,
@@ -186,7 +204,7 @@ export function LmsEventCreateWizard(props: {
       if (!values.endsAt) return "End date/time is required.";
       if (new Date(values.endsAt) <= new Date(values.startsAt)) return "End must be after start.";
     }
-    if (index === 2) {
+    if (index === 4) {
       if (!values.ticketName.trim()) return "Ticket name is required.";
       if (!values.isFree && values.price < 0) return "Enter a valid price.";
     }
@@ -327,15 +345,11 @@ export function LmsEventCreateWizard(props: {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="ev-instructor">Instructor</Label>
-            <Input
-              id="ev-instructor"
-              value={values.instructorName ?? ""}
-              onChange={(e) => patch({ instructorName: e.target.value })}
-              placeholder="John Davis"
-            />
-          </div>
+          <EventInstructorField
+            instructorUserId={values.instructorUserId ?? ""}
+            instructorName={values.instructorName ?? ""}
+            onChange={(instructorPatch) => patch(instructorPatch)}
+          />
 
           <MediaPicker
             id="ev-image"
@@ -444,7 +458,7 @@ export function LmsEventCreateWizard(props: {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="ev-doors">Doors open</Label>
               <Input
@@ -461,6 +475,15 @@ export function LmsEventCreateWizard(props: {
                 value={values.bingoStart ?? ""}
                 onChange={(e) => patch({ bingoStart: e.target.value })}
                 placeholder="7:00 PM"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ev-bingo-end">Bingo ends</Label>
+              <Input
+                id="ev-bingo-end"
+                value={values.bingoEnd ?? ""}
+                onChange={(e) => patch({ bingoEnd: e.target.value })}
+                placeholder="9:00 PM"
               />
             </div>
           </div>
@@ -563,13 +586,24 @@ export function LmsEventCreateWizard(props: {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="ev-tz">Timezone</Label>
-                <Input
-                  id="ev-tz"
-                  value={values.timezone}
-                  onChange={(e) => patch({ timezone: e.target.value })}
-                />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="ev-venue-phone">Venue phone</Label>
+                  <Input
+                    id="ev-venue-phone"
+                    value={values.venuePhone ?? ""}
+                    onChange={(e) => patch({ venuePhone: e.target.value })}
+                    placeholder="(214) 555-0100"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ev-tz">Timezone</Label>
+                  <Input
+                    id="ev-tz"
+                    value={values.timezone}
+                    onChange={(e) => patch({ timezone: e.target.value })}
+                  />
+                </div>
               </div>
             </>
           ) : null}
@@ -588,7 +622,11 @@ export function LmsEventCreateWizard(props: {
         </div>
       ) : null}
 
-      {step === 2 ? (
+      {step === 2 ? <LmsEventPublicPageFields values={values} onPatch={patch} /> : null}
+
+      {step === 3 ? <LmsEventHostSponsorFields values={values} onPatch={patch} /> : null}
+
+      {step === 4 ? (
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="ev-ticket-name">
@@ -703,7 +741,9 @@ export function LmsEventCreateWizard(props: {
         </div>
       ) : null}
 
-      {step === 3 ? (
+      {step === 5 ? <LmsEventGamesFaqFields values={values} onPatch={patch} /> : null}
+
+      {step === 6 ? (
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="ev-capacity">Event capacity</Label>
@@ -714,6 +754,16 @@ export function LmsEventCreateWizard(props: {
               value={values.capacity ?? ""}
               onChange={(e) => patch({ capacity: e.target.value ? Number(e.target.value) : null })}
             />
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="ev-sold-out"
+              checked={values.soldOut}
+              onCheckedChange={(v) => patch({ soldOut: v === true })}
+            />
+            <Label htmlFor="ev-sold-out" className="font-normal">
+              Mark as sold out on public page
+            </Label>
           </div>
           <div className="flex items-center gap-2">
             <Checkbox
@@ -766,7 +816,7 @@ export function LmsEventCreateWizard(props: {
         </div>
       ) : null}
 
-      {step === 4 ? (
+      {step === 7 ? (
         <div className="space-y-4 rounded-lg border bg-muted/30 p-4 text-sm">
           <div className="space-y-2">
             <Label>Publish status</Label>
@@ -832,6 +882,30 @@ export function LmsEventCreateWizard(props: {
                   {values.cardsIncluded} cards
                   {values.extraCardPrice != null ? ` · extra $${values.extraCardPrice}` : ""}
                 </dd>
+              </div>
+            ) : null}
+            {values.instructorName || values.hostName ? (
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Instructor / host</dt>
+                <dd className="text-right">{values.hostName || values.instructorName}</dd>
+              </div>
+            ) : null}
+            {values.sponsorName ? (
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Sponsor</dt>
+                <dd className="text-right">{values.sponsorName}</dd>
+              </div>
+            ) : null}
+            {values.bingoRounds?.length ? (
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">Bingo rounds</dt>
+                <dd className="text-right">{values.bingoRounds.length}</dd>
+              </div>
+            ) : null}
+            {values.faqs?.length ? (
+              <div className="flex justify-between gap-4">
+                <dt className="text-muted-foreground">FAQs</dt>
+                <dd className="text-right">{values.faqs.length}</dd>
               </div>
             ) : null}
           </dl>

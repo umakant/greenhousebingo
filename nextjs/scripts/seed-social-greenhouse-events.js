@@ -101,6 +101,7 @@ async function upsertCategory(orgId, category) {
 
 async function upsertEvent(orgId, categoryId, ev) {
   const slug = eventSlug(ev.slug);
+  const soldOut = ev.soldOut || ev.capacity - ev.ticketsSold <= 0;
   const payload = {
     organizationId: orgId,
     slug,
@@ -111,8 +112,8 @@ async function upsertEvent(orgId, categoryId, ev) {
     categoryId,
     eventType: "live_workshop",
     deliveryMode: "in_person",
-    status: eventStatus(ev),
-    instructorName: companyData.name,
+    status: soldOut ? "sold_out" : eventStatus(ev),
+    instructorName: ev.instructorName || ev.hostName || null,
     startsAt: new Date(ev.startsAt),
     endsAt: new Date(ev.endsAt),
     timezone: ev.timezone,
@@ -133,6 +134,7 @@ async function upsertEvent(orgId, categoryId, ev) {
     certificationAvailable: false,
     requirements: null,
     cancellationPolicy:
+      ev.cancellationPolicy ||
       "Tickets are non-refundable. Transfers may be available up to 48 hours before doors open.",
     isFeatured: ev.featured ?? false,
     ageRule: ev.ageRule ?? null,
@@ -143,6 +145,7 @@ async function upsertEvent(orgId, categoryId, ev) {
     extraCardPrice: ev.extraCardPrice ?? null,
     foodAndDrinks: ev.foodAndDrinks ?? null,
     attire: ev.attire ?? null,
+    detailContent: ev.detailContent ?? null,
     revenueTotal: ev.price * ev.ticketsSold,
     updatedAt: new Date(),
     updatedById: orgId,
@@ -246,7 +249,7 @@ async function main() {
     await upsertTicket(orgId, event.id, ev);
     const remaining = ev.capacity - ev.ticketsSold;
     console.log(
-      `  ✓ ${ev.title} — ${ev.venueCity}, ${ev.venueState} — ${ev.ticketsSold}/${ev.capacity} sold (${remaining} left) [${ev.ageRule}]`,
+      `  ✓ ${ev.title} — ${ev.venueCity}, ${ev.venueState} — ${ev.ticketsSold}/${ev.capacity} sold (${remaining} left) [host: ${ev.hostName || "—"}]`,
     );
   }
 

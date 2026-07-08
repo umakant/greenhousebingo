@@ -5,6 +5,28 @@ import {
   LMS_EVENT_STATUSES,
   LMS_TICKET_STATUSES,
 } from "@/lib/lms-events/constants";
+import {
+  LMS_EVENT_BINGO_DIFFICULTIES,
+  type LmsEventBingoDifficulty,
+  type LmsEventBingoRound,
+  type LmsEventFaq,
+} from "@/lib/lms-events/event-detail-content";
+
+export { LMS_EVENT_BINGO_DIFFICULTIES };
+export type { LmsEventBingoDifficulty, LmsEventBingoRound, LmsEventFaq };
+
+const lmsEventBingoRoundSchema = z.object({
+  roundNumber: z.coerce.number().int().positive(),
+  name: z.string().trim().min(1),
+  pattern: z.string().trim().min(1),
+  difficulty: z.enum(LMS_EVENT_BINGO_DIFFICULTIES),
+  prize: z.string().trim().min(1),
+});
+
+const lmsEventFaqSchema = z.object({
+  question: z.string().trim().min(1),
+  answer: z.string().trim().min(1),
+});
 
 export const lmsEventListFiltersSchema = z.object({
   search: z.string().trim().optional(),
@@ -50,6 +72,7 @@ export const lmsEventBasicInfoSchema = z.object({
   eventType: z.string().trim().min(1, "Event type is required"),
   deliveryMode: z.string().trim().min(1, "Format is required"),
   instructorName: z.string().trim().optional(),
+  instructorUserId: z.string().trim().optional().or(z.literal("")),
   isPublic: z.boolean().default(true),
   certificationAvailable: z.boolean().default(false),
   certificationName: z.string().trim().optional(),
@@ -126,6 +149,8 @@ export const lmsEventPageContentSchema = z.object({
   sponsorPerk: z.string().trim().optional(),
   whatsIncludedText: z.string().trim().optional(),
   checkInStepsText: z.string().trim().optional(),
+  bingoRounds: z.array(lmsEventBingoRoundSchema).optional(),
+  faqs: z.array(lmsEventFaqSchema).optional(),
 });
 
 export const lmsEventCreateWizardSchema = lmsEventBasicInfoSchema

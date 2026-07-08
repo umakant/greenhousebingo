@@ -3,8 +3,14 @@ import "server-only";
 import { applyCompanyThemeCustomizations } from "@/lib/company-themes/apply-customizations";
 import { getCompanyThemeCustomizerSchema } from "@/lib/company-themes/customizer-schema";
 import { getCustomizerValuesForSlug } from "@/lib/company-themes/customizer-service";
+import {
+  getCompanySiteEventByPublicSlug,
+  listCompanySiteEvents,
+} from "@/lib/company-themes/company-site-events-service";
 import { getCompanyWebsiteSettingsForOwnerId } from "@/lib/company-themes/company-website-settings";
+import { injectCompanySiteEvents } from "@/lib/company-themes/inject-company-site-events";
 import { loadCompanyThemeHtml } from "@/lib/company-themes/load-theme-html";
+import { findCompanyPublicSlugByOwnerId } from "@/lib/company-themes/company-website-host-resolver";
 import { getCompanyNextjsTheme, type CompanyNextjsTheme } from "@/lib/company-themes/registry";
 import {
   extractCompanyWebsiteChrome,
@@ -57,10 +63,61 @@ export async function renderCompanyWebsitePage(
     output = applyCompanyThemeCustomizations(html, schema.fields, values, pathname);
   }
 
+  if (theme.slug === "plant-bingo-bash") {
+    const companySlug = (await findCompanyPublicSlugByOwnerId(ownerId)) ?? "";
+    const bootstrap: {
+      list?: Awaited<ReturnType<typeof listCompanySiteEvents>>;
+      detail?: Awaited<ReturnType<typeof getCompanySiteEventByPublicSlug>>;
+      eventSlug?: string;
+    } = {};
+
+    if (pathname === "/events" || pathname === "/events/") {
+      const list = await listCompanySiteEvents(ownerId);
+      bootstrap.list = list;
+    } else if (pathname.startsWith("/events/")) {
+      const eventSlug = pathname.replace(/^\/events\//, "").replace(/\/$/, "");
+      if (eventSlug) {
+        const detail = await getCompanySiteEventByPublicSlug(ownerId, eventSlug);
+        if (detail) {
+          bootstrap.detail = detail;
+          bootstrap.eventSlug = eventSlug;
+        }
+      }
+    } else if (pathname === "/") {
+      const list = await listCompanySiteEvents(ownerId);
+      bootstrap.list = list;
+    }
+
+    output = injectCompanySiteEvents(output, theme, {
+      companySlug,
+      sitePathPrefix: sitePathPrefix || theme.sitePathPrefix,
+      pathname,
+      bootstrap: {
+        list: bootstrap.list
+          ? {
+              events: bootstrap.list.events,
+              total: bootstrap.list.total,
+              stateCount: bootstrap.list.stateCount,
+            }
+          : undefined,
+        detail: bootstrap.detail ?? undefined,
+        eventSlug: bootstrap.eventSlug,
+      },
+    });
+  }
+
+  const isDynamicEventsPage =
+    theme.slug === "plant-bingo-bash" &&
+    (pathname === "/" || pathname === "/events" || pathname === "/events/" || pathname.startsWith("/events/"));
+
   return {
     ok: true,
     html: output,
-    cacheControl: options?.privateCache ? "private, max-age=0, must-revalidate" : "public, max-age=60, s-maxage=300",
+    cacheControl: options?.privateCache
+      ? "private, max-age=0, must-revalidate"
+      : isDynamicEventsPage
+        ? "public, max-age=0, s-maxage=30, stale-while-revalidate=60"
+        : "public, max-age=60, s-maxage=300",
   };
 }
 

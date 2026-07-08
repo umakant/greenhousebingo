@@ -2,16 +2,15 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Armchair,
   BarChart3,
   Copy,
+  Eye,
   Grid3X3,
   Layers,
   LayoutGrid,
   Loader2,
-  MoreVertical,
   Plus,
   Search,
   Users,
@@ -21,14 +20,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Pagination } from "@/components/ui/pagination";
 import {
   Select,
@@ -38,13 +30,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
   Table,
   TableBody,
   TableCell,
@@ -53,7 +38,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TableActionButton, type TableActionItem } from "@/components/ui/table-action-button";
 import { SeatmapPreviewVisual } from "@/components/event-platform/seatmap-preview-visual";
+import { EventPlatformSeatmapCreateSheet } from "@/components/event-platform/event-platform-seatmap-create-sheet";
 import { EVENT_PLATFORM_PATHS } from "@/lib/event-platform/paths";
 import type {
   SeatmapOverviewPayload,
@@ -74,6 +61,19 @@ function statusBadgeClass(status: string) {
   if (s === "draft") return "bg-muted text-muted-foreground";
   if (s === "archived") return "bg-slate-500/15 text-slate-600 dark:text-slate-400";
   return "bg-muted text-muted-foreground";
+}
+
+function seatmapActionItems(row: SeatmapTemplateRow, isDemo: boolean): TableActionItem[] {
+  const items: TableActionItem[] = [];
+  if (!isDemo) {
+    items.push({ label: "Edit", href: EVENT_PLATFORM_PATHS.seatmapEdit(row.id) });
+  }
+  items.push({
+    label: "Duplicate",
+    icon: <Copy className="h-4 w-4" />,
+    onSelect: () => toast.message("Duplicate", { description: "Coming soon." }),
+  });
+  return items;
 }
 
 function KpiCard(props: {
@@ -100,7 +100,6 @@ function KpiCard(props: {
 }
 
 export function EventPlatformSeatmapsAdmin() {
-  const router = useRouter();
   const [data, setData] = React.useState<SeatmapOverviewPayload | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [tab, setTab] = React.useState("active");
@@ -112,8 +111,6 @@ export function EventPlatformSeatmapsAdmin() {
   const [perPage, setPerPage] = React.useState(PAGE_SIZE);
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = React.useState(false);
-  const [newName, setNewName] = React.useState("");
-  const [saving, setSaving] = React.useState(false);
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -188,33 +185,6 @@ export function EventPlatformSeatmapsAdmin() {
     }
   }, [paged, selectedId]);
 
-  async function createMap() {
-    if (!newName.trim()) return;
-    if (data?.isDemo) {
-      toast.message("Demo mode", { description: "Create a real seat map after seeding or clearing demo state." });
-      setSheetOpen(false);
-      return;
-    }
-    setSaving(true);
-    try {
-      const res = await fetch("/api/event-platform/seatmaps", {
-        method: "POST",
-        credentials: "include",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name: newName.trim(), status: "draft" }),
-      });
-      const json = (await res.json().catch(() => null)) as { ok?: boolean; item?: { id: string }; message?: string } | null;
-      if (!res.ok || !json?.ok || !json.item) throw new Error(json?.message ?? "Create failed.");
-      setSheetOpen(false);
-      setNewName("");
-      toast.success("Seat map created.");
-      router.push(EVENT_PLATFORM_PATHS.seatmapEdit(json.item.id));
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Create failed.");
-    } finally {
-      setSaving(false);
-    }
-  }
 
   if (loading) {
     return (
@@ -415,33 +385,13 @@ export function EventPlatformSeatmapsAdmin() {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex items-center justify-end gap-1">
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setSelectedId(row.id)}
-                                >
-                                  Preview
-                                </Button>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button type="button" variant="ghost" size="icon" className="h-8 w-8">
-                                      <MoreVertical className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    {!data.isDemo ? (
-                                      <DropdownMenuItem asChild>
-                                        <Link href={EVENT_PLATFORM_PATHS.seatmapEdit(row.id)}>Edit</Link>
-                                      </DropdownMenuItem>
-                                    ) : null}
-                                    <DropdownMenuItem onSelect={() => toast.message("Duplicate", { description: "Coming soon." })}>
-                                      Duplicate
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
+                              <TableActionButton
+                                label="Preview"
+                                primaryIcon={<Eye className="h-4 w-4" />}
+                                onPrimaryClick={() => setSelectedId(row.id)}
+                                items={seatmapActionItems(row, data.isDemo)}
+                                className="ml-auto"
+                              />
                             </TableCell>
                           </TableRow>
                         ))
@@ -541,23 +491,11 @@ export function EventPlatformSeatmapsAdmin() {
           </div>
       </div>
 
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>New seat map</SheetTitle>
-          </SheetHeader>
-          <div className="py-4">
-            <Label htmlFor="sm-name">Name</Label>
-            <Input id="sm-name" value={newName} onChange={(e) => setNewName(e.target.value)} className="mt-1.5" />
-          </div>
-          <SheetFooter>
-            <Button disabled={saving} onClick={() => void createMap()}>
-              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Create &amp; edit
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+      <EventPlatformSeatmapCreateSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        isDemo={data.isDemo}
+      />
     </div>
   );
 }
