@@ -11,6 +11,46 @@ const THEME_COLOR_HEX: Record<string, string> = {
   red: "#ef4444",
 };
 
+export const DEFAULT_BRAND_CUSTOM_COLOR = THEME_COLOR_HEX.green ?? "#10b981";
+
+/** Plant Bingo Bash `--forest` token (oklch(0.42 0.11 150)). */
+export const PLANT_BINGO_FOREST_HEX = "#4e735a";
+
+export function isValidBrandHexColor(value: string | null | undefined): boolean {
+  const raw = String(value ?? "").trim();
+  if (!raw) return false;
+  const hex = raw.startsWith("#") ? raw : `#${raw}`;
+  return /^#[0-9A-Fa-f]{3}$/.test(hex) || /^#[0-9A-Fa-f]{6}$/.test(hex);
+}
+
+/** Formats live text-field input: auto `#` prefix and hex digits only (up to 6). */
+export function formatBrandHexColorInput(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  const digits = (trimmed.startsWith("#") ? trimmed.slice(1) : trimmed)
+    .replace(/[^0-9A-Fa-f]/g, "")
+    .slice(0, 6);
+
+  if (!digits) return trimmed.startsWith("#") || trimmed === "#" ? "#" : "";
+  return `#${digits}`;
+}
+
+/** Accepts `#RRGGBB`, `RRGGBB`, or `#RGB`; returns lowercase `#rrggbb` or fallback. */
+export function normalizeBrandHexColor(
+  value: string | null | undefined,
+  fallback = DEFAULT_BRAND_CUSTOM_COLOR,
+): string {
+  const raw = String(value ?? "").trim();
+  if (!raw) return fallback;
+  let hex = raw.startsWith("#") ? raw : `#${raw}`;
+  if (/^#[0-9A-Fa-f]{3}$/.test(hex)) {
+    hex = `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`;
+  }
+  if (/^#[0-9A-Fa-f]{6}$/.test(hex)) return hex.toLowerCase();
+  return fallback;
+}
+
 /** HSL components as "H S% L%" for `hsl(var(--token))` (no `hsl()` wrapper). */
 function hexToHslComponents(hex: string): string {
   const raw = hex.replace(/^#/, "").trim();
@@ -60,11 +100,9 @@ function accentFromPrimary(primaryHsl: string): string {
 
 export function resolveBrandPrimaryHex(themeColor: string, customColor: string): string {
   if (themeColor === "custom") {
-    const c = (customColor || "").trim();
-    if (/^#[0-9A-Fa-f]{6}$/.test(c)) return c;
-    return "#10b981";
+    return normalizeBrandHexColor(customColor, DEFAULT_BRAND_CUSTOM_COLOR);
   }
-  return THEME_COLOR_HEX[themeColor] ?? THEME_COLOR_HEX.green ?? "#10b981";
+  return THEME_COLOR_HEX[themeColor] ?? DEFAULT_BRAND_CUSTOM_COLOR;
 }
 
 /** Light theme defaults from `globals.css` (plain sidebar). */

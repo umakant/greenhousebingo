@@ -29,6 +29,8 @@ export const ADDON_MODULE_BY_SCOPE: Record<string, string> = {
   lms: "lms",
   eventplatform: "eventplatform",
   "event-platform": "eventplatform",
+  venuemanagement: "venuemanagement",
+  "venue-management": "venuemanagement",
   expensemanagement: "expensemanagement",
   affiliatebusiness: "affiliatebusiness",
   "affiliate-business": "affiliatebusiness",
@@ -40,5 +42,14 @@ export const ADDON_MODULE_BY_SCOPE: Record<string, string> = {
 export function isAddOnEnabledForScope(activatedPackages: string[], scope: string): boolean {
   const module = ADDON_MODULE_BY_SCOPE[scope?.toLowerCase()];
   if (!module) return true; // no add-on gate for this scope
-  return activatedPackages.map((p) => p.toLowerCase()).includes(module.toLowerCase());
+  return normalizeActivatedPackages(activatedPackages)
+    .map((p) => p.toLowerCase())
+    .includes(module.toLowerCase());
+}
+
+/** Event Platform plans bundle Venue Management in menus until session cookies refresh. */
+export function normalizeActivatedPackages(activatedPackages: string[]): string[] {
+  const lower = new Set(activatedPackages.map((p) => p.toLowerCase()));
+  if (!lower.has("eventplatform") || lower.has("venuemanagement")) return activatedPackages;
+  return [...activatedPackages, "venuemanagement"];
 }

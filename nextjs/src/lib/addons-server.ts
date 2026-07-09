@@ -56,6 +56,9 @@ const PLAN_MODULE_TO_ADDON: Record<string, string> = {
   eventplatform: "eventplatform",
   event_platform: "eventplatform",
   EventPlatform: "eventplatform",
+  venuemanagement: "venuemanagement",
+  venue_management: "venuemanagement",
+  VenueManagement: "venuemanagement",
   expensemanagement: "expensemanagement",
   expense_management: "expensemanagement",
   ExpenseManagement: "expensemanagement",
@@ -81,12 +84,13 @@ export async function getActivatedPackagesForUser(
   isSuperadmin: boolean
 ): Promise<string[]> {
   const globalEnabled = await getEnabledAddOnModules();
-  if (isSuperadmin) return globalEnabled;
+  if (isSuperadmin) return bundleVenueManagementWithEventPlatform(globalEnabled);
 
   const withOrgGates = async (pkgs: string[]) => {
     const afterLms = await filterLmsByOrgSetting(userId, false, pkgs);
     const afterEventPlatform = await filterEventPlatformByOrgSetting(userId, false, afterLms);
-    return filterMarketplaceByOrgSetting(userId, false, afterEventPlatform);
+    const afterMarketplace = await filterMarketplaceByOrgSetting(userId, false, afterEventPlatform);
+    return bundleVenueManagementWithEventPlatform(afterMarketplace);
   };
 
   try {
@@ -130,6 +134,13 @@ export async function getActivatedPackagesForUser(
   } catch {
     return await withOrgGates(globalEnabled);
   }
+}
+
+/** Event Platform plans bundle Venue Management — keep menus/routes in sync without re-login. */
+function bundleVenueManagementWithEventPlatform(packages: string[]): string[] {
+  const lower = new Set(packages.map((p) => p.toLowerCase()));
+  if (!lower.has("eventplatform") || lower.has("venuemanagement")) return packages;
+  return [...packages, "venuemanagement"];
 }
 
 /**

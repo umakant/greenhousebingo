@@ -230,6 +230,118 @@ async function main() {
     `);
 
     await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_venues (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL,
+        name TEXT NOT NULL,
+        phone TEXT NULL,
+        website TEXT NULL,
+        address TEXT NULL,
+        city TEXT NULL,
+        state TEXT NULL,
+        zip TEXT NULL,
+        latitude DECIMAL(10, 7) NULL,
+        longitude DECIMAL(10, 7) NULL,
+        contact_first_name TEXT NULL,
+        contact_last_name TEXT NULL,
+        contact_phone TEXT NULL,
+        contact_email TEXT NULL,
+        seating INT NULL,
+        age_21_plus BOOLEAN NOT NULL DEFAULT FALSE,
+        drinks_alcohol BOOLEAN NOT NULL DEFAULT FALSE,
+        food BOOLEAN NOT NULL DEFAULT FALSE,
+        business_hours JSONB NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        archived_at TIMESTAMP(3) NULL,
+        created_by_id BIGINT NULL,
+        updated_by_id BIGINT NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_venues_org_status_idx ON event_venues(organization_id, status);`);
+    await pg.query(`ALTER TABLE event_venues ADD COLUMN IF NOT EXISTS address_2 TEXT NULL;`);
+    await pg.query(`ALTER TABLE event_venues ADD COLUMN IF NOT EXISTS category TEXT NULL;`);
+    await pg.query(`ALTER TABLE event_venues ADD COLUMN IF NOT EXISTS venue_type TEXT NULL;`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_venue_categories (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL,
+        name TEXT NOT NULL,
+        sort_order INT NOT NULL DEFAULT 0,
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL,
+        UNIQUE (organization_id, name)
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_venue_categories_org_active_idx ON event_venue_categories(organization_id, is_active);`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_venue_types (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL,
+        name TEXT NOT NULL,
+        sort_order INT NOT NULL DEFAULT 0,
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL,
+        UNIQUE (organization_id, name)
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_venue_types_org_active_idx ON event_venue_types(organization_id, is_active);`);
+
+    const DEFAULT_VENUE_CATEGORIES = [
+      "Entertainment",
+      "Food & Beverage",
+      "Hospitality",
+      "Outdoor",
+      "Community",
+      "Retail",
+    ];
+    const DEFAULT_VENUE_TYPES = [
+      "Brewery",
+      "Greenhouse",
+      "Cidery",
+      "Taproom",
+      "Nursery",
+      "Beer Hall",
+      "Event Hall",
+      "Lounge",
+      "Restaurant",
+      "Bar",
+    ];
+
+    const { rows: orgRows } = await pg.query(`
+      SELECT DISTINCT organization_id AS id FROM event_venues
+      UNION
+      SELECT id FROM users WHERE LOWER(COALESCE(type, '')) IN ('company', 'company_admin')
+    `);
+
+    for (const { id } of orgRows) {
+      for (let i = 0; i < DEFAULT_VENUE_CATEGORIES.length; i++) {
+        await pg.query(
+          `INSERT INTO event_venue_categories (organization_id, name, sort_order, is_active)
+           VALUES ($1, $2, $3, TRUE)
+           ON CONFLICT (organization_id, name) DO NOTHING`,
+          [id, DEFAULT_VENUE_CATEGORIES[i], i],
+        );
+      }
+      for (let i = 0; i < DEFAULT_VENUE_TYPES.length; i++) {
+        await pg.query(
+          `INSERT INTO event_venue_types (organization_id, name, sort_order, is_active)
+           VALUES ($1, $2, $3, TRUE)
+           ON CONFLICT (organization_id, name) DO NOTHING`,
+          [id, DEFAULT_VENUE_TYPES[i], i],
+        );
+      }
+    }
+    if (orgRows.length > 0) {
+      console.log(`  Seeded venue categories/types for ${orgRows.length} organization(s).`);
+    }
+
+    await pg.query(`
       CREATE TABLE IF NOT EXISTS event_audit_logs (
         id BIGSERIAL PRIMARY KEY,
         organization_id BIGINT NOT NULL,

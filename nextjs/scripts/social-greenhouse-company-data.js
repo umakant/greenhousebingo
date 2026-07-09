@@ -18,6 +18,9 @@ module.exports = {
   publicSitePath: "/sites/DN-0001-CO-26",
   instagram: "@thesocialgreenhouse",
   themeSlug: "plant-bingo-bash",
+  /** Dashboard brand theme — Plant Bingo Bash forest (oklch(0.42 0.11 150)). */
+  brandThemeColor: "custom",
+  brandCustomColor: "#4e735a",
   planName: "Greenhouse Bingo Plan",
   planModules: [
     "FormBuilder",

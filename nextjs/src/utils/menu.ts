@@ -10,7 +10,7 @@ import {
   isLmsEmployeeLearnerAudience,
   isLmsEmployeeLearnerMenuPermission,
 } from "@/lib/lms-employee-learner-audience";
-import { isAddOnEnabledForScope } from "@/lib/addon-scope";
+import { isAddOnEnabledForScope, normalizeActivatedPackages } from "@/lib/addon-scope";
 
 /** Kept in sync with `EMPLOYEE_EXPENSE_PERMISSION_NAMES` in hrm-employee-role.ts (client-safe copy). */
 const EMPLOYEE_EXPENSE_MENU_PERMISSIONS = [
@@ -139,6 +139,7 @@ const SCOPE_ROUTE_PREFIXES: [string, string][] = [
   ["/expense-management", "expensemanagement"],
   ["/lms", "lms"],
   ["/admin/event-platform", "eventplatform"],
+  ["/admin/venue-management", "venuemanagement"],
   ["/affiliate-business", "affiliatebusiness"],
   ["/compliance", "compliance"],
 ];
@@ -254,6 +255,7 @@ const DROPDOWN_SHOW_ALL_CHILDREN_NAMES = new Set([
   "compliance",
   "routing",
   "event-platform",
+  "venue-management",
 ]);
 
 /** Permissions that grant access to the Accounting menu (parent or any child). User needs at least one to see Accounting. */
@@ -428,6 +430,23 @@ function menuItemHasPermission(
   }
   if (permission === "manage-routing-my-routes") {
     return userPermissions.includes("manage-routing-my-routes");
+  }
+  /** Venue Management dashboard or nav: umbrella or any venue section permission. */
+  if (permission === "manage-venue-management-dashboard") {
+    if (userPermissions.includes("manage-venue-management-dashboard")) return true;
+    if (userPermissions.includes("manage-venue-management")) return true;
+    if (userPermissions.includes("venues.view") || userPermissions.includes("venues.manage")) return true;
+    if (userPermissions.includes("manage-lms-events")) return true;
+    if (userPermissions.includes("manage-event-platform")) return true;
+    if (userPermissions.includes("reports.view")) return true;
+    return false;
+  }
+  if (permission === "venues.view" || permission === "venues.manage") {
+    if (userPermissions.includes("manage-venue-management")) return true;
+    if (userPermissions.includes("manage-lms-events")) return true;
+    if (userPermissions.includes("manage-event-platform")) return true;
+    if (userPermissions.includes("reports.view")) return true;
+    return userPermissions.includes(permission);
   }
   return userPermissions.includes(permission);
 }
@@ -676,6 +695,7 @@ export function getMenuItems(opts: {
   primaryRole?: string;
 }): NavItem[] {
   const { roles, permissions, currentUrl, activatedPackages = [], primaryRole } = opts;
+  const packages = normalizeActivatedPackages(activatedPackages);
 
   // Partner portal sees only the partner menu (scoped, role-permission gated).
   if (isPartner(roles, primaryRole) && !isSuperAdmin(roles)) {
@@ -692,9 +712,9 @@ export function getMenuItems(opts: {
   const coreMenuItems = isSuperAdmin(roles) ? getSuperAdminMenu() : getCompanyMenu();
   const sorted = [...coreMenuItems].sort((a, b) => (a.order || 999) - (b.order || 999));
   let permitted = filterByPermission(sorted, permissions, roles, primaryRole);
-  permitted = filterByActivatedPackages(permitted, activatedPackages);
+  permitted = filterByActivatedPackages(permitted, packages);
   permitted = applyLmsRoleMenuFilter(permitted, roles, permissions, primaryRole, currentUrl);
-  permitted = restrictMenuForPortalUsers(permitted, roles, permissions, activatedPackages, primaryRole);
+  permitted = restrictMenuForPortalUsers(permitted, roles, permissions, packages, primaryRole);
 
   if (isSuperAdmin(roles)) return permitted;
 
@@ -704,11 +724,11 @@ export function getMenuItems(opts: {
   // when the user is browsing within that module. This makes the sidebar contextual:
   // /hrm/* → HRM nav only, /recruitment/* → Recruitment nav only, etc.
   if (scope) {
-    permitted = ensureScopeMenuPresent(permitted, sorted, scope, activatedPackages, permissions, roles, primaryRole);
+    permitted = ensureScopeMenuPresent(permitted, sorted, scope, packages, permissions, roles, primaryRole);
     permitted = applyLmsRoleMenuFilter(permitted, roles, permissions, primaryRole, currentUrl);
   }
 
-  const alsoScopes = portalPinnedScopes(roles, permissions, activatedPackages, primaryRole);
+  const alsoScopes = portalPinnedScopes(roles, permissions, packages, primaryRole);
   return filterByDashboardScope(permitted, scope, alsoScopes);
 }
 

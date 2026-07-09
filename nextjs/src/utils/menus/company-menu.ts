@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   LifeBuoy,
   Map,
+  MapPin,
   Route,
   Monitor,
   Receipt,
@@ -84,6 +85,12 @@ export const getCompanyMenu = (): NavItem[] => [
         href: "/admin/event-platform",
         permission: "reports.view",
         dashboardScope: "eventplatform",
+      },
+      {
+        title: t("Venue Dashboard"),
+        href: "/admin/venue-management",
+        permission: "venues.view",
+        dashboardScope: "venuemanagement",
       },
       {
         title: t("My Learning"),
@@ -587,6 +594,20 @@ export const getCompanyMenu = (): NavItem[] => [
       { title: t("Meetings"), href: "/lms/meetings", permission: "manage-lms-meetings" },
       { title: t("Analytics"), href: "/lms/analytics", permission: "manage-lms-analytics" },
       { title: t("Settings"), href: "/lms/settings", permission: "manage-lms-settings" },
+    ],
+  },
+  {
+    title: t("Venue Management"),
+    icon: MapPin,
+    permission: "manage-venue-management-dashboard",
+    name: "venue-management",
+    order: 2964,
+    dashboardScope: "venuemanagement",
+    children: [
+      { title: t("Dashboard"), href: "/admin/venue-management", permission: "manage-venue-management-dashboard" },
+      { title: t("Venues"), href: "/admin/venue-management", permission: "venues.view" },
+      { title: t("Venue Categories"), href: "/admin/venue-management/categories", permission: "venues.manage" },
+      { title: t("Venue Types"), href: "/admin/venue-management/types", permission: "venues.manage" },
     ],
   },
   {

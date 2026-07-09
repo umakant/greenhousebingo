@@ -1,5 +1,5 @@
 /**
- * Project-wide US phone formatting: (000) 000-0000 (10 digits).
+ * Project-wide US phone formatting: (000) 000 0000 (10 digits).
  * Use `formatPhone` / `unformatPhone` in inputs; `formatPhoneDisplay` for tables and read-only UI.
  * Strips a leading country digit 1 when there are 11 digits (e.g. +1…).
  */
@@ -12,7 +12,7 @@ export function formatPhone(raw: string): string {
   if (!digits.length) return "";
   if (digits.length <= 3) return `(${digits}`;
   if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)} ${digits.slice(6)}`;
 }
 
 export function unformatPhone(value: string): string {
@@ -37,15 +37,15 @@ export function formatPhoneDisplay(value: string | null | undefined, empty = "")
   if (!value || !String(value).trim()) return empty;
   const digits = String(value).replace(/\D/g, "");
   if (digits.length === 10) {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)} ${digits.slice(6)}`;
   }
   if (digits.length === 11 && digits.startsWith("1")) {
-    return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+    return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)} ${digits.slice(7)}`;
   }
   if (digits.length > 10) {
     const last10 = digits.slice(-10);
     const countryCode = digits.slice(0, digits.length - 10);
-    return `+${countryCode} (${last10.slice(0, 3)}) ${last10.slice(3, 6)}-${last10.slice(6)}`;
+    return `+${countryCode} (${last10.slice(0, 3)}) ${last10.slice(3, 6)} ${last10.slice(6)}`;
   }
   if (digits.length > 0) {
     return formatPhone(value);

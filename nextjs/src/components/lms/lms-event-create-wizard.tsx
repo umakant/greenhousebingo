@@ -26,6 +26,11 @@ import {
   LmsEventPublicPageFields,
 } from "@/components/lms/lms-event-page-sections";
 import MediaPicker from "@/components/MediaPicker";
+import {
+  collectCompletedWizardSteps,
+  markWizardStepComplete,
+  WizardStepIndicator,
+} from "@/components/ui/wizard-step-indicator";
 import { useAppSettingsOptional } from "@/contexts/app-settings-context";
 import { useEventFormOptions } from "@/hooks/use-event-form-options";
 import {
@@ -149,29 +154,6 @@ function patchEventDatetime(iso: string, patch: { date?: string; time?: string }
   return combineDateTimeToIso(patch.date ?? date, patch.time ?? time);
 }
 
-function StepIndicator({ current }: { current: number }) {
-  return (
-    <ol className="flex flex-wrap gap-2 border-b pb-4">
-      {STEPS.map((label, i) => (
-        <li
-          key={label}
-          className={cn(
-            "flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium",
-            i === current
-              ? "bg-primary text-primary-foreground"
-              : i < current
-                ? "bg-primary/15 text-primary"
-                : "bg-muted text-muted-foreground",
-          )}
-        >
-          <span className="tabular-nums">{i + 1}</span>
-          {label}
-        </li>
-      ))}
-    </ol>
-  );
-}
-
 export function LmsEventCreateWizard(props: {
   mode?: "create" | "edit";
   categories: LmsEventCategory[];
@@ -185,10 +167,43 @@ export function LmsEventCreateWizard(props: {
     (appSettings?.settings?.googleMapsApiKey ?? "").trim() || undefined;
   const formOptions = useEventFormOptions();
   const [step, setStep] = React.useState(0);
+  const [completedSteps, setCompletedSteps] = React.useState<Set<number>>(() => new Set());
   const [values, setValues] = React.useState<LmsEventCreateWizardInput>(
     initialValues ? { ...DEFAULT_VALUES, ...initialValues } : DEFAULT_VALUES,
   );
   const [err, setErr] = React.useState<string | null>(null);
+
+  const syncCompletedSteps = React.useCallback(
+    (input: LmsEventCreateWizardInput) => {
+      const snapshot = { ...DEFAULT_VALUES, ...input };
+      const validate = (index: number): string | null => {
+        if (index === 0) {
+          if (!snapshot.title.trim() || snapshot.title.trim().length < 3) return "Event title is required.";
+          if (!snapshot.categoryId) return "Select a category.";
+        }
+        if (index === 1) {
+          if (!snapshot.startsAt) return "Start date/time is required.";
+          if (!snapshot.endsAt) return "End date/time is required.";
+          if (new Date(snapshot.endsAt) <= new Date(snapshot.startsAt)) return "End must be after start.";
+        }
+        if (index === 4) {
+          if (!snapshot.ticketName.trim()) return "Ticket name is required.";
+          if (!snapshot.isFree && snapshot.price < 0) return "Enter a valid price.";
+        }
+        return null;
+      };
+      setCompletedSteps(collectCompletedWizardSteps(STEPS.length - 1, validate));
+    },
+    [],
+  );
+
+  React.useEffect(() => {
+    if (initialValues) {
+      const merged = { ...DEFAULT_VALUES, ...initialValues };
+      setValues(merged);
+      if (mode === "edit") syncCompletedSteps(merged);
+    }
+  }, [initialValues, mode, syncCompletedSteps]);
 
   function patch(partial: Partial<LmsEventCreateWizardInput>) {
     setValues((prev) => ({ ...prev, ...partial }));
@@ -218,6 +233,7 @@ export function LmsEventCreateWizard(props: {
       return;
     }
     setErr(null);
+    setCompletedSteps((prev) => markWizardStepComplete(prev, step));
     if (step < STEPS.length - 1) {
       setStep((s) => s + 1);
       return;
@@ -249,7 +265,17 @@ export function LmsEventCreateWizard(props: {
         void handleNext();
       }}
     >
-      <StepIndicator current={step} />
+      <WizardStepIndicator
+        steps={STEPS}
+        current={step}
+        completedSteps={completedSteps}
+        onStepClick={(index) => {
+          if (index === step || completedSteps.has(index)) {
+            setErr(null);
+            setStep(index);
+          }
+        }}
+      />
 
       {err ? <p className="text-sm text-destructive">{err}</p> : null}
 

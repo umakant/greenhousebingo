@@ -36,6 +36,9 @@ export async function register() {
       const { ensureEventPlatformSetup } = await import("@/lib/event-platform/event-platform-permissions");
       await ensureEventPlatformSetup();
       await ensureEventPlatformPlanMigration(prisma);
+      const { ensureVenueManagementSetup } = await import("@/lib/venue-management/venue-management-permissions");
+      await ensureVenueManagementSetup();
+      await ensureVenueManagementPlanMigration(prisma);
       const { ensureMarketplaceSetup } = await import("@/lib/marketplace-permissions");
       await ensureMarketplaceSetup();
       await ensurePlanModulesIncludeAddons(prisma);
@@ -70,6 +73,7 @@ async function ensurePlanModulesIncludeAddons(prisma: any) {
     "AffiliateBusiness",
     "Compliance",
     "Routing",
+    "VenueManagement",
     "Marketplace",
   ];
   try {
@@ -110,6 +114,25 @@ async function ensureEventPlatformPlanMigration(prisma: any) {
     }
   } catch (err) {
     console.error("[instrumentation] ensureEventPlatformPlanMigration failed:", err);
+  }
+}
+
+async function ensureVenueManagementPlanMigration(prisma: any) {
+  try {
+    const plans = await prisma.plan.findMany({ select: { id: true, name: true, modules: true } });
+    for (const plan of plans) {
+      const existing: string[] = Array.isArray(plan.modules) ? plan.modules : [];
+      if (existing.length === 0) continue;
+      const existingLower = existing.map((m: string) => m.toLowerCase());
+      const hasEventPlatform = existingLower.some((m) => m === "eventplatform");
+      const hasVenueManagement = existingLower.some((m) => m === "venuemanagement");
+      if (!hasEventPlatform || hasVenueManagement) continue;
+      const updated = [...existing, "VenueManagement"];
+      await prisma.plan.update({ where: { id: plan.id }, data: { modules: updated } });
+      console.log(`[instrumentation] plan "${plan.name}": added VenueManagement (Event Platform bundle migration)`);
+    }
+  } catch (err) {
+    console.error("[instrumentation] ensureVenueManagementPlanMigration failed:", err);
   }
 }
 

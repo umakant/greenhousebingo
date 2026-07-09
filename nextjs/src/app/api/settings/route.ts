@@ -18,6 +18,7 @@ import { companyWebsiteOwnerId } from "@/lib/company-themes/company-website-acce
 import { findCompanyOwnerIdByWebsiteHostname } from "@/lib/company-themes/company-website-host-resolver";
 import { syncCompanyUserAvatarFromSettings } from "@/lib/company-user-avatar";
 import { normalizeWebsiteUrl, websiteUrlToHostname } from "@/lib/website-url";
+import { normalizeBrandHexColor } from "@/lib/brand-theme";
 
 function appUrlFromReq(req: NextRequest): string {
   const env = (process.env.NEXT_PUBLIC_APP_URL ?? "").trim();
@@ -411,7 +412,10 @@ export async function POST(req: NextRequest) {
     .filter((key) => Object.prototype.hasOwnProperty.call(payload, key))
     .map((key) => ({
       key,
-      value: normalizeValue(payload[key]),
+      value:
+        section === "brand" && key === "customColor"
+          ? normalizeBrandHexColor(normalizeValue(payload[key]))
+          : normalizeValue(payload[key]),
       isPublic:
         key === "companyNextjsThemeCustomizer" ||
         key === "companyWebsiteAccessPasswordHash"

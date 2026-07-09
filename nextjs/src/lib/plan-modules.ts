@@ -28,6 +28,9 @@ const PLAN_MODULE_TO_ADDON_NAME: Record<string, string> = {
   eventplatform: "EventPlatform",
   event_platform: "EventPlatform",
   EventPlatform: "EventPlatform",
+  venuemanagement: "VenueManagement",
+  venue_management: "VenueManagement",
+  VenueManagement: "VenueManagement",
   affiliatebusiness: "AffiliateBusiness",
   affiliate_business: "AffiliateBusiness",
   AffiliateBusiness: "AffiliateBusiness",
@@ -342,6 +345,12 @@ const FALLBACK_PERMISSIONS: Record<string, string[]> = {
     "roles.manage",
     "integrations.manage",
     "reports.view",
+  ],
+  venuemanagement: [
+    "manage-venue-management",
+    "manage-venue-management-dashboard",
+    "venues.view",
+    "venues.manage",
   ],
   affiliatebusiness: [
     "manage-affiliate-business",

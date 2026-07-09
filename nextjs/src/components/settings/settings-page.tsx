@@ -136,6 +136,12 @@ import {
   resolveBrandLogoWidth,
   syncBrandLogoDimensions,
 } from "@/lib/brand-logo-size";
+import {
+  DEFAULT_BRAND_CUSTOM_COLOR,
+  formatBrandHexColorInput,
+  isValidBrandHexColor,
+  normalizeBrandHexColor,
+} from "@/lib/brand-theme";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { useAppSettingsOptional } from "@/contexts/app-settings-context";
 import type {
@@ -1015,7 +1021,7 @@ function BrandSection({
       layoutDirection: source.layoutDirection?.trim() || "ltr",
       themeMode: source.themeMode?.trim() || "light",
       themeColor: source.themeColor?.trim() || "green",
-      customColor: source.customColor?.trim() || "#10b981",
+      customColor: normalizeBrandHexColor(source.customColor, DEFAULT_BRAND_CUSTOM_COLOR),
       loginImage: source.loginImage?.trim() || "",
       loginBgColor: source.loginBgColor?.trim() || "",
       loginFormBgColor: source.loginFormBgColor?.trim() || "",
@@ -1075,11 +1081,27 @@ function BrandSection({
     setSettings((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleCustomColorBlur = () => {
+    setSettings((prev) => {
+      if (!isValidBrandHexColor(prev.customColor)) return prev;
+      return { ...prev, customColor: normalizeBrandHexColor(prev.customColor) };
+    });
+  };
+
+  const handleCustomColorChange = (value: string) => {
+    setSettings((prev) => ({ ...prev, customColor: formatBrandHexColorInput(value) }));
+  };
+
+  const resolvedCustomColor = normalizeBrandHexColor(settings.customColor, DEFAULT_BRAND_CUSTOM_COLOR);
+
   const save = async () => {
     setSaving(true);
     onFlash(null);
     try {
-      await postSettings("brand", settings);
+      await postSettings("brand", {
+        ...settings,
+        customColor: normalizeBrandHexColor(settings.customColor, DEFAULT_BRAND_CUSTOM_COLOR),
+      });
       onFlash({ type: "success", message: "Brand settings saved." });
       toast.success("Brand settings saved.");
       window.dispatchEvent(new Event("pf:app-settings-updated"));
@@ -1562,10 +1584,10 @@ function BrandSection({
                       type="button"
                       variant={settings.themeColor === "custom" ? "default" : "outline"}
                       className="h-8 w-full p-0 relative"
-                      style={{ backgroundColor: settings.themeColor === "custom" ? settings.customColor : "transparent" }}
+                      style={{ backgroundColor: settings.themeColor === "custom" ? resolvedCustomColor : "transparent" }}
                       onClick={() => handleSelectChange("themeColor", "custom")}
                     >
-                      <span className="absolute inset-1 rounded-sm" style={{ backgroundColor: settings.customColor }} />
+                      <span className="absolute inset-1 rounded-sm" style={{ backgroundColor: resolvedCustomColor }} />
                     </Button>
                   </div>
 
@@ -1577,18 +1599,19 @@ function BrandSection({
                           <Input
                             id="colorPicker"
                             type="color"
-                            value={settings.customColor}
+                            value={resolvedCustomColor}
                             onChange={(e) => handleSelectChange("customColor", e.target.value)}
                             className="absolute inset-0 opacity-0 cursor-pointer"
                           />
-                          <div className="w-10 h-10 rounded border cursor-pointer" style={{ backgroundColor: settings.customColor }} />
+                          <div className="w-10 h-10 rounded border cursor-pointer" style={{ backgroundColor: resolvedCustomColor }} />
                         </div>
                         <Input
                           id="customColor"
                           name="customColor"
                           type="text"
                           value={settings.customColor}
-                          onChange={(e) => handleSelectChange("customColor", e.target.value)}
+                          onChange={(e) => handleCustomColorChange(e.target.value)}
+                          onBlur={handleCustomColorBlur}
                           placeholder="#10b981"
                         />
                       </div>

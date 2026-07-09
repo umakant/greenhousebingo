@@ -174,6 +174,8 @@ async function seedCompanySettings(orgId) {
     ["metaKeywords", "plant bingo, greenhouse bingo, community events, houseplants, social events, Minneapolis"],
     ["defaultCurrency", "USD"],
     ["defaultLanguage", "en"],
+    ["themeColor", companyData.brandThemeColor ?? "custom"],
+    ["customColor", companyData.brandCustomColor ?? "#4e735a"],
   ];
 
   for (const [key, value] of settings) {

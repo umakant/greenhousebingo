@@ -12,6 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { getImagePath } from "@/utils/image-path";
 import { resolveBrandLogoHeight, resolveBrandLogoPosition, resolveBrandLogoWidth } from "@/lib/brand-logo-size";
+import {
+  DEFAULT_BRAND_CUSTOM_COLOR,
+  formatBrandHexColorInput,
+  isValidBrandHexColor,
+  normalizeBrandHexColor,
+} from "@/lib/brand-theme";
 
 const NAVY_LEFT = "#0f172a";
 const NAVY_FORM = "#1e293b";
@@ -43,7 +49,7 @@ export function ThemeSettingsSection({ isSuperAdmin, canEdit, initial, onFlash }
     layoutDirection: initial.layoutDirection ?? "ltr",
     themeMode: initial.themeMode ?? "light",
     themeColor: initial.themeColor ?? "green",
-    customColor: initial.customColor ?? "#10b981",
+    customColor: normalizeBrandHexColor(initial.customColor, DEFAULT_BRAND_CUSTOM_COLOR),
     loginBgColor: initial.loginBgColor ?? "",
     loginFormBgColor: initial.loginFormBgColor ?? "",
   });
@@ -57,11 +63,27 @@ export function ThemeSettingsSection({ isSuperAdmin, canEdit, initial, onFlash }
     setSettings((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleCustomColorBlur = () => {
+    setSettings((prev) => {
+      if (!isValidBrandHexColor(prev.customColor)) return prev;
+      return { ...prev, customColor: normalizeBrandHexColor(prev.customColor) };
+    });
+  };
+
+  const handleCustomColorChange = (value: string) => {
+    setSettings((prev) => ({ ...prev, customColor: formatBrandHexColorInput(value) }));
+  };
+
+  const resolvedCustomColor = normalizeBrandHexColor(settings.customColor, DEFAULT_BRAND_CUSTOM_COLOR);
+
   const save = async () => {
     setSaving(true);
     onFlash(null);
     try {
-      await saveThemeSettings(settings);
+      await saveThemeSettings({
+        ...settings,
+        customColor: normalizeBrandHexColor(settings.customColor, DEFAULT_BRAND_CUSTOM_COLOR),
+      });
       onFlash({ type: "success", message: "Theme settings saved." });
       toast.success("Theme settings saved.");
       window.dispatchEvent(new Event("pf:app-settings-updated"));
@@ -125,13 +147,13 @@ export function ThemeSettingsSection({ isSuperAdmin, canEdit, initial, onFlash }
                   variant={settings.themeColor === "custom" ? "default" : "outline"}
                   className="relative h-8 w-full p-0"
                   style={{
-                    backgroundColor: settings.themeColor === "custom" ? settings.customColor : "transparent",
+                    backgroundColor: settings.themeColor === "custom" ? resolvedCustomColor : "transparent",
                   }}
                   onClick={() => handleSelectChange("themeColor", "custom")}
                 >
                   <span
                     className="absolute inset-1 rounded-sm"
-                    style={{ backgroundColor: settings.customColor }}
+                    style={{ backgroundColor: resolvedCustomColor }}
                   />
                 </Button>
               </div>
@@ -143,13 +165,13 @@ export function ThemeSettingsSection({ isSuperAdmin, canEdit, initial, onFlash }
                       <Input
                         id="colorPicker"
                         type="color"
-                        value={settings.customColor}
+                        value={resolvedCustomColor}
                         onChange={(e) => handleSelectChange("customColor", e.target.value)}
                         className="absolute inset-0 cursor-pointer opacity-0"
                       />
                       <div
                         className="h-10 w-10 cursor-pointer rounded border"
-                        style={{ backgroundColor: settings.customColor }}
+                        style={{ backgroundColor: resolvedCustomColor }}
                       />
                     </div>
                     <Input
@@ -157,7 +179,8 @@ export function ThemeSettingsSection({ isSuperAdmin, canEdit, initial, onFlash }
                       name="customColor"
                       type="text"
                       value={settings.customColor}
-                      onChange={(e) => handleSelectChange("customColor", e.target.value)}
+                      onChange={(e) => handleCustomColorChange(e.target.value)}
+                      onBlur={handleCustomColorBlur}
                       placeholder="#10b981"
                     />
                   </div>
