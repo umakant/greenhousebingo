@@ -6,7 +6,7 @@ import {
   requireEventPlatformApi,
 } from "@/lib/event-platform/event-platform-api-auth";
 import { eventHostUpdateSchema } from "@/lib/event-platform/hosts/host-schemas";
-import { getEventHostById, serializeEventHost } from "@/lib/event-platform/hosts/host-service";
+import { getEventHostById, hostDisplayNameFromFields, serializeEventHost } from "@/lib/event-platform/hosts/host-service";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -37,10 +37,18 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     }
     const p = parsed.data;
 
+    const firstName = p.firstName !== undefined ? p.firstName.trim() : existing.firstName ?? "";
+    const lastName = p.lastName !== undefined ? p.lastName.trim() : existing.lastName ?? "";
+
     const updated = await prisma.eventHost.update({
       where: { id: existing.id },
       data: {
-        displayName: p.displayName?.trim() ?? undefined,
+        firstName: p.firstName !== undefined ? firstName : undefined,
+        lastName: p.lastName !== undefined ? lastName : undefined,
+        displayName:
+          p.firstName !== undefined || p.lastName !== undefined
+            ? hostDisplayNameFromFields({ firstName, lastName })
+            : undefined,
         email: p.email?.trim().toLowerCase() ?? undefined,
         phone: p.phone !== undefined ? p.phone?.trim() || null : undefined,
         bio: p.bio !== undefined ? p.bio?.trim() || null : undefined,

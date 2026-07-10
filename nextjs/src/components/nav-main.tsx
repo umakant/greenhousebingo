@@ -82,6 +82,12 @@ function isAccountHomePath(pathname: string): boolean {
   return path === "/account";
 }
 
+/** Section "Dashboard" links that must not stay active on nested module routes. */
+const MODULE_SECTION_HOME_HREFS = new Set([
+  "/admin/event-platform",
+  "/admin/venue-management",
+]);
+
 function isLinkActive(href: string | undefined, pathname: string): boolean {
   if (!href || href === "#") return false;
   const path = normalizeNavPath(pathname);
@@ -91,6 +97,8 @@ function isLinkActive(href: string | undefined, pathname: string): boolean {
   // Accounting submenu "Accounting" → /account: exact home only, not every /account/* child.
   if (target === "/account") return isAccountHomePath(pathname);
   if (target === "/launchpad") return false;
+  // Event Platform / Venue "Dashboard" → exact home only, not every child route.
+  if (MODULE_SECTION_HOME_HREFS.has(target)) return false;
   if (target.length > 1 && path.startsWith(`${target}/`)) return true;
   return false;
 }

@@ -5,8 +5,7 @@ import { Plus } from "lucide-react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 
-import MediaPicker from "@/components/MediaPicker";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -38,12 +37,20 @@ type PatchFn = (partial: Partial<LmsEventCreateWizardInput>) => void;
 
 function LibraryAdminLink({ href, label, className }: { href: string; label: string; className?: string }) {
   return (
-    <Button asChild className={cn("gap-2 shrink-0", className)}>
-      <a href={href} target="_blank" rel="noreferrer">
-        <Plus className="h-4 w-4" />
-        {label}
-      </a>
-    </Button>
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className={cn(
+        buttonVariants(),
+        "relative z-10 inline-flex shrink-0 items-center gap-2 no-underline",
+        className,
+      )}
+    >
+      <Plus className="h-4 w-4" />
+      {label}
+    </a>
   );
 }
 
@@ -211,25 +218,9 @@ export function LmsEventHostSponsorFields({
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            Auto-fills host bio and photo from your host directory. You can still edit the fields below.
+            Host bio and photo are pulled from your host directory when the event is saved.
           </p>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="ev-host-bio">Host bio</Label>
-          <Textarea
-            id="ev-host-bio"
-            rows={4}
-            value={values.hostBio ?? ""}
-            onChange={(e) => onPatch({ hostBio: e.target.value })}
-          />
-        </div>
-        <MediaPicker
-          id="ev-host-image"
-          label="Host photo"
-          value={values.hostImageUrl ?? ""}
-          onChange={(v) => onPatch({ hostImageUrl: typeof v === "string" ? v : v[0] ?? "" })}
-          placeholder="Select host headshot…"
-        />
       </div>
 
       <div className="rounded-lg border bg-muted/20 p-4 space-y-4">
@@ -260,34 +251,8 @@ export function LmsEventHostSponsorFields({
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            Auto-fills sponsor address, phone, and perk from your sponsor directory.
+            Sponsor address, phone, and perk are pulled from your sponsor directory when the event is saved.
           </p>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="ev-sponsor-address">Sponsor address</Label>
-          <Input
-            id="ev-sponsor-address"
-            value={values.sponsorAddress ?? ""}
-            onChange={(e) => onPatch({ sponsorAddress: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="ev-sponsor-phone">Sponsor phone</Label>
-          <Input
-            id="ev-sponsor-phone"
-            value={values.sponsorPhone ?? ""}
-            onChange={(e) => onPatch({ sponsorPhone: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="ev-sponsor-perk">Sponsor perk / offer</Label>
-          <Textarea
-            id="ev-sponsor-perk"
-            rows={2}
-            value={values.sponsorPerk ?? ""}
-            onChange={(e) => onPatch({ sponsorPerk: e.target.value })}
-            placeholder="Every attendee gets a discount card…"
-          />
         </div>
       </div>
     </div>
@@ -305,24 +270,28 @@ function BingoGamePicker({
   const [loading, setLoading] = React.useState(false);
   const selectedIds = values.bingoGameIds ?? [];
 
-  React.useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/lms/admin/bingo-games", { credentials: "include", cache: "no-store" });
-        const data = (await res.json().catch(() => null)) as { ok?: boolean; items?: EventBingoGameDto[] } | null;
-        if (!cancelled && res.ok && data?.ok && Array.isArray(data.items)) {
-          setGames(data.items);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
+  const loadGames = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/lms/admin/bingo-games", { credentials: "include", cache: "no-store" });
+      const data = (await res.json().catch(() => null)) as { ok?: boolean; items?: EventBingoGameDto[] } | null;
+      if (res.ok && data?.ok && Array.isArray(data.items)) {
+        setGames(data.items);
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  React.useEffect(() => {
+    void loadGames();
+  }, [loadGames]);
+
+  React.useEffect(() => {
+    const onFocus = () => void loadGames();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [loadGames]);
 
   React.useEffect(() => {
     if (selectedIds.length > 0 || games.length === 0) return;
@@ -438,24 +407,28 @@ function FaqPicker({
   const [loading, setLoading] = React.useState(false);
   const selectedIds = values.faqIds ?? [];
 
-  React.useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/lms/admin/event-faqs", { credentials: "include", cache: "no-store" });
-        const data = (await res.json().catch(() => null)) as { ok?: boolean; items?: EventBingoFaqDto[] } | null;
-        if (!cancelled && res.ok && data?.ok && Array.isArray(data.items)) {
-          setFaqs(data.items);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
+  const loadFaqs = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/lms/admin/event-faqs", { credentials: "include", cache: "no-store" });
+      const data = (await res.json().catch(() => null)) as { ok?: boolean; items?: EventBingoFaqDto[] } | null;
+      if (res.ok && data?.ok && Array.isArray(data.items)) {
+        setFaqs(data.items);
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  React.useEffect(() => {
+    void loadFaqs();
+  }, [loadFaqs]);
+
+  React.useEffect(() => {
+    const onFocus = () => void loadFaqs();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [loadFaqs]);
 
   React.useEffect(() => {
     if (selectedIds.length > 0 || faqs.length === 0) return;

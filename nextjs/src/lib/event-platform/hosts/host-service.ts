@@ -3,6 +3,7 @@ import "server-only";
 import type { EventHost, EventHostInvitation, LmsTrainingEvent } from "@prisma/client";
 
 import { parseDetailContent } from "@/lib/lms-events/event-detail-content";
+import { buildEventHostDisplayName } from "@/lib/event-platform/hosts/host-display-name";
 import type {
   EventHostDto,
   EventHostInvitationDto,
@@ -29,6 +30,8 @@ export function serializeEventHost(
   return {
     id: row.id.toString(),
     displayName: row.displayName,
+    firstName: row.firstName,
+    lastName: row.lastName,
     email: row.email,
     phone: row.phone,
     bio: row.bio,
@@ -64,6 +67,10 @@ export function serializeEventHostInvitation(
     expiresAt: row.expiresAt?.toISOString() ?? null,
     createdAt: row.createdAt.toISOString(),
   };
+}
+
+export function hostDisplayNameFromFields(input: { firstName: string; lastName: string }) {
+  return buildEventHostDisplayName(input);
 }
 
 export async function listEventHosts(organizationId: bigint): Promise<EventHostDto[]> {

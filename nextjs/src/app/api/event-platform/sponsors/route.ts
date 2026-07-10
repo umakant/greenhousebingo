@@ -6,7 +6,7 @@ import {
   requireEventPlatformApi,
 } from "@/lib/event-platform/event-platform-api-auth";
 import { eventSponsorCreateSchema } from "@/lib/event-platform/sponsors/sponsor-schemas";
-import { listEventSponsors, serializeEventSponsor } from "@/lib/event-platform/sponsors/sponsor-service";
+import { listEventSponsors, serializeEventSponsor, sponsorNameFromFields } from "@/lib/event-platform/sponsors/sponsor-service";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -33,11 +33,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, message: parsed.error.issues[0]?.message ?? "Invalid input." }, { status: 400 });
     }
     const p = parsed.data;
+    const firstName = p.firstName.trim();
+    const lastName = p.lastName.trim();
+    const company = p.company?.trim() || null;
 
     const created = await prisma.eventSponsor.create({
       data: {
         organizationId: actor.organizationId,
-        name: p.name.trim(),
+        firstName,
+        lastName,
+        company,
+        name: sponsorNameFromFields({ firstName, lastName, company }),
         address: p.address?.trim() || null,
         phone: p.phone?.trim() || null,
         perk: p.perk?.trim() || null,

@@ -162,7 +162,7 @@ function ScheduleDateTimeField(props: {
         {label}
         {required ? <span className="text-destructive"> *</span> : null}
       </Label>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_minmax(0,220px)]">
+      <div className="grid grid-cols-1 gap-2">
         <DatePickerInput
           id={`${id}-date`}
           value={displayDate}
@@ -807,7 +807,7 @@ export function LmsEventCreateWizard(props: {
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid min-w-0 gap-4 sm:grid-cols-3">
             <ScheduleDateTimeField
               id="ev-doors"
               label="Doors open"
@@ -825,17 +825,16 @@ export function LmsEventCreateWizard(props: {
               onEventDateChange={patchEventDate}
               onChange={(iso) => patch({ bingoStart: iso, startsAt: iso })}
             />
+            <ScheduleDateTimeField
+              id="ev-bingo-end"
+              label="Bingo end"
+              required
+              eventDate={values.eventDate?.trim() || eventDateFromIso(values.startsAt)}
+              iso={values.bingoEnd || values.endsAt}
+              onEventDateChange={patchEventDate}
+              onChange={(iso) => patch({ bingoEnd: iso, endsAt: iso })}
+            />
           </div>
-
-          <ScheduleDateTimeField
-            id="ev-bingo-end"
-            label="Bingo end"
-            required
-            eventDate={values.eventDate?.trim() || eventDateFromIso(values.startsAt)}
-            iso={values.bingoEnd || values.endsAt}
-            onEventDateChange={patchEventDate}
-            onChange={(iso) => patch({ bingoEnd: iso, endsAt: iso })}
-          />
 
           {values.deliveryMode !== "online" ? (
             <>
@@ -1007,7 +1006,7 @@ export function LmsEventCreateWizard(props: {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ev-qty">Bingo card numbers</Label>
+              <Label htmlFor="ev-qty">Number of seats</Label>
               <Input
                 id="ev-qty"
                 type="number"
@@ -1017,37 +1016,17 @@ export function LmsEventCreateWizard(props: {
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="ev-ticket-desc">Bingo card description</Label>
-            <Textarea
-              id="ev-ticket-desc"
-              rows={2}
-              value={values.ticketDescription ?? ""}
-              onChange={(e) => patch({ ticketDescription: e.target.value })}
-            />
-          </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="ev-bonus-card">Bonus card</Label>
-              <Input
-                id="ev-bonus-card"
-                value={values.bonusCardName ?? ""}
-                onChange={(e) => patch({ bonusCardName: e.target.value })}
-                placeholder="Bonus card"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ev-bonus-price">Bonus card price (USD)</Label>
-              <Input
-                id="ev-bonus-price"
-                type="number"
-                min={0}
-                step="0.01"
-                value={values.extraCardPrice ?? ""}
-                onChange={(e) => patch({ extraCardPrice: e.target.value ? Number(e.target.value) : null })}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="ev-bonus-price">Bonus card price (USD)</Label>
+            <Input
+              id="ev-bonus-price"
+              type="number"
+              min={0}
+              step="0.01"
+              value={values.extraCardPrice ?? ""}
+              onChange={(e) => patch({ extraCardPrice: e.target.value ? Number(e.target.value) : null })}
+            />
           </div>
         </div>
       ) : null}

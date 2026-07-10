@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { writeEventAuditLog } from "@/lib/event-platform/dashboard-service";
 import { eventBingoGameUpdateSchema } from "@/lib/event-platform/bingo-games/bingo-game-schemas";
-import { getEventBingoGameById, serializeEventBingoGame } from "@/lib/event-platform/bingo-games/bingo-game-service";
+import { getEventBingoGameById, getEventBingoGameByIdForOrg, serializeEventBingoGame } from "@/lib/event-platform/bingo-games/bingo-game-service";
 import {
   isEventPlatformApiError,
   requireEventPlatformApi,
@@ -73,6 +73,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
   if (isEventPlatformApiError(actor)) return actor;
   try {
     const { id: idRaw } = await ctx.params;
+    const permanent = new URL(req.url).searchParams.get("permanent") === "1";
     let id: bigint;
     try {
       id = BigInt(idRaw);
@@ -80,9 +81,23 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
       return NextResponse.json({ ok: false, message: "Invalid bingo game id." }, { status: 400 });
     }
 
-    const existing = await getEventBingoGameById(actor.organizationId, id);
+    const existing = permanent
+      ? await getEventBingoGameByIdForOrg(actor.organizationId, id)
+      : await getEventBingoGameById(actor.organizationId, id);
     if (!existing) {
       return NextResponse.json({ ok: false, message: "Bingo game not found." }, { status: 404 });
+    }
+
+    if (permanent) {
+      await prisma.eventBingoGame.delete({ where: { id: existing.id } });
+      await writeEventAuditLog({
+        organizationId: actor.organizationId,
+        actorUserId: actor.userId,
+        action: "bingo_game.deleted",
+        entityType: "event_bingo_game",
+        entityId: existing.id.toString(),
+      });
+      return NextResponse.json({ ok: true });
     }
 
     await prisma.eventBingoGame.update({
@@ -100,7 +115,8 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
 
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Archive failed.";
+    const permanent = new URL(req.url).searchParams.get("permanent") === "1";
+    const message = e instanceof Error ? e.message : permanent ? "Delete failed." : "Archive failed.";
     return NextResponse.json({ ok: false, message }, { status: 500 });
   }
 }

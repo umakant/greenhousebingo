@@ -7,7 +7,7 @@ import {
 } from "@/lib/event-platform/event-platform-api-auth";
 import { getEventHostsListPayload } from "@/lib/event-platform/hosts/host-list-service";
 import { eventHostCreateSchema } from "@/lib/event-platform/hosts/host-schemas";
-import { serializeEventHost } from "@/lib/event-platform/hosts/host-service";
+import { hostDisplayNameFromFields, serializeEventHost } from "@/lib/event-platform/hosts/host-service";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -34,11 +34,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, message: parsed.error.issues[0]?.message ?? "Invalid input." }, { status: 400 });
     }
     const p = parsed.data;
+    const firstName = p.firstName.trim();
+    const lastName = p.lastName.trim();
 
     const created = await prisma.eventHost.create({
       data: {
         organizationId: actor.organizationId,
-        displayName: p.displayName.trim(),
+        firstName,
+        lastName,
+        displayName: hostDisplayNameFromFields({ firstName, lastName }),
         email: p.email.trim().toLowerCase(),
         phone: p.phone?.trim() || null,
         bio: p.bio?.trim() || null,

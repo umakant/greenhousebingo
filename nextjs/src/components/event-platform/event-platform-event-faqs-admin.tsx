@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import NoRecordsFound from "@/components/no-records-found";
 import { Button } from "@/components/ui/button";
+import { TableActionButton } from "@/components/ui/table-action-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -198,17 +199,23 @@ export function EventPlatformEventFaqsAdmin() {
                       {faq.status}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openEdit(faq)}>
-                        Edit
-                      </Button>
-                      {faq.status === "active" ? (
-                        <Button variant="outline" size="sm" onClick={() => void archiveFaq(faq.id)}>
-                          Archive
-                        </Button>
-                      ) : null}
-                    </div>
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                    <TableActionButton
+                      label="Edit"
+                      onPrimaryClick={() => openEdit(faq)}
+                      items={
+                        faq.status === "active"
+                          ? [
+                              {
+                                label: "Archive",
+                                onSelect: () => void archiveFaq(faq.id),
+                                destructive: true,
+                              },
+                            ]
+                          : []
+                      }
+                      className="ml-auto"
+                    />
                   </TableCell>
                 </TableRow>
               ))}

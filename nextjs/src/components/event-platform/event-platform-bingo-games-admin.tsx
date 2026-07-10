@@ -31,7 +31,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { TableActionButton, type TableActionItem } from "@/components/ui/table-action-button";
 import type { EventBingoGameDto } from "@/lib/event-platform/bingo-games/bingo-game-types";
+import { appConfirm } from "@/lib/app-confirm";
 import { LMS_EVENT_BINGO_DIFFICULTIES } from "@/lib/lms-events/event-detail-content";
 import { cn } from "@/lib/utils";
 
@@ -105,6 +107,14 @@ export function EventPlatformBingoGamesAdmin() {
   }
 
   async function saveGame() {
+    const name = form.name.trim();
+    const pattern = form.pattern.trim();
+    const prize = form.prize.trim();
+    if (!name || !pattern || !prize) {
+      toast.error("Name, pattern, and prize are required.");
+      return;
+    }
+
     setSaving(true);
     try {
       const url = editingId ? `/api/event-platform/bingo-games/${editingId}` : "/api/event-platform/bingo-games";
@@ -113,7 +123,7 @@ export function EventPlatformBingoGamesAdmin() {
         method,
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, name, pattern, prize }),
       });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
       if (!res.ok || !data?.ok) {
@@ -140,6 +150,45 @@ export function EventPlatformBingoGamesAdmin() {
     }
     toast.success("Bingo game archived.");
     await reload();
+  }
+
+  async function deleteGame(game: EventBingoGameDto) {
+    const confirmed = await appConfirm({
+      title: "Delete bingo game",
+      description: `Permanently delete "${game.name}"? This cannot be undone.`,
+      confirmLabel: "Delete",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+
+    const res = await fetch(`/api/event-platform/bingo-games/${game.id}?permanent=1`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    const data = (await res.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
+    if (!res.ok || !data?.ok) {
+      toast.error(data?.message ?? "Could not delete bingo game.");
+      return;
+    }
+    toast.success("Bingo game deleted.");
+    await reload();
+  }
+
+  function gameRowActions(game: EventBingoGameDto) {
+    const items: TableActionItem[] = [];
+    if (game.status === "active") {
+      items.push({ label: "Archive", onSelect: () => void archiveGame(game.id) });
+    }
+    items.push({
+      label: "Delete",
+      onSelect: () => void deleteGame(game),
+      destructive: true,
+    });
+    return {
+      label: "Edit",
+      onPrimaryClick: () => openEdit(game),
+      items,
+    };
   }
 
   return (
@@ -212,17 +261,8 @@ export function EventPlatformBingoGamesAdmin() {
                       {game.status}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openEdit(game)}>
-                        Edit
-                      </Button>
-                      {game.status === "active" ? (
-                        <Button variant="outline" size="sm" onClick={() => void archiveGame(game.id)}>
-                          Archive
-                        </Button>
-                      ) : null}
-                    </div>
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                    <TableActionButton {...gameRowActions(game)} className="ml-auto" />
                   </TableCell>
                 </TableRow>
               ))}
@@ -232,92 +272,97 @@ export function EventPlatformBingoGamesAdmin() {
       </div>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="overflow-y-auto sm:max-w-lg">
-          <SheetHeader>
+        <SheetContent side="right" className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+          <SheetHeader className="border-b px-6 py-5">
             <SheetTitle>{editingId ? "Edit bingo game" : "Add bingo game"}</SheetTitle>
           </SheetHeader>
-          <div className="mt-6 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="bg-name">Name</Label>
-              <Input
-                id="bg-name"
-                value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="Traditional Bingo"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="bg-pattern">Pattern</Label>
-              <Input
-                id="bg-pattern"
-                value={form.pattern}
-                onChange={(e) => setForm((f) => ({ ...f, pattern: e.target.value }))}
-                placeholder="Any line — horizontal, vertical, or diagonal"
-              />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="bg-prize">Prize</Label>
+                <Label htmlFor="bg-name">Name</Label>
                 <Input
-                  id="bg-prize"
-                  value={form.prize}
-                  onChange={(e) => setForm((f) => ({ ...f, prize: e.target.value }))}
-                  placeholder="Pothos"
+                  id="bg-name"
+                  autoComplete="off"
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="Traditional Bingo"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Difficulty</Label>
-                <Select value={form.difficulty} onValueChange={(v) => setForm((f) => ({ ...f, difficulty: v }))}>
+                <Label htmlFor="bg-pattern">Pattern</Label>
+                <Input
+                  id="bg-pattern"
+                  autoComplete="off"
+                  value={form.pattern}
+                  onChange={(e) => setForm((f) => ({ ...f, pattern: e.target.value }))}
+                  placeholder="Any line — horizontal, vertical, or diagonal"
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="bg-prize">Prize</Label>
+                  <Input
+                    id="bg-prize"
+                    autoComplete="off"
+                    value={form.prize}
+                    onChange={(e) => setForm((f) => ({ ...f, prize: e.target.value }))}
+                    placeholder="Pothos"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Difficulty</Label>
+                  <Select value={form.difficulty} onValueChange={(v) => setForm((f) => ({ ...f, difficulty: v }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LMS_EVENT_BINGO_DIFFICULTIES.map((level) => (
+                        <SelectItem key={level} value={level}>
+                          {level}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bg-sort">Sort order</Label>
+                <Input
+                  id="bg-sort"
+                  type="number"
+                  min={0}
+                  value={form.sortOrder}
+                  onChange={(e) => setForm((f) => ({ ...f, sortOrder: Number(e.target.value) || 0 }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bg-desc">Description (optional)</Label>
+                <Textarea
+                  id="bg-desc"
+                  rows={3}
+                  value={form.description}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {LMS_EVENT_BINGO_DIFFICULTIES.map((level) => (
-                      <SelectItem key={level} value={level}>
-                        {level}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="bg-sort">Sort order</Label>
-              <Input
-                id="bg-sort"
-                type="number"
-                min={0}
-                value={form.sortOrder}
-                onChange={(e) => setForm((f) => ({ ...f, sortOrder: Number(e.target.value) || 0 }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="bg-desc">Description (optional)</Label>
-              <Textarea
-                id="bg-desc"
-                rows={3}
-                value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={form.status} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
-          <SheetFooter className="mt-6">
-            <Button
-              onClick={() => void saveGame()}
-              disabled={saving || !form.name.trim() || !form.pattern.trim() || !form.prize.trim()}
-            >
+          <SheetFooter className="border-t px-6 py-4">
+            <Button type="button" variant="outline" onClick={() => setSheetOpen(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={() => void saveGame()} disabled={saving}>
               {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {editingId ? "Save changes" : "Create game"}
             </Button>

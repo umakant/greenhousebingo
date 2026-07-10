@@ -4,6 +4,9 @@ export type EventSponsorStatus = (typeof EVENT_SPONSOR_STATUSES)[number];
 export type EventSponsorDto = {
   id: string;
   name: string;
+  firstName: string | null;
+  lastName: string | null;
+  company: string | null;
   address: string | null;
   phone: string | null;
   perk: string | null;

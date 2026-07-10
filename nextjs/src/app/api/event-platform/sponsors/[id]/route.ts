@@ -6,7 +6,12 @@ import {
   requireEventPlatformApi,
 } from "@/lib/event-platform/event-platform-api-auth";
 import { eventSponsorUpdateSchema } from "@/lib/event-platform/sponsors/sponsor-schemas";
-import { getEventSponsorById, serializeEventSponsor } from "@/lib/event-platform/sponsors/sponsor-service";
+import {
+  getEventSponsorById,
+  getEventSponsorByIdForOrg,
+  serializeEventSponsor,
+  sponsorNameFromFields,
+} from "@/lib/event-platform/sponsors/sponsor-service";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -37,10 +42,21 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     }
     const p = parsed.data;
 
+    const firstName = p.firstName !== undefined ? p.firstName.trim() : existing.firstName ?? "";
+    const lastName = p.lastName !== undefined ? p.lastName.trim() : existing.lastName ?? "";
+    const company =
+      p.company !== undefined ? p.company?.trim() || null : existing.company;
+
     const updated = await prisma.eventSponsor.update({
       where: { id: existing.id },
       data: {
-        name: p.name?.trim() ?? undefined,
+        firstName: p.firstName !== undefined ? firstName : undefined,
+        lastName: p.lastName !== undefined ? lastName : undefined,
+        company: p.company !== undefined ? company : undefined,
+        name:
+          p.firstName !== undefined || p.lastName !== undefined || p.company !== undefined
+            ? sponsorNameFromFields({ firstName, lastName, company })
+            : undefined,
         address: p.address !== undefined ? p.address?.trim() || null : undefined,
         phone: p.phone !== undefined ? p.phone?.trim() || null : undefined,
         perk: p.perk !== undefined ? p.perk?.trim() || null : undefined,
@@ -73,6 +89,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
   if (isEventPlatformApiError(actor)) return actor;
   try {
     const { id: idRaw } = await ctx.params;
+    const permanent = new URL(req.url).searchParams.get("permanent") === "1";
     let id: bigint;
     try {
       id = BigInt(idRaw);
@@ -80,9 +97,23 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
       return NextResponse.json({ ok: false, message: "Invalid sponsor id." }, { status: 400 });
     }
 
-    const existing = await getEventSponsorById(actor.organizationId, id);
+    const existing = permanent
+      ? await getEventSponsorByIdForOrg(actor.organizationId, id)
+      : await getEventSponsorById(actor.organizationId, id);
     if (!existing) {
       return NextResponse.json({ ok: false, message: "Sponsor not found." }, { status: 404 });
+    }
+
+    if (permanent) {
+      await prisma.eventSponsor.delete({ where: { id: existing.id } });
+      await writeEventAuditLog({
+        organizationId: actor.organizationId,
+        actorUserId: actor.userId,
+        action: "sponsor.deleted",
+        entityType: "event_sponsor",
+        entityId: existing.id.toString(),
+      });
+      return NextResponse.json({ ok: true });
     }
 
     await prisma.eventSponsor.update({
@@ -100,7 +131,8 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
 
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Archive failed.";
+    const permanent = new URL(req.url).searchParams.get("permanent") === "1";
+    const message = e instanceof Error ? e.message : permanent ? "Delete failed." : "Archive failed.";
     return NextResponse.json({ ok: false, message }, { status: 500 });
   }
 }

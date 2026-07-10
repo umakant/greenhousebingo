@@ -3,7 +3,9 @@ import { z } from "zod";
 import { EVENT_SPONSOR_STATUSES } from "@/lib/event-platform/sponsors/sponsor-types";
 
 export const eventSponsorCreateSchema = z.object({
-  name: z.string().trim().min(1, "Name is required.").max(255),
+  firstName: z.string().trim().min(1, "First name is required.").max(128),
+  lastName: z.string().trim().min(1, "Last name is required.").max(128),
+  company: z.string().trim().max(255).optional().or(z.literal("")),
   address: z.string().trim().max(512).optional().or(z.literal("")),
   phone: z.string().trim().max(64).optional().or(z.literal("")),
   perk: z.string().trim().max(5000).optional().or(z.literal("")),

@@ -39,3 +39,9 @@ export async function getEventBingoGameById(organizationId: bigint, id: bigint) 
     where: { id, organizationId, archivedAt: null },
   });
 }
+
+export async function getEventBingoGameByIdForOrg(organizationId: bigint, id: bigint) {
+  return prisma.eventBingoGame.findFirst({
+    where: { id, organizationId },
+  });
+}

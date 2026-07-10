@@ -216,22 +216,10 @@ export function LmsEventReviewStep({
           className="sm:col-span-2"
         />
         {values.quantity != null ? (
-          <ReviewField label="Card numbers" value={values.quantity.toLocaleString()} />
+          <ReviewField label="Number of seats" value={values.quantity.toLocaleString()} />
         ) : null}
-        {values.bonusCardName || values.extraCardPrice != null ? (
-          <ReviewField
-            label="Bonus card"
-            value={
-              <>
-                {values.bonusCardName || "Bonus card"}
-                {values.extraCardPrice != null ? (
-                  <span className="ml-1.5 font-normal text-muted-foreground">
-                    · ${values.extraCardPrice.toFixed(2)}
-                  </span>
-                ) : null}
-              </>
-            }
-          />
+        {values.extraCardPrice != null ? (
+          <ReviewField label="Bonus card price (USD)" value={`$${values.extraCardPrice.toFixed(2)}`} />
         ) : null}
       </ReviewSection>
 

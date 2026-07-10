@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import NoRecordsFound from "@/components/no-records-found";
 import { Button } from "@/components/ui/button";
+import { TableActionButton, type TableActionItem } from "@/components/ui/table-action-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -34,19 +35,34 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { EventHostDto, EventHostInvitationDto } from "@/lib/event-platform/hosts/host-types";
+import { splitEventHostDisplayName } from "@/lib/event-platform/hosts/host-display-name";
 import { formatPhoneExtended, formatPhoneExtendedDisplay } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
 type EventOption = { id: string; title: string; startsAt: string };
 
 const emptyHostForm = {
-  displayName: "",
+  firstName: "",
+  lastName: "",
   email: "",
   phone: "",
   bio: "",
   imageUrl: "",
   status: "active",
 };
+
+function hostFormFromDto(host: EventHostDto) {
+  const personName = splitEventHostDisplayName(host.displayName);
+  return {
+    firstName: host.firstName?.trim() || personName.firstName,
+    lastName: host.lastName?.trim() || personName.lastName,
+    email: host.email,
+    phone: formatPhoneExtendedDisplay(host.phone ?? ""),
+    bio: host.bio ?? "",
+    imageUrl: host.imageUrl ?? "",
+    status: host.status,
+  };
+}
 
 function inviteStatusClass(status: string) {
   const s = status.toLowerCase();
@@ -102,6 +118,8 @@ export function EventPlatformHostsAdmin() {
     return hosts.filter(
       (h) =>
         h.displayName.toLowerCase().includes(q) ||
+        (h.firstName ?? "").toLowerCase().includes(q) ||
+        (h.lastName ?? "").toLowerCase().includes(q) ||
         h.email.toLowerCase().includes(q) ||
         (h.phone ?? "").toLowerCase().includes(q),
     );
@@ -120,14 +138,7 @@ export function EventPlatformHostsAdmin() {
 
   function openEditHost(host: EventHostDto) {
     setEditingHostId(host.id);
-    setHostForm({
-      displayName: host.displayName,
-      email: host.email,
-      phone: formatPhoneExtendedDisplay(host.phone ?? ""),
-      bio: host.bio ?? "",
-      imageUrl: host.imageUrl ?? "",
-      status: host.status,
-    });
+    setHostForm(hostFormFromDto(host));
     setHostSheetOpen(true);
   }
 
@@ -206,11 +217,17 @@ export function EventPlatformHostsAdmin() {
         return;
       }
       if (data.email?.devLink) {
-        toast.success("Invitation created. Copy the link from the invitations tab (email not configured).");
+        toast.success(
+          data.email.message ??
+            "Invitation created. Copy the invite link from the Invitations tab (email was not sent).",
+        );
       } else if (data.email?.ok) {
         toast.success(data.email.message ?? "Invitation sent.");
       } else {
-        toast.warning(data.email?.message ?? "Invitation created but email may not have been sent.");
+        toast.warning(
+          data.email?.message ??
+            "Invitation created. Copy the invite link from the Invitations tab — email was not sent.",
+        );
       }
       setInviteSheetOpen(false);
       await reload();
@@ -322,16 +339,19 @@ export function EventPlatformHostsAdmin() {
                           {host.status}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm" onClick={() => openEditHost(host)}>
-                            Edit
-                          </Button>
-                          <Button size="sm" className="gap-1" onClick={() => void openInvite(host)}>
-                            <Mail className="h-3.5 w-3.5" />
-                            Invite
-                          </Button>
-                        </div>
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                        <TableActionButton
+                          label="Edit"
+                          onPrimaryClick={() => openEditHost(host)}
+                          items={[
+                            {
+                              label: "Invite",
+                              icon: <Mail className="h-4 w-4" />,
+                              onSelect: () => void openInvite(host),
+                            },
+                          ]}
+                          className="ml-auto"
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -398,18 +418,24 @@ export function EventPlatformHostsAdmin() {
                         </span>
                       </TableCell>
                       <TableCell>{format(new Date(inv.createdAt), "MMM d, yyyy")}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm" className="gap-1" onClick={() => copyInviteLink(inv.inviteUrl)}>
-                            <Copy className="h-3.5 w-3.5" />
-                            Link
-                          </Button>
-                          {inv.status === "pending" ? (
-                            <Button variant="outline" size="sm" onClick={() => void revokeInvite(inv.id)}>
-                              Revoke
-                            </Button>
-                          ) : null}
-                        </div>
+                      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                        <TableActionButton
+                          label="Copy link"
+                          primaryIcon={<Copy className="h-4 w-4" />}
+                          onPrimaryClick={() => copyInviteLink(inv.inviteUrl)}
+                          items={
+                            inv.status === "pending"
+                              ? ([
+                                  {
+                                    label: "Revoke",
+                                    onSelect: () => void revokeInvite(inv.id),
+                                    destructive: true,
+                                  },
+                                ] satisfies TableActionItem[])
+                              : []
+                          }
+                          className="ml-auto"
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -426,13 +452,25 @@ export function EventPlatformHostsAdmin() {
             <SheetTitle>{editingHostId ? "Edit host" : "Add host"}</SheetTitle>
           </SheetHeader>
           <div className="mt-6 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="host-name">Display name</Label>
-              <Input
-                id="host-name"
-                value={hostForm.displayName}
-                onChange={(e) => setHostForm((f) => ({ ...f, displayName: e.target.value }))}
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="host-first-name">First name</Label>
+                <Input
+                  id="host-first-name"
+                  value={hostForm.firstName}
+                  onChange={(e) => setHostForm((f) => ({ ...f, firstName: e.target.value }))}
+                  placeholder="Jordan"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="host-last-name">Last name</Label>
+                <Input
+                  id="host-last-name"
+                  value={hostForm.lastName}
+                  onChange={(e) => setHostForm((f) => ({ ...f, lastName: e.target.value }))}
+                  placeholder="Reyes"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="host-email">Email</Label>
@@ -466,7 +504,10 @@ export function EventPlatformHostsAdmin() {
             <Button variant="outline" onClick={() => setHostSheetOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={() => void saveHost()} disabled={saving}>
+            <Button
+              onClick={() => void saveHost()}
+              disabled={saving || !hostForm.firstName.trim() || !hostForm.lastName.trim() || !hostForm.email.trim()}
+            >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : editingHostId ? "Save" : "Create"}
             </Button>
           </SheetFooter>

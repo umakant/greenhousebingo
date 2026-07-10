@@ -68,13 +68,27 @@ export async function sendEventHostInviteEmail(opts: {
     <p style="color:#71717a;font-size:13px">Or copy this link: <a href="${inviteUrl}">${inviteUrl}</a></p>
   `;
 
-  await transporter.sendMail({
-    from: formatSmtpFromHeader(smtp),
-    to: opts.to,
-    subject,
-    text,
-    html,
-  });
+  try {
+    await transporter.sendMail({
+      from: formatSmtpFromHeader(smtp),
+      to: opts.to,
+      subject,
+      text,
+      html,
+    });
+  } catch (e: unknown) {
+    const raw = e instanceof Error ? e.message : "Email send failed.";
+    const authFailed =
+      raw.includes("535") || /authentication failed/i.test(raw) || /invalid login/i.test(raw);
+    const message = authFailed
+      ? "Invitation saved, but email could not be sent. Check SMTP username and password under Settings → Email."
+      : "Invitation saved, but email could not be sent. Verify your email settings.";
+
+    if (process.env.NODE_ENV !== "production") {
+      return { ok: false, message, devLink: inviteUrl };
+    }
+    return { ok: false, message };
+  }
 
   return { ok: true, message: `Invitation email sent to ${opts.to}.` };
 }

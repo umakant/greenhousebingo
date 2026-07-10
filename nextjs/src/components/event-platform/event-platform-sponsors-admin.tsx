@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import NoRecordsFound from "@/components/no-records-found";
 import MediaPicker from "@/components/MediaPicker";
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,12 +33,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { TableActionButton, type TableActionItem } from "@/components/ui/table-action-button";
+import { useAppSettingsOptional } from "@/contexts/app-settings-context";
+import {
+  buildEventSponsorName,
+  formatEventSponsorPersonName,
+} from "@/lib/event-platform/sponsors/sponsor-display-name";
 import type { EventSponsorDto } from "@/lib/event-platform/sponsors/sponsor-types";
+import { appConfirm } from "@/lib/app-confirm";
 import { formatPhoneExtended, formatPhoneExtendedDisplay } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
 const emptySponsorForm = {
-  name: "",
+  firstName: "",
+  lastName: "",
+  company: "",
   address: "",
   phone: "",
   perk: "",
@@ -46,7 +56,41 @@ const emptySponsorForm = {
   status: "active",
 };
 
+function sponsorFormFromDto(sponsor: EventSponsorDto) {
+  const personName = formatEventSponsorPersonName(sponsor);
+  const legacyNameOnly =
+    !personName && !sponsor.company?.trim() && sponsor.name.trim() ? sponsor.name.trim() : "";
+
+  return {
+    firstName: sponsor.firstName ?? "",
+    lastName: sponsor.lastName ?? "",
+    company: sponsor.company?.trim() || legacyNameOnly,
+    address: sponsor.address ?? "",
+    phone: formatPhoneExtendedDisplay(sponsor.phone ?? ""),
+    perk: sponsor.perk ?? "",
+    imageUrl: sponsor.imageUrl ?? "",
+    website: sponsor.website ?? "",
+    status: sponsor.status,
+  };
+}
+
+function sponsorDisplayLabel(sponsor: EventSponsorDto): string {
+  return buildEventSponsorName({
+    firstName: sponsor.firstName ?? "",
+    lastName: sponsor.lastName ?? "",
+    company: sponsor.company,
+  }) || sponsor.name;
+}
+
+function sponsorDisplaySubtitle(sponsor: EventSponsorDto): string | null {
+  const personName = formatEventSponsorPersonName(sponsor);
+  if (sponsor.company?.trim() && personName) return personName;
+  return null;
+}
+
 export function EventPlatformSponsorsAdmin() {
+  const appSettings = useAppSettingsOptional();
+  const googleMapsApiKey = appSettings?.settings?.googleMapsApiKey;
   const [sponsors, setSponsors] = React.useState<EventSponsorDto[] | null>(null);
   const [search, setSearch] = React.useState("");
   const [sheetOpen, setSheetOpen] = React.useState(false);
@@ -79,7 +123,9 @@ export function EventPlatformSponsorsAdmin() {
     if (!q) return sponsors;
     return sponsors.filter(
       (s) =>
-        s.name.toLowerCase().includes(q) ||
+        sponsorDisplayLabel(s).toLowerCase().includes(q) ||
+        (s.company ?? "").toLowerCase().includes(q) ||
+        formatEventSponsorPersonName(s).toLowerCase().includes(q) ||
         (s.address ?? "").toLowerCase().includes(q) ||
         (s.phone ?? "").toLowerCase().includes(q),
     );
@@ -93,15 +139,7 @@ export function EventPlatformSponsorsAdmin() {
 
   function openEdit(sponsor: EventSponsorDto) {
     setEditingId(sponsor.id);
-    setForm({
-      name: sponsor.name,
-      address: sponsor.address ?? "",
-      phone: formatPhoneExtendedDisplay(sponsor.phone ?? ""),
-      perk: sponsor.perk ?? "",
-      imageUrl: sponsor.imageUrl ?? "",
-      website: sponsor.website ?? "",
-      status: sponsor.status,
-    });
+    setForm(sponsorFormFromDto(sponsor));
     setSheetOpen(true);
   }
 
@@ -141,6 +179,45 @@ export function EventPlatformSponsorsAdmin() {
     }
     toast.success("Sponsor archived.");
     await reload();
+  }
+
+  async function deleteSponsor(sponsor: EventSponsorDto) {
+    const confirmed = await appConfirm({
+      title: "Delete sponsor",
+      description: `Permanently delete "${sponsorDisplayLabel(sponsor)}"? This cannot be undone.`,
+      confirmLabel: "Delete",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+
+    const res = await fetch(`/api/event-platform/sponsors/${sponsor.id}?permanent=1`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    const data = (await res.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
+    if (!res.ok || !data?.ok) {
+      toast.error(data?.message ?? "Could not delete sponsor.");
+      return;
+    }
+    toast.success("Sponsor deleted.");
+    await reload();
+  }
+
+  function sponsorRowActions(sponsor: EventSponsorDto) {
+    const items: TableActionItem[] = [];
+    if (sponsor.status === "active") {
+      items.push({ label: "Archive", onSelect: () => void archiveSponsor(sponsor.id) });
+    }
+    items.push({
+      label: "Delete",
+      onSelect: () => void deleteSponsor(sponsor),
+      destructive: true,
+    });
+    return {
+      label: "Edit",
+      onPrimaryClick: () => openEdit(sponsor),
+      items,
+    };
   }
 
   return (
@@ -185,6 +262,7 @@ export function EventPlatformSponsorsAdmin() {
             <TableHeader>
               <TableRow>
                 <TableHead>Sponsor</TableHead>
+                <TableHead>Company</TableHead>
                 <TableHead>Address</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Status</TableHead>
@@ -199,9 +277,17 @@ export function EventPlatformSponsorsAdmin() {
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
                         <Handshake className="h-4 w-4 text-muted-foreground" />
                       </div>
-                      <span className="font-medium">{sponsor.name}</span>
+                      <div className="min-w-0">
+                        <span className="font-medium">{sponsorDisplayLabel(sponsor)}</span>
+                        {sponsorDisplaySubtitle(sponsor) ? (
+                          <p className="truncate text-xs text-muted-foreground">
+                            {sponsorDisplaySubtitle(sponsor)}
+                          </p>
+                        ) : null}
+                      </div>
                     </div>
                   </TableCell>
+                  <TableCell className="max-w-[180px] truncate">{sponsor.company?.trim() || "—"}</TableCell>
                   <TableCell className="max-w-[240px] truncate">{sponsor.address || "—"}</TableCell>
                   <TableCell>{formatPhoneExtendedDisplay(sponsor.phone, "—")}</TableCell>
                   <TableCell>
@@ -216,17 +302,8 @@ export function EventPlatformSponsorsAdmin() {
                       {sponsor.status}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openEdit(sponsor)}>
-                        Edit
-                      </Button>
-                      {sponsor.status === "active" ? (
-                        <Button variant="outline" size="sm" onClick={() => void archiveSponsor(sponsor.id)}>
-                          Archive
-                        </Button>
-                      ) : null}
-                    </div>
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                    <TableActionButton {...sponsorRowActions(sponsor)} className="ml-auto" />
                   </TableCell>
                 </TableRow>
               ))}
@@ -241,21 +318,50 @@ export function EventPlatformSponsorsAdmin() {
             <SheetTitle>{editingId ? "Edit sponsor" : "Add sponsor"}</SheetTitle>
           </SheetHeader>
           <div className="mt-6 space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="sp-first-name">First name</Label>
+                <Input
+                  id="sp-first-name"
+                  value={form.firstName}
+                  onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
+                  placeholder="Jane"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sp-last-name">Last name</Label>
+                <Input
+                  id="sp-last-name"
+                  value={form.lastName}
+                  onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
+                  placeholder="Smith"
+                />
+              </div>
+            </div>
             <div className="space-y-2">
-              <Label htmlFor="sp-name">Name</Label>
+              <Label htmlFor="sp-company">Company</Label>
               <Input
-                id="sp-name"
-                value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                id="sp-company"
+                value={form.company}
+                onChange={(e) => setForm((f) => ({ ...f, company: e.target.value }))}
                 placeholder="North Haven Gardens"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="sp-address">Address</Label>
-              <Input
+              <AddressAutocomplete
                 id="sp-address"
+                apiKey={googleMapsApiKey ?? undefined}
                 value={form.address}
-                onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                onChange={(value) => setForm((f) => ({ ...f, address: value }))}
+                onPlaceSelect={(addr) =>
+                  setForm((f) => ({
+                    ...f,
+                    address: addr.formattedAddress || addr.street || f.address,
+                  }))
+                }
+                placeholder="Start typing an address…"
+                inputProps={{ autoComplete: "off" }}
               />
             </div>
             <div className="space-y-2">
@@ -307,7 +413,10 @@ export function EventPlatformSponsorsAdmin() {
             </div>
           </div>
           <SheetFooter className="mt-6">
-            <Button onClick={() => void saveSponsor()} disabled={saving || !form.name.trim()}>
+            <Button
+              onClick={() => void saveSponsor()}
+              disabled={saving || !form.firstName.trim() || !form.lastName.trim()}
+            >
               {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {editingId ? "Save changes" : "Create sponsor"}
             </Button>

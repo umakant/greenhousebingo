@@ -13,6 +13,8 @@ export type EventHostInvitationStatus = (typeof EVENT_HOST_INVITATION_STATUSES)[
 export type EventHostDto = {
   id: string;
   displayName: string;
+  firstName: string | null;
+  lastName: string | null;
   email: string;
   phone: string | null;
   bio: string | null;

@@ -362,6 +362,20 @@ async function main() {
     `);
     await pg.query(`CREATE INDEX IF NOT EXISTS event_hosts_org_status_idx ON event_hosts(organization_id, status);`);
     await pg.query(`CREATE INDEX IF NOT EXISTS event_hosts_org_email_idx ON event_hosts(organization_id, email);`);
+    await pg.query(`ALTER TABLE event_hosts ADD COLUMN IF NOT EXISTS first_name TEXT NULL;`);
+    await pg.query(`ALTER TABLE event_hosts ADD COLUMN IF NOT EXISTS last_name TEXT NULL;`);
+    await pg.query(`
+      UPDATE event_hosts
+      SET
+        first_name = COALESCE(NULLIF(TRIM(first_name), ''), SPLIT_PART(display_name, ' ', 1)),
+        last_name = COALESCE(
+          NULLIF(TRIM(last_name), ''),
+          NULLIF(TRIM(SUBSTRING(display_name FROM POSITION(' ' IN display_name) + 1)), '')
+        )
+      WHERE COALESCE(TRIM(first_name), '') = ''
+        AND COALESCE(TRIM(last_name), '') = ''
+        AND COALESCE(TRIM(display_name), '') <> '';
+    `);
 
     await pg.query(`
       CREATE TABLE IF NOT EXISTS event_host_invitations (
@@ -402,6 +416,17 @@ async function main() {
       );
     `);
     await pg.query(`CREATE INDEX IF NOT EXISTS event_sponsors_org_status_idx ON event_sponsors(organization_id, status);`);
+    await pg.query(`ALTER TABLE event_sponsors ADD COLUMN IF NOT EXISTS first_name TEXT NULL;`);
+    await pg.query(`ALTER TABLE event_sponsors ADD COLUMN IF NOT EXISTS last_name TEXT NULL;`);
+    await pg.query(`ALTER TABLE event_sponsors ADD COLUMN IF NOT EXISTS company TEXT NULL;`);
+    await pg.query(`
+      UPDATE event_sponsors
+      SET company = name
+      WHERE COALESCE(TRIM(company), '') = ''
+        AND COALESCE(TRIM(first_name), '') = ''
+        AND COALESCE(TRIM(last_name), '') = ''
+        AND COALESCE(TRIM(name), '') <> '';
+    `);
 
     await pg.query(`
       CREATE TABLE IF NOT EXISTS event_bingo_games (

@@ -2,6 +2,7 @@ import "server-only";
 
 import type { EventSponsor } from "@prisma/client";
 
+import { buildEventSponsorName } from "@/lib/event-platform/sponsors/sponsor-display-name";
 import type { EventSponsorDto, EventSponsorStatus } from "@/lib/event-platform/sponsors/sponsor-types";
 import { prisma } from "@/lib/prisma";
 
@@ -12,6 +13,9 @@ export function serializeEventSponsor(row: EventSponsor): EventSponsorDto {
   return {
     id: row.id.toString(),
     name: row.name,
+    firstName: row.firstName,
+    lastName: row.lastName,
+    company: row.company,
     address: row.address,
     phone: row.phone,
     perk: row.perk,
@@ -21,6 +25,14 @@ export function serializeEventSponsor(row: EventSponsor): EventSponsorDto {
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt?.toISOString() ?? null,
   };
+}
+
+export function sponsorNameFromFields(input: {
+  firstName: string;
+  lastName: string;
+  company?: string | null;
+}) {
+  return buildEventSponsorName(input);
 }
 
 export async function listEventSponsors(organizationId: bigint, includeArchived = false) {
@@ -36,5 +48,11 @@ export async function listEventSponsors(organizationId: bigint, includeArchived 
 export async function getEventSponsorById(organizationId: bigint, id: bigint) {
   return prisma.eventSponsor.findFirst({
     where: { id, organizationId, archivedAt: null },
+  });
+}
+
+export async function getEventSponsorByIdForOrg(organizationId: bigint, id: bigint) {
+  return prisma.eventSponsor.findFirst({
+    where: { id, organizationId },
   });
 }

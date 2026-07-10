@@ -3,7 +3,8 @@ import { z } from "zod";
 import { EVENT_HOST_INVITATION_STATUSES, EVENT_HOST_STATUSES } from "@/lib/event-platform/hosts/host-types";
 
 export const eventHostCreateSchema = z.object({
-  displayName: z.string().trim().min(1, "Name is required.").max(255),
+  firstName: z.string().trim().min(1, "First name is required.").max(128),
+  lastName: z.string().trim().min(1, "Last name is required.").max(128),
   email: z.string().trim().email("Valid email is required.").max(255),
   phone: z.string().trim().max(64).optional().or(z.literal("")),
   bio: z.string().trim().max(5000).optional().or(z.literal("")),
