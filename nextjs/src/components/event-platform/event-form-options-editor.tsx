@@ -5,13 +5,21 @@ import { ArrowDown, ArrowUp, CalendarRange, MapPin, Monitor, Plus, Shield, Trash
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   slugifyFormOptionValue,
   type EventFormOptionItem,
   type EventPlatformEventFormSettings,
 } from "@/lib/event-platform/event-form-options";
+import { LMS_EVENT_IN_PERSON_ONLY } from "@/lib/lms-events/constants";
 
 export type EventFormOptionSectionId = "event-types" | "formats" | "age-rules" | "venue-types";
 
@@ -25,7 +33,7 @@ type EventFormOptionSectionConfig = {
   valueHint?: string;
 };
 
-export const EVENT_FORM_OPTION_SECTIONS: EventFormOptionSectionConfig[] = [
+const ALL_EVENT_FORM_OPTION_SECTIONS: EventFormOptionSectionConfig[] = [
   {
     id: "event-types",
     title: "Event types",
@@ -59,6 +67,10 @@ export const EVENT_FORM_OPTION_SECTIONS: EventFormOptionSectionConfig[] = [
     settingsKey: "venueTypes",
   },
 ];
+
+export const EVENT_FORM_OPTION_SECTIONS = ALL_EVENT_FORM_OPTION_SECTIONS.filter(
+  (section) => !(LMS_EVENT_IN_PERSON_ONLY && section.id === "formats"),
+);
 
 const SECTION_BY_ID = Object.fromEntries(
   EVENT_FORM_OPTION_SECTIONS.map((section) => [section.id, section]),
@@ -123,76 +135,94 @@ function OptionListEditor(props: {
         </div>
       ) : null}
 
-      <div className="space-y-3">
-        {items.map((row, index) => (
-          <div
-            key={`${row.value}-${index}`}
-            className="grid gap-3 rounded-md border border-border/60 bg-muted/20 p-3 sm:grid-cols-[1fr_1fr_auto]"
-          >
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Label</Label>
-              <Input
-                value={row.label}
-                onChange={(e) => {
-                  const label = e.target.value;
-                  const patch: Partial<EventFormOptionItem> = { label };
-                  if (!valueEditable) patch.value = label;
-                  patchAt(index, patch);
-                }}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">
-                {valueEditable ? "Value (stored)" : "Value"}
-              </Label>
-              <Input
-                value={row.value}
-                disabled={!valueEditable}
-                onChange={(e) => patchAt(index, { value: slugifyFormOptionValue(e.target.value) || e.target.value })}
-              />
-              {valueHint ? <p className="text-[11px] text-muted-foreground">{valueHint}</p> : null}
-            </div>
-            <div className="flex flex-wrap items-end gap-2 sm:flex-col sm:items-stretch">
-              <div className="flex items-center justify-between gap-2 rounded-md border bg-background px-3 py-2">
-                <Label className="text-xs">Enabled</Label>
-                <Switch checked={row.enabled} onCheckedChange={(v) => patchAt(index, { enabled: v })} />
-              </div>
-              <div className="flex gap-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => move(index, -1)}
-                  disabled={index === 0}
-                >
-                  <ArrowUp className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => move(index, 1)}
-                  disabled={index === items.length - 1}
-                >
-                  <ArrowDown className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-9 w-9 text-destructive"
-                  onClick={() => remove(index)}
-                  disabled={items.length <= 1}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[40%]">Label</TableHead>
+              <TableHead className="w-[35%]">{valueEditable ? "Value (stored)" : "Value"}</TableHead>
+              <TableHead className="w-24 text-center">Enabled</TableHead>
+              <TableHead className="w-32 text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="h-16 text-center text-muted-foreground">
+                  No options yet.
+                </TableCell>
+              </TableRow>
+            ) : (
+              items.map((row, index) => (
+                <TableRow key={`${row.value}-${index}`}>
+                  <TableCell className="align-middle">
+                    <Input
+                      value={row.label}
+                      onChange={(e) => {
+                        const label = e.target.value;
+                        const patch: Partial<EventFormOptionItem> = { label };
+                        if (!valueEditable) patch.value = label;
+                        patchAt(index, patch);
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell className="align-middle">
+                    <Input
+                      value={row.value}
+                      disabled={!valueEditable}
+                      onChange={(e) =>
+                        patchAt(index, { value: slugifyFormOptionValue(e.target.value) || e.target.value })
+                      }
+                    />
+                  </TableCell>
+                  <TableCell className="align-middle text-center">
+                    <Switch checked={row.enabled} onCheckedChange={(v) => patchAt(index, { enabled: v })} />
+                  </TableCell>
+                  <TableCell className="align-middle">
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => move(index, -1)}
+                        disabled={index === 0}
+                        aria-label="Move up"
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => move(index, 1)}
+                        disabled={index === items.length - 1}
+                        aria-label="Move down"
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 text-destructive"
+                        onClick={() => remove(index)}
+                        disabled={items.length <= 1}
+                        aria-label="Remove"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </div>
+
+      {valueHint ? <p className="text-xs text-muted-foreground">{valueHint}</p> : null}
 
       <Button type="button" variant="outline" size="sm" onClick={add}>
         <Plus className="mr-2 h-4 w-4" />

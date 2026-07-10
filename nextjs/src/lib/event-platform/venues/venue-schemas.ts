@@ -38,6 +38,7 @@ function optionalCoordinateSchema(min: number, max: number, label: string) {
 
 export const eventVenueCreateSchema = z.object({
   name: z.string().trim().min(1).max(255),
+  imageUrl: z.string().trim().max(2048).optional().nullable().or(z.literal("")),
   phone: z.string().trim().max(64).optional().nullable(),
   website: z.string().trim().max(512).optional().nullable(),
   address: z.string().trim().max(512).optional().nullable(),

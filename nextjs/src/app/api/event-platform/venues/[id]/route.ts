@@ -56,6 +56,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const data: Prisma.EventVenueUpdateInput = { updatedById: actor.userId };
 
   if (p.name !== undefined) data.name = p.name.trim();
+  if (p.imageUrl !== undefined) data.imageUrl = p.imageUrl?.trim() || null;
   if (p.phone !== undefined) data.phone = p.phone?.trim() || null;
   if (p.website !== undefined) data.website = p.website?.trim() || null;
   if (p.address !== undefined) data.address = p.address?.trim() || null;

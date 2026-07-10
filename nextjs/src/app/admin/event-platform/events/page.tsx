@@ -11,7 +11,7 @@ export default async function EventPlatformEventsPage() {
     <EventPlatformPage
       permissions={["events.view", "manage-lms-events"]}
       path="/admin/event-platform/events"
-      title="Training Events"
+      title="Bingo Events"
       hidePageTitle
     >
       <LmsEventsAdminClient />

@@ -263,6 +263,7 @@ async function main() {
     await pg.query(`ALTER TABLE event_venues ADD COLUMN IF NOT EXISTS address_2 TEXT NULL;`);
     await pg.query(`ALTER TABLE event_venues ADD COLUMN IF NOT EXISTS category TEXT NULL;`);
     await pg.query(`ALTER TABLE event_venues ADD COLUMN IF NOT EXISTS venue_type TEXT NULL;`);
+    await pg.query(`ALTER TABLE event_venues ADD COLUMN IF NOT EXISTS image_url TEXT NULL;`);
 
     await pg.query(`
       CREATE TABLE IF NOT EXISTS event_venue_categories (
@@ -340,6 +341,106 @@ async function main() {
     if (orgRows.length > 0) {
       console.log(`  Seeded venue categories/types for ${orgRows.length} organization(s).`);
     }
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_hosts (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL,
+        display_name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        phone TEXT NULL,
+        bio TEXT NULL,
+        image_url TEXT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        linked_user_id BIGINT NULL,
+        archived_at TIMESTAMP(3) NULL,
+        created_by_id BIGINT NULL,
+        updated_by_id BIGINT NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_hosts_org_status_idx ON event_hosts(organization_id, status);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_hosts_org_email_idx ON event_hosts(organization_id, email);`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_host_invitations (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL,
+        host_id BIGINT NOT NULL REFERENCES event_hosts(id) ON DELETE CASCADE,
+        event_id BIGINT NOT NULL,
+        invite_token TEXT NOT NULL UNIQUE,
+        status TEXT NOT NULL DEFAULT 'pending',
+        message TEXT NULL,
+        invited_by_id BIGINT NULL,
+        responded_at TIMESTAMP(3) NULL,
+        expires_at TIMESTAMP(3) NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_host_invitations_org_status_idx ON event_host_invitations(organization_id, status);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_host_invitations_host_event_idx ON event_host_invitations(host_id, event_id);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_host_invitations_event_status_idx ON event_host_invitations(event_id, status);`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_sponsors (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL,
+        name TEXT NOT NULL,
+        address TEXT NULL,
+        phone TEXT NULL,
+        perk TEXT NULL,
+        image_url TEXT NULL,
+        website TEXT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        archived_at TIMESTAMP(3) NULL,
+        created_by_id BIGINT NULL,
+        updated_by_id BIGINT NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_sponsors_org_status_idx ON event_sponsors(organization_id, status);`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_bingo_games (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL,
+        name TEXT NOT NULL,
+        pattern TEXT NOT NULL,
+        difficulty TEXT NOT NULL DEFAULT 'Easy',
+        prize TEXT NOT NULL,
+        description TEXT NULL,
+        sort_order INT NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'active',
+        archived_at TIMESTAMP(3) NULL,
+        created_by_id BIGINT NULL,
+        updated_by_id BIGINT NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_bingo_games_org_status_idx ON event_bingo_games(organization_id, status);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_bingo_games_org_sort_idx ON event_bingo_games(organization_id, sort_order);`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_bingo_faqs (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL,
+        question TEXT NOT NULL,
+        answer TEXT NOT NULL,
+        sort_order INT NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'active',
+        archived_at TIMESTAMP(3) NULL,
+        created_by_id BIGINT NULL,
+        updated_by_id BIGINT NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_bingo_faqs_org_status_idx ON event_bingo_faqs(organization_id, status);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_bingo_faqs_org_sort_idx ON event_bingo_faqs(organization_id, sort_order);`);
 
     await pg.query(`
       CREATE TABLE IF NOT EXISTS event_audit_logs (

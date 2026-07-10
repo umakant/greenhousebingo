@@ -56,6 +56,7 @@ export const EP_SETTINGS_KEYS = {
   languagesJson: "ep_languages_json",
   translationsJson: "ep_translations_json",
   eventFormOptionsJson: "ep_event_form_options_json",
+  featuredEventsMaxSlots: "ep_featured_events_max_slots",
 } as const;
 
 export type EventPlatformCurrencySettings = {

@@ -150,6 +150,11 @@ model User {
   lmsEventWishlist            LmsEventWishlistItem[]   @relation("LmsEventWishlistOrganization")
   lmsEventWishlistAsStudent   LmsEventWishlistItem[]   @relation("LmsEventWishlistStudent")
   epEventVendors              EventVendor[]            @relation("EpEventVendorOrganization")
+  epEventHosts                EventHost[]              @relation("EpEventHostOrganization")
+  epEventHostInvitations      EventHostInvitation[]    @relation("EpEventHostInvitationOrganization")
+  epEventSponsors             EventSponsor[]           @relation("EpEventSponsorOrganization")
+  epEventBingoGames           EventBingoGame[]         @relation("EpEventBingoGameOrganization")
+  epEventBingoFaqs            EventBingoFaq[]          @relation("EpEventBingoFaqOrganization")
   epEventVenues               EventVenue[]             @relation("EpEventVenueOrganization")
   epEventCommissionLedger     EventCommissionLedger[]  @relation("EpCommissionLedgerOrganization")
   epEventVendorPayouts        EventVendorPayout[]      @relation("EpVendorPayoutOrganization")
@@ -6524,7 +6529,8 @@ model LmsTrainingEvent {
   transactions   LmsEventTransaction[]
   supportTickets LmsEventSupportTicket[]
   notifications  LmsEventNotification[]
-  wishlistItems  LmsEventWishlistItem[]
+  wishlistItems   LmsEventWishlistItem[]
+  hostInvitations EventHostInvitation[]
 
   @@unique([organizationId, slug])
   @@index([organizationId, status, startsAt])
@@ -6829,10 +6835,124 @@ model EventVendorPayoutItem {
   @@map("event_vendor_payout_items")
 }
 
+model EventHost {
+  id             BigInt    @id @default(autoincrement())
+  organizationId BigInt    @map("organization_id")
+  displayName    String    @map("display_name") @db.VarChar(255)
+  email          String    @db.VarChar(255)
+  phone          String?   @db.VarChar(64)
+  bio            String?   @db.Text
+  imageUrl       String?   @map("image_url") @db.VarChar(2048)
+  status         String    @default("active") @db.VarChar(32)
+  linkedUserId   BigInt?   @map("linked_user_id")
+  archivedAt     DateTime? @map("archived_at")
+  createdById    BigInt?   @map("created_by_id")
+  updatedById    BigInt?   @map("updated_by_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
+
+  organization User                    @relation("EpEventHostOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  invitations  EventHostInvitation[]
+
+  @@index([organizationId, status])
+  @@index([organizationId, email])
+  @@map("event_hosts")
+}
+
+model EventHostInvitation {
+  id             BigInt    @id @default(autoincrement())
+  organizationId BigInt    @map("organization_id")
+  hostId         BigInt    @map("host_id")
+  eventId        BigInt    @map("event_id")
+  inviteToken    String    @unique @map("invite_token") @db.VarChar(64)
+  status         String    @default("pending") @db.VarChar(32)
+  message        String?   @db.Text
+  invitedById    BigInt?   @map("invited_by_id")
+  respondedAt    DateTime? @map("responded_at")
+  expiresAt      DateTime? @map("expires_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
+
+  organization User             @relation("EpEventHostInvitationOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  host         EventHost        @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  event        LmsTrainingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@index([hostId, eventId])
+  @@index([eventId, status])
+  @@map("event_host_invitations")
+}
+
+model EventSponsor {
+  id             BigInt    @id @default(autoincrement())
+  organizationId BigInt    @map("organization_id")
+  name           String    @db.VarChar(255)
+  address        String?   @db.VarChar(512)
+  phone          String?   @db.VarChar(64)
+  perk           String?   @db.Text
+  imageUrl       String?   @map("image_url") @db.VarChar(2048)
+  website        String?   @db.VarChar(512)
+  status         String    @default("active") @db.VarChar(32)
+  archivedAt     DateTime? @map("archived_at")
+  createdById    BigInt?   @map("created_by_id")
+  updatedById    BigInt?   @map("updated_by_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
+
+  organization User @relation("EpEventSponsorOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@map("event_sponsors")
+}
+
+model EventBingoGame {
+  id             BigInt    @id @default(autoincrement())
+  organizationId BigInt    @map("organization_id")
+  name           String    @db.VarChar(255)
+  pattern        String    @db.VarChar(512)
+  difficulty     String    @db.VarChar(32)
+  prize          String    @db.VarChar(255)
+  description    String?   @db.Text
+  sortOrder      Int       @default(0) @map("sort_order")
+  status         String    @default("active") @db.VarChar(32)
+  archivedAt     DateTime? @map("archived_at")
+  createdById    BigInt?   @map("created_by_id")
+  updatedById    BigInt?   @map("updated_by_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
+
+  organization User @relation("EpEventBingoGameOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@index([organizationId, sortOrder])
+  @@map("event_bingo_games")
+}
+
+model EventBingoFaq {
+  id             BigInt    @id @default(autoincrement())
+  organizationId BigInt    @map("organization_id")
+  question       String    @db.VarChar(512)
+  answer         String    @db.Text
+  sortOrder      Int       @default(0) @map("sort_order")
+  status         String    @default("active") @db.VarChar(32)
+  archivedAt     DateTime? @map("archived_at")
+  createdById    BigInt?   @map("created_by_id")
+  updatedById    BigInt?   @map("updated_by_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
+
+  organization User @relation("EpEventBingoFaqOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@index([organizationId, sortOrder])
+  @@map("event_bingo_faqs")
+}
+
 model EventVenue {
   id               BigInt    @id @default(autoincrement())
   organizationId   BigInt    @map("organization_id")
   name             String    @db.VarChar(255)
+  imageUrl         String?   @map("image_url") @db.VarChar(2048)
   phone            String?   @db.VarChar(64)
   website          String?   @db.VarChar(512)
   address          String?   @db.VarChar(512)

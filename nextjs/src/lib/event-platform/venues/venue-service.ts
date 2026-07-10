@@ -19,6 +19,7 @@ export function serializeEventVenue(v: EventVenue): EventVenueDto {
     id: v.id.toString(),
     organizationId: v.organizationId.toString(),
     name: v.name,
+    imageUrl: v.imageUrl,
     phone: v.phone,
     website: v.website,
     address: v.address,

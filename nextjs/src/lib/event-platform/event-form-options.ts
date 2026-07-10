@@ -1,6 +1,7 @@
 import {
   LMS_EVENT_AGE_RULES,
   LMS_EVENT_DELIVERY_MODES,
+  LMS_EVENT_IN_PERSON_ONLY,
   LMS_EVENT_TYPE_LABELS,
   LMS_EVENT_TYPES,
   LMS_EVENT_VENUE_TYPES,
@@ -26,17 +27,34 @@ const DELIVERY_MODE_LABELS: Record<(typeof LMS_EVENT_DELIVERY_MODES)[number], st
   hybrid: "Hybrid",
 };
 
-function item(value: string, label: string, sortOrder: number): EventFormOptionItem {
-  return { value, label, enabled: true, sortOrder };
+function item(value: string, label: string, sortOrder: number, enabled = true): EventFormOptionItem {
+  return { value, label, enabled, sortOrder };
+}
+
+function deliveryModeItems(): EventFormOptionItem[] {
+  return LMS_EVENT_DELIVERY_MODES.map((m, i) =>
+    item(m, DELIVERY_MODE_LABELS[m], i + 1, LMS_EVENT_IN_PERSON_ONLY ? m === "in_person" : true),
+  );
+}
+
+function applyInPersonOnlyRules(settings: EventPlatformEventFormSettings): EventPlatformEventFormSettings {
+  if (!LMS_EVENT_IN_PERSON_ONLY) return settings;
+  return {
+    ...settings,
+    deliveryModes: settings.deliveryModes.map((mode) => ({
+      ...mode,
+      enabled: mode.value === "in_person",
+    })),
+  };
 }
 
 export function defaultEventPlatformEventFormSettings(): EventPlatformEventFormSettings {
-  return {
+  return applyInPersonOnlyRules({
     eventTypes: LMS_EVENT_TYPES.map((t, i) => item(t, LMS_EVENT_TYPE_LABELS[t], i + 1)),
-    deliveryModes: LMS_EVENT_DELIVERY_MODES.map((m, i) => item(m, DELIVERY_MODE_LABELS[m], i + 1)),
+    deliveryModes: deliveryModeItems(),
     ageRules: LMS_EVENT_AGE_RULES.map((r, i) => item(r, r, i + 1)),
     venueTypes: LMS_EVENT_VENUE_TYPES.map((v, i) => item(v, v, i + 1)),
-  };
+  });
 }
 
 function normalizeList(raw: unknown, fallback: EventFormOptionItem[]): EventFormOptionItem[] {
@@ -62,12 +80,12 @@ function normalizeList(raw: unknown, fallback: EventFormOptionItem[]): EventForm
 export function mergeEventFormSettings(stored: Partial<EventPlatformEventFormSettings> | null | undefined): EventPlatformEventFormSettings {
   const defaults = defaultEventPlatformEventFormSettings();
   if (!stored) return defaults;
-  return {
+  return applyInPersonOnlyRules({
     eventTypes: normalizeList(stored.eventTypes, defaults.eventTypes),
     deliveryModes: normalizeList(stored.deliveryModes, defaults.deliveryModes),
     ageRules: normalizeList(stored.ageRules, defaults.ageRules),
     venueTypes: normalizeList(stored.venueTypes, defaults.venueTypes),
-  };
+  });
 }
 
 export function enabledFormOptions(list: EventFormOptionItem[]): EventFormOptionItem[] {

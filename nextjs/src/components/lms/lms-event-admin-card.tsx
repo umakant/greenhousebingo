@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 const TYPE_BADGE: Partial<Record<LmsEventType, { label: string; className: string }>> = {
   cpr_class: { label: "Live Class", className: "bg-violet-600/95 hover:bg-violet-600/95" },
-  live_workshop: { label: "Workshop", className: "bg-teal-600/95 hover:bg-teal-600/95" },
+  live_workshop: { label: "Bingo Event", className: "bg-teal-600/95 hover:bg-teal-600/95" },
   in_person_training: { label: "Training", className: "bg-orange-500/95 hover:bg-orange-500/95" },
   certification_class: { label: "Certification", className: "bg-indigo-600/95 hover:bg-indigo-600/95" },
   online_training: { label: "Online", className: "bg-sky-600/95 hover:bg-sky-600/95" },
@@ -26,7 +26,7 @@ function formatWhen(startsAt: string, endsAt: string): string {
   const date = start.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
   const t1 = start.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
   const t2 = end.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-  return `${date} · ${t1} – ${t2}`;
+  return `${date} - ${t1} – ${t2}`;
 }
 
 function locationLine(event: LmsEvent): string {
@@ -38,11 +38,6 @@ function locationLine(event: LmsEvent): string {
 function formatPrice(event: LmsEvent): string {
   if (event.isFree || !event.priceFrom || event.priceFrom <= 0) return "Free";
   return new Intl.NumberFormat(undefined, { style: "currency", currency: event.currency }).format(event.priceFrom);
-}
-
-function instructorInitial(name: string | null): string {
-  if (!name?.trim()) return "?";
-  return name.trim().charAt(0).toUpperCase();
 }
 
 function seatsBadgeClass(seats: number | null): string {
@@ -100,29 +95,30 @@ function EventImage({
 }
 
 function EventMeta({ event, compact }: { event: LmsEvent; compact?: boolean }) {
+  const textSize = compact ? "text-xs" : "text-sm";
+
   return (
-    <div className={cn("text-muted-foreground", compact ? "flex flex-wrap gap-x-4 gap-y-1 text-xs" : "space-y-1.5 text-sm")}>
-      <div className="inline-flex min-w-0 items-center gap-1.5">
+    <div className={cn("space-y-1.5 text-muted-foreground", textSize)}>
+      <div className="flex min-w-0 items-center gap-1.5">
         <Calendar className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
         <span className="truncate">{formatWhen(event.startsAt, event.endsAt)}</span>
       </div>
-      <div className="inline-flex min-w-0 items-center gap-1.5">
-        {event.deliveryMode === "online" ? (
-          <Monitor className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
-        ) : (
-          <MapPin className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
-        )}
-        <span className="truncate">{locationLine(event)}</span>
-      </div>
-      {event.instructorName ? (
-        <div className="inline-flex min-w-0 items-center gap-1.5">
-          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-foreground">
-            {instructorInitial(event.instructorName)}
-          </span>
-          <User className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
-          <span className="truncate">{event.instructorName}</span>
+      <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1">
+        <div className="flex min-w-0 items-center gap-1.5">
+          {event.deliveryMode === "online" ? (
+            <Monitor className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
+          ) : (
+            <MapPin className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
+          )}
+          <span className="truncate">{locationLine(event)}</span>
         </div>
-      ) : null}
+        {event.instructorName ? (
+          <div className="flex min-w-0 items-center gap-1.5">
+            <User className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
+            <span className="truncate">{event.instructorName}</span>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -1,3 +1,8 @@
+import {
+  injectEventDetailHtml,
+  injectEventsListHtml,
+  injectHomeEventsHtml,
+} from "@/lib/company-themes/company-site-events-html";
 import type { CompanyNextjsTheme } from "@/lib/company-themes/registry";
 import type { CompanySiteEventCard, CompanySiteEventDetail } from "@/lib/company-themes/company-site-events-types";
 
@@ -33,10 +38,27 @@ export function injectCompanySiteEvents(
     bootstrap: options.bootstrap ?? null,
   };
 
+  let output = html;
+  const events = options.bootstrap?.list?.events ?? [];
+  const normalizedPath = options.pathname.replace(/\/$/, "") || "/";
+
+  if (events.length > 0) {
+    if (normalizedPath === "/") {
+      output = injectHomeEventsHtml(output, events, sitePrefix);
+    } else if (normalizedPath === "/events") {
+      output = injectEventsListHtml(output, events, sitePrefix);
+    }
+  }
+
+  const detail = options.bootstrap?.detail;
+  if (detail && normalizedPath.startsWith("/events/")) {
+    output = injectEventDetailHtml(output, detail);
+  }
+
   const snippet = `<script id="pbs-company-site-events-config" type="application/json">${escapeJsonForScript(config)}</script><script src="${assetPrefix}/assets/company-site-events.js" defer></script>`;
 
-  if (html.includes("</body>")) {
-    return html.replace("</body>", `${snippet}</body>`);
+  if (output.includes("</body>")) {
+    return output.replace("</body>", `${snippet}</body>`);
   }
-  return `${html}${snippet}`;
+  return `${output}${snippet}`;
 }

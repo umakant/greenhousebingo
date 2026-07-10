@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LMS_EVENT_DELIVERY_MODES, LMS_EVENT_TYPES, LMS_EVENT_TYPE_LABELS } from "@/lib/lms-events/constants";
+import { LMS_EVENT_DELIVERY_MODES, LMS_EVENT_IN_PERSON_ONLY, LMS_EVENT_TYPES, LMS_EVENT_TYPE_LABELS } from "@/lib/lms-events/constants";
 import type { LmsEventListFiltersInput } from "@/lib/lms-events/schemas";
 import type { LmsEventCategory } from "@/lib/lms-events/types";
 import { cn } from "@/lib/utils";
@@ -74,6 +74,7 @@ export function EventFilters(props: {
           </SelectContent>
         </Select>
 
+        {!LMS_EVENT_IN_PERSON_ONLY ? (
         <Select
           value={value.deliveryMode ?? "all"}
           onValueChange={(v) =>
@@ -94,6 +95,7 @@ export function EventFilters(props: {
             ))}
           </SelectContent>
         </Select>
+        ) : null}
 
         {showEventType ? (
           <Select
@@ -143,33 +145,6 @@ export function EventFilters(props: {
         />
 
         <div className="flex shrink-0 items-center gap-1">
-          <Button
-            type="button"
-            size="sm"
-            className="h-8 px-2.5 text-xs"
-            variant={value.freeOnly ? "default" : "outline"}
-            onClick={() => patch({ freeOnly: !value.freeOnly, paidOnly: false })}
-          >
-            Free
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            className="h-8 px-2.5 text-xs"
-            variant={value.paidOnly ? "default" : "outline"}
-            onClick={() => patch({ paidOnly: !value.paidOnly, freeOnly: false })}
-          >
-            Paid
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            className="h-8 px-2.5 text-xs"
-            variant={value.certificationOnly ? "default" : "outline"}
-            onClick={() => patch({ certificationOnly: !value.certificationOnly })}
-          >
-            Cert
-          </Button>
           {onReset ? (
             <Button type="button" size="sm" className="h-8 px-2 text-xs" variant="ghost" onClick={onReset}>
               Reset

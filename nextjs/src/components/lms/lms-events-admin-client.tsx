@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import {
-  ChevronDown,
   Grid3X3,
   LayoutList,
   Loader2,
@@ -17,12 +16,6 @@ import { LmsEventFormSheet, type LmsEventSheetMode } from "@/components/lms/lms-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Pagination } from "@/components/ui/pagination";
 import {
   Select,
@@ -221,21 +214,13 @@ export function LmsEventsAdminClient() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm text-muted-foreground">
-            Browse and manage upcoming training events, workshops, and live sessions.
+            Browse and manage upcoming Plant Bingo events at your venues.
           </p>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button className="shrink-0 gap-1">
-              <Plus className="h-4 w-4" />
-              Create Event
-              <ChevronDown className="h-4 w-4 opacity-70" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={openCreateSheet}>New training event</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button className="shrink-0 gap-1" onClick={openCreateSheet}>
+          <Plus className="h-4 w-4" />
+          Create Event
+        </Button>
       </div>
 
       <EventFilters
@@ -306,7 +291,7 @@ export function LmsEventsAdminClient() {
           ) : paged.length === 0 ? (
             <EventEmptyState
               title="No events yet"
-              description="Create your first training event or adjust filters to see seeded demo data."
+              description="Create your first bingo event or adjust filters to see seeded demo data."
               actionLabel="Create Event"
               onAction={openCreateSheet}
             />

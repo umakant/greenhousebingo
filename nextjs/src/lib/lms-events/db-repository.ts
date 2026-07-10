@@ -1,10 +1,32 @@
 import type { Prisma } from "@prisma/client";
 
+import { assertCanMarkEventFeatured } from "@/lib/event-platform/featured-events";
 import type { LmsEventCreateWizardInput, LmsEventListFiltersInput } from "@/lib/lms-events/schemas";
+import {
+  LMS_EVENT_DEFAULT_DELIVERY_MODE,
+  LMS_EVENT_IN_PERSON_ONLY,
+} from "@/lib/lms-events/constants";
 import {
   buildDetailContentFromWizardInput,
   parseDetailContent,
 } from "@/lib/lms-events/event-detail-content";
+import { normalizeEventScheduleInput } from "@/lib/lms-events/event-schedule-helpers";
+import {
+  BONUS_CARD_TICKET_DESCRIPTION,
+  DEFAULT_BONUS_CARD_NAME,
+} from "@/lib/lms-events/event-wizard-input";
+
+function bonusCardNameFromInput(input: LmsEventCreateWizardInput): string {
+  return input.bonusCardName?.trim() || DEFAULT_BONUS_CARD_NAME;
+}
+
+function isBonusCardDbTicket(ticket: { name: string; description: string | null }): boolean {
+  return (
+    ticket.description === BONUS_CARD_TICKET_DESCRIPTION ||
+    ticket.name === "Extra bingo card" ||
+    ticket.name === DEFAULT_BONUS_CARD_NAME
+  );
+}
 import type {
   LmsEvent,
   LmsEventAttendee,
@@ -248,6 +270,15 @@ function slugifyTitle(title: string): string {
     .slice(0, 80);
 }
 
+function normalizeDeliveryModeInput(input: LmsEventCreateWizardInput): LmsEventCreateWizardInput {
+  if (!LMS_EVENT_IN_PERSON_ONLY) return input;
+  return {
+    ...input,
+    deliveryMode: LMS_EVENT_DEFAULT_DELIVERY_MODE,
+    onlineMeetingUrl: "",
+  };
+}
+
 export class LmsEventDbRepository {
   constructor(private readonly scope: LmsEventRepositoryScope) {}
 
@@ -285,6 +316,7 @@ export class LmsEventDbRepository {
     input: LmsEventCreateWizardInput,
     actorUserId?: string,
   ): Promise<{ event: LmsEvent; ticket: LmsEventTicket }> {
+    input = normalizeEventScheduleInput(normalizeDeliveryModeInput(input));
     const orgId = this.orgId();
     const actorId = actorUserId ? BigInt(actorUserId) : orgId;
     const slugBase = input.slug?.trim() || slugifyTitle(input.title);
@@ -300,6 +332,11 @@ export class LmsEventDbRepository {
     const priceFrom = isFree ? 0 : input.price;
     const publishStatus = input.status === "draft" ? "draft" : input.status || "registration_open";
     const detailContent = buildDetailContentFromWizardInput(input);
+
+    await assertCanMarkEventFeatured({
+      organizationId: orgId,
+      isFeatured: input.isFeatured ?? false,
+    });
 
     const result = await prisma.$transaction(async (tx) => {
       const eventRow = await tx.lmsTrainingEvent.create({
@@ -381,8 +418,8 @@ export class LmsEventDbRepository {
           data: {
             organizationId: orgId,
             eventId: eventRow.id,
-            name: "Extra bingo card",
-            description: "Additional bingo card for the same event",
+            name: bonusCardNameFromInput(input),
+            description: BONUS_CARD_TICKET_DESCRIPTION,
             price: input.extraCardPrice,
             currency: input.currency || "USD",
             quantity: null,
@@ -409,6 +446,7 @@ export class LmsEventDbRepository {
     input: LmsEventCreateWizardInput,
     actorUserId?: string,
   ): Promise<{ event: LmsEvent; ticket: LmsEventTicket }> {
+    input = normalizeEventScheduleInput(normalizeDeliveryModeInput(input));
     const orgId = this.orgId();
     const actorId = actorUserId ? BigInt(actorUserId) : orgId;
     let eventIdBig: bigint;
@@ -439,6 +477,12 @@ export class LmsEventDbRepository {
         ? "draft"
         : input.status || "registration_open";
     const detailContent = buildDetailContentFromWizardInput(input);
+
+    await assertCanMarkEventFeatured({
+      organizationId: orgId,
+      isFeatured: input.isFeatured ?? false,
+      excludeEventId: eventIdBig,
+    });
 
     const result = await prisma.$transaction(async (tx) => {
       const eventRow = await tx.lmsTrainingEvent.update({
@@ -497,8 +541,7 @@ export class LmsEventDbRepository {
         where: { organizationId: orgId, eventId: eventIdBig },
         orderBy: { price: "asc" },
       });
-      const primaryTicket =
-        tickets.find((t) => t.name !== "Extra bingo card") ?? tickets[0] ?? null;
+      const primaryTicket = tickets.find((t) => !isBonusCardDbTicket(t)) ?? tickets[0] ?? null;
 
       let ticketRow;
       if (primaryTicket) {
@@ -539,12 +582,13 @@ export class LmsEventDbRepository {
         });
       }
 
-      const extraTicket = tickets.find((t) => t.name === "Extra bingo card");
+      const extraTicket = tickets.find(isBonusCardDbTicket);
       if (input.extraCardPrice != null && input.extraCardPrice > 0) {
         if (extraTicket) {
           await tx.lmsEventTicket.update({
             where: { id: extraTicket.id },
             data: {
+              name: bonusCardNameFromInput(input),
               price: input.extraCardPrice,
               currency: input.currency || "USD",
               updatedById: actorId,
@@ -556,8 +600,8 @@ export class LmsEventDbRepository {
             data: {
               organizationId: orgId,
               eventId: eventIdBig,
-              name: "Extra bingo card",
-              description: "Additional bingo card for the same event",
+              name: bonusCardNameFromInput(input),
+              description: BONUS_CARD_TICKET_DESCRIPTION,
               price: input.extraCardPrice,
               currency: input.currency || "USD",
               quantity: null,

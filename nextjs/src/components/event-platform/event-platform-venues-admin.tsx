@@ -102,6 +102,7 @@ function buildPayload(form: VenueFormState) {
   }
   return {
     name: form.name.trim(),
+    imageUrl: form.imageUrl.trim() || null,
     phone: normalizeMobileForStorage(form.phone),
     website: normalizeWebsiteUrl(form.website) || null,
     address: form.address.trim() || null,

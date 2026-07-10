@@ -155,9 +155,9 @@ export function LmsEventsSummarySection() {
     <section className="space-y-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Training Events</h3>
+          <h3 className="text-lg font-semibold">Bingo Events</h3>
           <p className="text-sm text-muted-foreground">
-            Register for live training, workshops, and certification classes.
+            Register for Plant Bingo nights and community events at local venues.
           </p>
         </div>
         <Button asChild size="sm" className="shrink-0 gap-1">

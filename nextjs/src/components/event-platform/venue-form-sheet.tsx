@@ -32,6 +32,7 @@ import { VENUE_WEEKDAYS } from "@/lib/event-platform/venues/venue-types";
 import { formatPhone, formatPhoneDisplay } from "@/lib/phone";
 import { normalizeWebsiteUrl } from "@/lib/website-url";
 
+import MediaPicker from "@/components/MediaPicker";
 import { VenueAmenitiesHoursStep } from "./venue-amenities-hours-step";
 
 const WEEKDAY_LABELS: Record<VenueWeekday, string> = {
@@ -46,6 +47,7 @@ const WEEKDAY_LABELS: Record<VenueWeekday, string> = {
 
 export type VenueFormState = {
   name: string;
+  imageUrl: string;
   phone: string;
   website: string;
   address: string;
@@ -75,6 +77,7 @@ function emptyBusinessHours(): Record<VenueWeekday, string> {
 export function emptyVenueForm(): VenueFormState {
   return {
     name: "",
+    imageUrl: "",
     phone: "",
     website: "",
     address: "",
@@ -107,6 +110,7 @@ export function venueFormFromDto(v: EventVenueDto): VenueFormState {
   }
   return {
     name: v.name,
+    imageUrl: v.imageUrl ?? "",
     phone: formatPhone(v.phone ?? ""),
     website: v.website ?? "",
     address: v.address ?? "",
@@ -296,6 +300,16 @@ export function VenueFormSheet({
                     placeholder="e.g., Main Arena"
                   />
                 </div>
+
+                <MediaPicker
+                  id="venue-image"
+                  label="Venue image"
+                  value={form.imageUrl}
+                  onChange={(v) =>
+                    setForm((f) => ({ ...f, imageUrl: typeof v === "string" ? v : v[0] ?? "" }))
+                  }
+                  placeholder="Upload or select a venue photo…"
+                />
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
@@ -508,6 +522,15 @@ export function VenueFormSheet({
                 <div className="space-y-3 rounded-lg border p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Venue details</p>
                   <ReviewRow label="Name" value={form.name} />
+                  {form.imageUrl.trim() ? (
+                    <div className="grid grid-cols-[120px_1fr] gap-3 text-sm">
+                      <span className="text-muted-foreground">Image</span>
+                      <div className="overflow-hidden rounded-md border">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={form.imageUrl} alt="" className="h-24 w-full max-w-xs object-cover" />
+                      </div>
+                    </div>
+                  ) : null}
                   <ReviewRow label="Phone" value={formatPhoneDisplay(form.phone)} />
                   <ReviewRow label="Website" value={form.website} />
                   <ReviewRow label="Category" value={form.category} />

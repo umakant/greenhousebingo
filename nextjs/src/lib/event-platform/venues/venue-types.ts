@@ -21,6 +21,7 @@ export type EventVenueDto = {
   id: string;
   organizationId: string;
   name: string;
+  imageUrl: string | null;
   phone: string | null;
   website: string | null;
   address: string | null;

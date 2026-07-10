@@ -13,6 +13,14 @@ export const EVENT_PLATFORM_PERMISSION_NAMES = [
   "bookings.manage",
   "vendors.view",
   "vendors.manage",
+  "hosts.view",
+  "hosts.manage",
+  "sponsors.view",
+  "sponsors.manage",
+  "bingoGames.view",
+  "bingoGames.manage",
+  "eventFaqs.view",
+  "eventFaqs.manage",
   "commissions.manage",
   "payouts.manage",
   "payments.manage",
@@ -38,6 +46,14 @@ export const EVENT_PLATFORM_PERMISSION_LABELS: Record<EventPlatformPermission, s
   "bookings.manage": "Manage Bookings",
   "vendors.view": "View Vendors",
   "vendors.manage": "Manage Vendors",
+  "hosts.view": "View Hosts",
+  "hosts.manage": "Manage Hosts",
+  "sponsors.view": "View Sponsors",
+  "sponsors.manage": "Manage Sponsors",
+  "bingoGames.view": "View Bingo Games",
+  "bingoGames.manage": "Manage Bingo Games",
+  "eventFaqs.view": "View Event FAQs",
+  "eventFaqs.manage": "Manage Event FAQs",
   "commissions.manage": "Manage Commissions",
   "payouts.manage": "Manage Payouts",
   "payments.manage": "Manage Payments",
@@ -59,6 +75,14 @@ export const EVENT_PLATFORM_COMPANY_DEFAULT_PERMISSIONS: readonly EventPlatformP
   "bookings.manage",
   "vendors.view",
   "vendors.manage",
+  "hosts.view",
+  "hosts.manage",
+  "sponsors.view",
+  "sponsors.manage",
+  "bingoGames.view",
+  "bingoGames.manage",
+  "eventFaqs.view",
+  "eventFaqs.manage",
   "commissions.manage",
   "payouts.manage",
   "payments.manage",
@@ -82,7 +106,15 @@ export function userHasEventPlatformPermission(
       required === "events.update" ||
       required === "events.delete" ||
       required === "bookings.view" ||
-      required === "bookings.manage")
+      required === "bookings.manage" ||
+      required === "hosts.view" ||
+      required === "hosts.manage" ||
+      required === "sponsors.view" ||
+      required === "sponsors.manage" ||
+      required === "bingoGames.view" ||
+      required === "bingoGames.manage" ||
+      required === "eventFaqs.view" ||
+      required === "eventFaqs.manage")
   ) {
     return true;
   }

@@ -80,6 +80,7 @@ export const lmsEventBasicInfoSchema = z.object({
 });
 
 export const lmsEventScheduleSchema = z.object({
+  eventDate: z.string().trim().optional(),
   startsAt: z.string().min(1, "Start date/time is required"),
   endsAt: z.string().min(1, "End date/time is required"),
   timezone: z.string().default("America/New_York"),
@@ -104,6 +105,9 @@ export const lmsEventExperienceSchema = z.object({
   doorsOpen: z.string().trim().max(32).optional(),
   bingoStart: z.string().trim().max(32).optional(),
   venueType: z.string().trim().optional().nullable(),
+  venueAge21Plus: z.boolean().optional(),
+  venueDrinksAlcohol: z.boolean().optional(),
+  venueFood: z.boolean().optional(),
   cardsIncluded: z.coerce.number().int().positive().optional().nullable(),
   extraCardPrice: z.coerce.number().min(0).optional().nullable(),
   foodAndDrinks: z.string().trim().optional(),
@@ -111,8 +115,9 @@ export const lmsEventExperienceSchema = z.object({
 });
 
 export const lmsEventTicketFormSchema = z.object({
-  ticketName: z.string().trim().min(1, "Ticket name is required"),
+  ticketName: z.string().trim().min(1, "Bingo card name is required"),
   ticketDescription: z.string().trim().optional(),
+  bonusCardName: z.string().trim().max(128).optional(),
   price: z.coerce.number().min(0),
   currency: z.string().length(3).default("USD"),
   quantity: z.coerce.number().int().positive().nullable().optional(),
@@ -150,6 +155,8 @@ export const lmsEventPageContentSchema = z.object({
   whatsIncludedText: z.string().trim().optional(),
   checkInStepsText: z.string().trim().optional(),
   bingoRounds: z.array(lmsEventBingoRoundSchema).optional(),
+  bingoGameIds: z.array(z.string().trim().min(1)).optional(),
+  faqIds: z.array(z.string().trim().min(1)).optional(),
   faqs: z.array(lmsEventFaqSchema).optional(),
 });
 

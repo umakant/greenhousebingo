@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
       data: {
         organizationId: actor.organizationId,
         name: p.name.trim(),
+        imageUrl: p.imageUrl?.trim() || null,
         phone: p.phone?.trim() || null,
         website: p.website?.trim() || null,
         address: p.address?.trim() || null,

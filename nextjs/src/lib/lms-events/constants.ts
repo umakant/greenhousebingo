@@ -21,7 +21,7 @@ export type LmsEventType = (typeof LMS_EVENT_TYPES)[number];
 export const LMS_EVENT_TYPE_LABELS: Record<LmsEventType, string> = {
   online_training: "Online training",
   in_person_training: "In-person training",
-  live_workshop: "Live workshop",
+  live_workshop: "Bingo event",
   certification_class: "Certification class",
   conference_session: "Conference session",
   safety_briefing: "Safety briefing",
@@ -89,6 +89,11 @@ export type LmsEventCertificateStatus = (typeof LMS_CERTIFICATE_STATUSES)[number
 export const LMS_EVENT_DELIVERY_MODES = ["online", "in_person", "hybrid"] as const;
 
 export type LmsEventDeliveryMode = (typeof LMS_EVENT_DELIVERY_MODES)[number];
+
+/** Plant Bingo events are always held at a physical venue. */
+export const LMS_EVENT_IN_PERSON_ONLY = true;
+
+export const LMS_EVENT_DEFAULT_DELIVERY_MODE: LmsEventDeliveryMode = "in_person";
 
 /** Plant Bingo / community event age restrictions shown on public event pages. */
 export const LMS_EVENT_AGE_RULES = ["21+", "Family", "All ages"] as const;

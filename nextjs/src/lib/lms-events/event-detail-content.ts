@@ -29,6 +29,12 @@ export type LmsEventDetailSponsor = {
   perk: string;
 };
 
+export type LmsEventVenueAmenities = {
+  age21Plus?: boolean;
+  drinksAlcohol?: boolean;
+  food?: boolean;
+};
+
 /** Rich public event page content (Plant Bingo detail template). */
 export type LmsEventDetailContent = {
   regionTag?: string;
@@ -39,11 +45,14 @@ export type LmsEventDetailContent = {
   agePolicyText?: string;
   cardFeePercent?: number;
   soldOut?: boolean;
+  venueAmenities?: LmsEventVenueAmenities;
   host?: LmsEventDetailHost;
   sponsor?: LmsEventDetailSponsor;
   whatsIncluded?: string[];
   checkInSteps?: string[];
   bingoRounds?: LmsEventBingoRound[];
+  bingoGameIds?: string[];
+  faqIds?: string[];
   faqs?: LmsEventFaq[];
 };
 
@@ -167,18 +176,28 @@ export function buildDetailContentFromWizardInput(input: LmsEventCreateWizardInp
     regionTag: input.regionTag?.trim() || regionTagFromState(input.venueState) || undefined,
     heroTagline: input.heroTagline?.trim() || DEFAULT_HERO_TAGLINE,
     descriptionTitle:
-      input.descriptionTitle?.trim() || defaultDescriptionTitle(input.venueName) || undefined,
+      input.descriptionTitle?.trim() ||
+      (input.title?.trim() ? `You're Invited to ${input.title.trim()}!` : undefined) ||
+      defaultDescriptionTitle(input.venueName) ||
+      undefined,
     bingoEnd: input.bingoEnd?.trim() || undefined,
     venuePhone: input.venuePhone?.trim() || undefined,
     agePolicyText: input.agePolicyText?.trim() || defaultAgePolicyText(input.ageRule) || undefined,
     cardFeePercent: input.cardFeePercent ?? 3.5,
     soldOut: input.soldOut ?? false,
+    venueAmenities: {
+      age21Plus: input.venueAge21Plus ?? false,
+      drinksAlcohol: input.venueDrinksAlcohol ?? false,
+      food: input.venueFood ?? false,
+    },
     host,
     sponsor,
     whatsIncluded: whatsIncluded.length > 0 ? whatsIncluded : [...DEFAULT_WHATS_INCLUDED],
     checkInSteps: checkInSteps.length > 0 ? checkInSteps : [...DEFAULT_CHECKIN_STEPS],
     bingoRounds: input.bingoRounds?.length ? input.bingoRounds : [...DEFAULT_BINGO_ROUNDS],
-    faqs: input.faqs?.length ? input.faqs : [...DEFAULT_EVENT_FAQS],
+    bingoGameIds: input.bingoGameIds?.length ? input.bingoGameIds : undefined,
+    faqIds: input.faqIds?.length ? input.faqIds : undefined,
+    faqs: input.faqs?.length ? input.faqs : undefined,
   };
 }
 
@@ -202,6 +221,10 @@ export function parseDetailContent(raw: unknown): LmsEventDetailContent | null {
     agePolicyText: typeof o.agePolicyText === "string" ? o.agePolicyText : undefined,
     cardFeePercent: typeof o.cardFeePercent === "number" ? o.cardFeePercent : undefined,
     soldOut: o.soldOut === true,
+    venueAmenities:
+      o.venueAmenities && typeof o.venueAmenities === "object"
+        ? (o.venueAmenities as LmsEventVenueAmenities)
+        : undefined,
     host: o.host && typeof o.host === "object" ? (o.host as LmsEventDetailHost) : undefined,
     sponsor: o.sponsor && typeof o.sponsor === "object" ? (o.sponsor as LmsEventDetailSponsor) : undefined,
     whatsIncluded: Array.isArray(o.whatsIncluded)
@@ -211,6 +234,10 @@ export function parseDetailContent(raw: unknown): LmsEventDetailContent | null {
       ? o.checkInSteps.filter((x): x is string => typeof x === "string")
       : undefined,
     bingoRounds: Array.isArray(o.bingoRounds) ? (o.bingoRounds as LmsEventBingoRound[]) : undefined,
+    bingoGameIds: Array.isArray(o.bingoGameIds)
+      ? o.bingoGameIds.filter((x): x is string => typeof x === "string")
+      : undefined,
+    faqIds: Array.isArray(o.faqIds) ? o.faqIds.filter((x): x is string => typeof x === "string") : undefined,
     faqs: Array.isArray(o.faqs) ? (o.faqs as LmsEventFaq[]) : undefined,
   };
 }
@@ -226,6 +253,9 @@ export function detailContentToWizardFields(content: LmsEventDetailContent | nul
     agePolicyText: content.agePolicyText ?? "",
     cardFeePercent: content.cardFeePercent ?? 3.5,
     soldOut: content.soldOut ?? false,
+    venueAge21Plus: content.venueAmenities?.age21Plus ?? false,
+    venueDrinksAlcohol: content.venueAmenities?.drinksAlcohol ?? false,
+    venueFood: content.venueAmenities?.food ?? false,
     hostName: content.host?.name ?? "",
     hostBio: content.host?.bio ?? "",
     hostImageUrl: content.host?.imageUrl ?? "",
@@ -236,7 +266,9 @@ export function detailContentToWizardFields(content: LmsEventDetailContent | nul
     whatsIncludedText: (content.whatsIncluded ?? []).join("\n"),
     checkInStepsText: (content.checkInSteps ?? []).join("\n"),
     bingoRounds: content.bingoRounds?.length ? content.bingoRounds : [...DEFAULT_BINGO_ROUNDS],
-    faqs: content.faqs?.length ? content.faqs : [...DEFAULT_EVENT_FAQS],
+    bingoGameIds: content.bingoGameIds ?? [],
+    faqIds: content.faqIds ?? [],
+    faqs: content.faqs ?? [],
   };
 }
 

@@ -1,6 +1,7 @@
 /** Theme-compatible event card shape (plant-bingo-bash). */
 export type CompanySiteEventCard = {
   slug: string;
+  title: string;
   month: string;
   day: string;
   year: number;

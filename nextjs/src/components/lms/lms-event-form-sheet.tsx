@@ -129,7 +129,7 @@ export function LmsEventFormSheet({
           <SheetTitle>{title}</SheetTitle>
           <p className="text-sm text-muted-foreground">
             {mode === "create"
-              ? "Fill in the details to create a training event."
+              ? "Fill in the details to create a bingo event."
               : "Update event details, schedule, tickets, and settings."}
           </p>
         </SheetHeader>
@@ -148,6 +148,7 @@ export function LmsEventFormSheet({
                 <LmsEventCreateWizard
                   key={formKey}
                   mode={mode}
+                  editingEventId={eventId}
                   categories={categories}
                   initialValues={initialValues}
                   onSubmit={handleSubmit}
