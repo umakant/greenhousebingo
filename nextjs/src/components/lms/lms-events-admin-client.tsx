@@ -211,15 +211,16 @@ export function LmsEventsAdminClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight">Bingo Events</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Browse and manage upcoming Plant Bingo events at your venues.
           </p>
         </div>
-        <Button className="shrink-0 gap-1" onClick={openCreateSheet}>
+        <Button onClick={openCreateSheet} className="gap-2">
           <Plus className="h-4 w-4" />
-          Create Event
+          Add event
         </Button>
       </div>
 

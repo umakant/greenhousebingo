@@ -34,6 +34,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { EventHostDto, EventHostInvitationDto } from "@/lib/event-platform/hosts/host-types";
+import { formatPhoneExtended, formatPhoneExtendedDisplay } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
 type EventOption = { id: string; title: string; startsAt: string };
@@ -122,7 +123,7 @@ export function EventPlatformHostsAdmin() {
     setHostForm({
       displayName: host.displayName,
       email: host.email,
-      phone: host.phone ?? "",
+      phone: formatPhoneExtendedDisplay(host.phone ?? ""),
       bio: host.bio ?? "",
       imageUrl: host.imageUrl ?? "",
       status: host.status,
@@ -306,7 +307,7 @@ export function EventPlatformHostsAdmin() {
                         </div>
                       </TableCell>
                       <TableCell>{host.email}</TableCell>
-                      <TableCell>{host.phone || "—"}</TableCell>
+                      <TableCell>{formatPhoneExtendedDisplay(host.phone, "—")}</TableCell>
                       <TableCell>{host.pendingInvites}</TableCell>
                       <TableCell>{host.acceptedInvites}</TableCell>
                       <TableCell>
@@ -447,7 +448,8 @@ export function EventPlatformHostsAdmin() {
               <Input
                 id="host-phone"
                 value={hostForm.phone}
-                onChange={(e) => setHostForm((f) => ({ ...f, phone: e.target.value }))}
+                onChange={(e) => setHostForm((f) => ({ ...f, phone: formatPhoneExtended(e.target.value) }))}
+                placeholder="(000) 0000-000"
               />
             </div>
             <div className="space-y-2">

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Plus } from "lucide-react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -34,6 +35,17 @@ import type { EventSponsorDto } from "@/lib/event-platform/sponsors/sponsor-type
 import { cn } from "@/lib/utils";
 
 type PatchFn = (partial: Partial<LmsEventCreateWizardInput>) => void;
+
+function LibraryAdminLink({ href, label, className }: { href: string; label: string; className?: string }) {
+  return (
+    <Button asChild className={cn("gap-2 shrink-0", className)}>
+      <a href={href} target="_blank" rel="noreferrer">
+        <Plus className="h-4 w-4" />
+        {label}
+      </a>
+    </Button>
+  );
+}
 
 export function LmsEventPublicPageFields({
   values,
@@ -176,14 +188,7 @@ export function LmsEventHostSponsorFields({
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2">
             <Label>Host</Label>
-            <a
-              href={EVENT_PLATFORM_PATHS.hosts}
-              className="text-xs text-primary hover:underline"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Manage hosts
-            </a>
+            <LibraryAdminLink href={EVENT_PLATFORM_PATHS.hosts} label="Add host" />
           </div>
           <Select
             value={selectedHostId || undefined}
@@ -232,14 +237,7 @@ export function LmsEventHostSponsorFields({
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2">
             <Label>Sponsor</Label>
-            <a
-              href={EVENT_PLATFORM_PATHS.sponsors}
-              className="text-xs text-primary hover:underline"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Manage sponsors
-            </a>
+            <LibraryAdminLink href={EVENT_PLATFORM_PATHS.sponsors} label="Add sponsor" />
           </div>
           <Select
             value={selectedSponsorId || undefined}
@@ -369,25 +367,15 @@ function BingoGamePicker({
         <p className="text-sm text-muted-foreground">
           Select which games from your library appear on this event&apos;s public page.
         </p>
-        <a
-          href={EVENT_PLATFORM_PATHS.bingoGames}
-          className="text-xs text-primary hover:underline shrink-0"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Manage bingo games
-        </a>
+        <LibraryAdminLink href={EVENT_PLATFORM_PATHS.bingoGames} label="Add game" />
       </div>
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading bingo games…</p>
       ) : games.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-          No bingo games in your library yet.{" "}
-          <a href={EVENT_PLATFORM_PATHS.bingoGames} className="text-primary hover:underline" target="_blank" rel="noreferrer">
-            Add games
-          </a>{" "}
-          first, then select them here.
+        <div className="rounded-lg border border-dashed p-6 text-center">
+          <p className="text-sm text-muted-foreground">No bingo games in your library yet.</p>
+          <LibraryAdminLink href={EVENT_PLATFORM_PATHS.bingoGames} label="Add game" className="mt-4" />
         </div>
       ) : (
         <div className="space-y-2">
@@ -514,25 +502,15 @@ function FaqPicker({
         <p className="text-sm text-muted-foreground">
           Select which FAQs from your library appear on this event&apos;s public page.
         </p>
-        <a
-          href={EVENT_PLATFORM_PATHS.eventFaqs}
-          className="text-xs text-primary hover:underline shrink-0"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Manage event FAQs
-        </a>
+        <LibraryAdminLink href={EVENT_PLATFORM_PATHS.eventFaqs} label="Add FAQ" />
       </div>
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading FAQs…</p>
       ) : faqs.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-          No FAQs in your library yet.{" "}
-          <a href={EVENT_PLATFORM_PATHS.eventFaqs} className="text-primary hover:underline" target="_blank" rel="noreferrer">
-            Add FAQs
-          </a>{" "}
-          first, then select them here.
+        <div className="rounded-lg border border-dashed p-6 text-center">
+          <p className="text-sm text-muted-foreground">No FAQs in your library yet.</p>
+          <LibraryAdminLink href={EVENT_PLATFORM_PATHS.eventFaqs} label="Add FAQ" className="mt-4" />
         </div>
       ) : (
         <div className="space-y-2">

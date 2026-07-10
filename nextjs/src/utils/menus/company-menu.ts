@@ -622,7 +622,6 @@ export const getCompanyMenu = (): NavItem[] => [
       { title: t("Bingo Events"), href: "/admin/event-platform/events", permission: "manage-lms-events" },
       { title: t("Workshops"), href: "/admin/event-platform/workshops", permission: "manage-lms-events" },
       { title: t("Vendors"), href: "/admin/event-platform/vendors", permission: "vendors.view" },
-      { title: t("Instructors"), href: "/admin/event-platform/instructors", permission: "manage-lms-events" },
       { title: t("Hosts"), href: "/admin/event-platform/hosts", permission: "hosts.view" },
       { title: t("Sponsors"), href: "/admin/event-platform/sponsors", permission: "sponsors.view" },
       { title: t("Bingo Games"), href: "/admin/event-platform/bingo-games", permission: "bingoGames.view" },

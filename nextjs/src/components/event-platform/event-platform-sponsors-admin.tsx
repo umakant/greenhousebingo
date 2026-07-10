@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import type { EventSponsorDto } from "@/lib/event-platform/sponsors/sponsor-types";
+import { formatPhoneExtended, formatPhoneExtendedDisplay } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
 const emptySponsorForm = {
@@ -95,7 +96,7 @@ export function EventPlatformSponsorsAdmin() {
     setForm({
       name: sponsor.name,
       address: sponsor.address ?? "",
-      phone: sponsor.phone ?? "",
+      phone: formatPhoneExtendedDisplay(sponsor.phone ?? ""),
       perk: sponsor.perk ?? "",
       imageUrl: sponsor.imageUrl ?? "",
       website: sponsor.website ?? "",
@@ -202,7 +203,7 @@ export function EventPlatformSponsorsAdmin() {
                     </div>
                   </TableCell>
                   <TableCell className="max-w-[240px] truncate">{sponsor.address || "—"}</TableCell>
-                  <TableCell>{sponsor.phone || "—"}</TableCell>
+                  <TableCell>{formatPhoneExtendedDisplay(sponsor.phone, "—")}</TableCell>
                   <TableCell>
                     <span
                       className={cn(
@@ -262,7 +263,8 @@ export function EventPlatformSponsorsAdmin() {
               <Input
                 id="sp-phone"
                 value={form.phone}
-                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, phone: formatPhoneExtended(e.target.value) }))}
+                placeholder="(000) 0000-000"
               />
             </div>
             <div className="space-y-2">
