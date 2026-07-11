@@ -9,13 +9,13 @@ import type { LiveEventSnapshot } from "@/lib/event-platform/live-event/live-eve
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatPhone, normalizeMobileForStorage } from "@/lib/phone";
@@ -95,13 +95,13 @@ export function WalkInDialog(props: {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add walk-in</DialogTitle>
-          <DialogDescription>Creates a valid registration and optional check-in.</DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-3 py-2">
+    <Sheet open={props.open} onOpenChange={props.onOpenChange}>
+      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>Add walk-in</SheetTitle>
+          <SheetDescription>Creates a valid registration and optional check-in.</SheetDescription>
+        </SheetHeader>
+        <div className="mt-6 grid gap-3">
           <div className="grid grid-cols-2 gap-2">
             <div><Label>First name</Label><Input className="h-10" value={firstName} onChange={(e) => setFirstName(e.target.value)} /></div>
             <div><Label>Last name</Label><Input className="h-10" value={lastName} onChange={(e) => setLastName(e.target.value)} /></div>
@@ -150,14 +150,14 @@ export function WalkInDialog(props: {
             Guest consents to registration & communications
           </label>
         </div>
-        <DialogFooter>
+        <SheetFooter className="mt-6">
           <Button variant="outline" onClick={() => props.onOpenChange(false)}>Cancel</Button>
           <Button disabled={busy || !firstName.trim() || !phone.trim()} onClick={() => void submit()}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Register walk-in"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -208,13 +208,13 @@ export function BonusCardSaleDialog(props: {
   const total = unit * (Number(quantity) || 1);
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Sell bonus cards</DialogTitle>
-          <DialogDescription>Records payment via existing transaction architecture.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3 py-2">
+    <Sheet open={props.open} onOpenChange={props.onOpenChange}>
+      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>Sell bonus cards</SheetTitle>
+          <SheetDescription>Records payment via existing transaction architecture.</SheetDescription>
+        </SheetHeader>
+        <div className="mt-6 space-y-3">
           <div><Label>Find attendee</Label><Input className="h-10" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name or email…" /></div>
           {rows.length > 0 && (
             <Select value={registrationId} onValueChange={setRegistrationId}>
@@ -242,12 +242,12 @@ export function BonusCardSaleDialog(props: {
           </div>
           <p className="text-sm font-medium">Total: {total.toFixed(2)} {props.snapshot.currency}</p>
         </div>
-        <DialogFooter>
+        <SheetFooter className="mt-6">
           <Button variant="outline" onClick={() => props.onOpenChange(false)}>Cancel</Button>
           <Button disabled={busy} onClick={() => void submit()}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Complete sale"}</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -279,13 +279,13 @@ export function AnnouncementDialog(props: {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Send announcement</DialogTitle>
-          <DialogDescription>External delivery requires connected channels. Message is logged and queued.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-3 py-2">
+    <Sheet open={props.open} onOpenChange={props.onOpenChange}>
+      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>Send announcement</SheetTitle>
+          <SheetDescription>External delivery requires connected channels. Message is logged and queued.</SheetDescription>
+        </SheetHeader>
+        <div className="mt-6 space-y-3">
           <div>
             <Label>Audience</Label>
             <Select value={audience} onValueChange={setAudience}>
@@ -306,12 +306,12 @@ export function AnnouncementDialog(props: {
             I confirm this message should be sent to the selected audience
           </label>
         </div>
-        <DialogFooter>
+        <SheetFooter className="mt-6">
           <Button variant="outline" onClick={() => props.onOpenChange(false)}>Cancel</Button>
           <Button disabled={busy || !message.trim()} onClick={() => void submit()}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send"}</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -342,12 +342,12 @@ export function IncidentDialog(props: {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Incident note</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3 py-2">
+    <Sheet open={props.open} onOpenChange={props.onOpenChange}>
+      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>Incident note</SheetTitle>
+        </SheetHeader>
+        <div className="mt-6 space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <div><Label>Category</Label><Input className="h-10" value={category} onChange={(e) => setCategory(e.target.value)} /></div>
             <div>
@@ -364,11 +364,11 @@ export function IncidentDialog(props: {
           </div>
           <div><Label>Description</Label><Textarea rows={4} value={description} onChange={(e) => setDescription(e.target.value)} /></div>
         </div>
-        <DialogFooter>
+        <SheetFooter className="mt-6">
           <Button variant="outline" onClick={() => props.onOpenChange(false)}>Cancel</Button>
           <Button disabled={busy || !description.trim()} onClick={() => void submit()}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

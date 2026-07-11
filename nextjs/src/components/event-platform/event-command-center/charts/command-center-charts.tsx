@@ -39,7 +39,7 @@ export function RegistrationTrendChart(props: RegistrationTrendChartProps) {
   return (
     <Card className="shadow-sm">
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0 pb-2">
-        <CardTitle className="text-base">Registration trend</CardTitle>
+        <CardTitle className="text-base">Registration Trend</CardTitle>
         <div className="flex flex-wrap gap-1" role="group" aria-label="Registration trend range">
           {RANGE_OPTIONS.map((opt) => (
             <Button
@@ -194,7 +194,7 @@ export function RevenueExpensesChart(props: {
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Revenue vs expenses</CardTitle>
+        <CardTitle className="text-base">Revenue vs Expenses</CardTitle>
       </CardHeader>
       <CardContent>
         {props.loading ? (

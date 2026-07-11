@@ -21,6 +21,7 @@ import { ProjectDrawer } from "@/components/projects/project-drawer";
 import { cn } from "@/lib/utils";
 import { useAppSettings } from "@/contexts/app-settings-context";
 import { formatDate as fmtDateLib, parseDate } from "@/lib/format-date";
+import { formatPhoneDisplay } from "@/lib/phone";
 import { calcHoursFromTimes } from "@/lib/project-staff-hours";
 
 type OpsProject = {
@@ -478,7 +479,7 @@ export function OpsOverviewTab({ projectId, canManage }: { projectId: number; ca
               {project.security_director_phone ? (
                 <div className="flex items-center gap-2 text-sm text-foreground">
                   <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  {project.security_director_phone}
+                  {formatPhoneDisplay(project.security_director_phone)}
                 </div>
               ) : null}
               {project.security_director_email ? (

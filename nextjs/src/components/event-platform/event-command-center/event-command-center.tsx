@@ -25,6 +25,7 @@ import {
 import { EventKpiGrid } from "@/components/event-platform/event-command-center/event-kpi-grid";
 import { ActivityTab } from "@/components/event-platform/event-command-center/tabs/activity-tab";
 import { AttendeesTab } from "@/components/event-platform/event-command-center/tabs/attendees-tab";
+import { GuestsTab } from "@/components/event-platform/event-command-center/tabs/guests-tab";
 import { FinancialsTab } from "@/components/event-platform/event-command-center/tabs/financials-tab";
 import { GamesTab } from "@/components/event-platform/event-command-center/tabs/games-tab";
 import { MarketingTab } from "@/components/event-platform/event-command-center/tabs/marketing-tab";
@@ -155,6 +156,7 @@ function EventCommandCenterBody(props: { eventId: string }) {
           />
         ) : null}
         <AttendeesTab eventId={props.eventId} activeTab={activeTab} />
+        <GuestsTab eventId={props.eventId} activeTab={activeTab} />
         {activeTab === "games" ? <GamesTab eventId={props.eventId} activeTab={activeTab} /> : null}
         {activeTab === "plants" ? <PlantsTab eventId={props.eventId} activeTab={activeTab} /> : null}
         {activeTab === "financials" ? <FinancialsTab eventId={props.eventId} activeTab={activeTab} /> : null}
@@ -175,13 +177,11 @@ function EventCommandCenterBody(props: { eventId: string }) {
 
       <Sheet open={checkInOpen} onOpenChange={setCheckInOpen}>
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
-          <SheetHeader>
+          <SheetHeader className="sr-only">
             <SheetTitle>Check in attendees</SheetTitle>
             <SheetDescription>Scan a QR code or search by name or email.</SheetDescription>
           </SheetHeader>
-          <div className="mt-6">
-            <LmsEventAdminCheckInClient eventId={props.eventId} />
-          </div>
+          <LmsEventAdminCheckInClient eventId={props.eventId} compact />
         </SheetContent>
       </Sheet>
     </div>

@@ -125,29 +125,11 @@ function EventMeta({ event, compact }: { event: LmsEvent; compact?: boolean }) {
 
 function EventTitle({
   event,
-  canManage,
-  onEdit,
   className,
 }: {
   event: LmsEvent;
-  canManage: boolean;
-  onEdit?: () => void;
   className?: string;
 }) {
-  if (canManage && onEdit) {
-    return (
-      <button
-        type="button"
-        className={cn(
-          "line-clamp-2 text-left font-semibold leading-snug tracking-tight transition-colors hover:text-primary",
-          className,
-        )}
-        onClick={onEdit}
-      >
-        {event.title}
-      </button>
-    );
-  }
   return (
     <Link
       href={lmsEventAdminDetailPath(event.id)}
@@ -225,7 +207,7 @@ function LmsEventAdminCardList(props: {
                 </Badge>
               ) : null}
             </div>
-            <EventTitle event={event} canManage={canManage} onEdit={onEdit} className="text-base sm:text-lg" />
+            <EventTitle event={event} className="text-base sm:text-lg" />
             <EventMeta event={event} compact />
           </div>
 
@@ -262,7 +244,7 @@ function LmsEventAdminCardGrid(props: {
             {event.categoryName}
           </Badge>
         ) : null}
-        <EventTitle event={event} canManage={canManage} onEdit={onEdit} className="text-base" />
+        <EventTitle event={event} className="text-base" />
         <EventMeta event={event} />
       </CardContent>
 

@@ -3,6 +3,7 @@ import type { LmsEvent, LmsEventAttendee, LmsEventCategory, LmsEventTicket } fro
 export const EVENT_COMMAND_TABS = [
   { id: "overview", label: "Overview" },
   { id: "attendees", label: "Attendees" },
+  { id: "guests", label: "Guests" },
   { id: "games", label: "Games & Winners" },
   { id: "plants", label: "Plants" },
   { id: "financials", label: "Financials" },

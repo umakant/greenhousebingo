@@ -19,7 +19,27 @@ function buildEventsSearchUrl(parts: { q?: string; city?: string; state?: string
 export function GreenhouseHeroLocationSearch() {
   const router = useRouter();
   const [query, setQuery] = React.useState("");
+  const [mapsApiKey, setMapsApiKey] = React.useState("");
   const placeRef = React.useRef<{ city?: string; state?: string }>({});
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/public-settings", { cache: "no-store" });
+        const data = (await res.json().catch(() => null)) as
+          | { ok?: boolean; settings?: Record<string, string> }
+          | null;
+        const key = data?.settings?.googleMapsApiKey?.trim();
+        if (!cancelled && key) setMapsApiKey(key);
+      } catch {
+        // no key — falls back to a plain text input
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function goSearch() {
     router.push(
@@ -42,6 +62,7 @@ export function GreenhouseHeroLocationSearch() {
       <div className="flex min-w-0 flex-1 items-center gap-2 pl-5">
         <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         <AddressAutocomplete
+          apiKey={mapsApiKey}
           value={query}
           onChange={(v) => {
             setQuery(v);

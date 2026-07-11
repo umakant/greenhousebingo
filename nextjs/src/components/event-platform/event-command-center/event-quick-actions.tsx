@@ -21,6 +21,10 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+  EventActionsDrawer,
+  type EventActionId,
+} from "@/components/event-platform/event-command-center/event-actions-drawer";
 import { useEventCommandCenter } from "@/components/event-platform/event-command-center/event-command-center-context";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,6 +50,7 @@ function comingSoon(label: string) {
 
 export function EventQuickActions(props: EventQuickActionsProps) {
   const { eventId, event } = useEventCommandCenter();
+  const [action, setAction] = React.useState<EventActionId | null>(null);
 
   if (!event) return null;
 
@@ -97,36 +102,36 @@ export function EventQuickActions(props: EventQuickActionsProps) {
               <Pencil className="mr-2 h-4 w-4" />
               Edit Event
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => comingSoon("Add attendee")}>
+            <DropdownMenuItem onSelect={() => setAction("add_attendee")}>
               <UserPlus className="mr-2 h-4 w-4" />
               Add Attendee
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => comingSoon("Add expense")}>
+            <DropdownMenuItem onSelect={() => setAction("add_expense")}>
               <Receipt className="mr-2 h-4 w-4" />
               Add Expense
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => comingSoon("Add plant")}>
+            <DropdownMenuItem onSelect={() => setAction("add_plant")}>
               <Sprout className="mr-2 h-4 w-4" />
               Add Plant
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => comingSoon("Add game")}>
+            <DropdownMenuItem onSelect={() => setAction("add_game")}>
               <Trophy className="mr-2 h-4 w-4" />
               Add Game
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => comingSoon("Record winner")}>
+            <DropdownMenuItem onSelect={() => setAction("record_winner")}>
               <Trophy className="mr-2 h-4 w-4" />
               Record Winner
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => comingSoon("Message attendees")}>
+            <DropdownMenuItem onSelect={() => setAction("message")}>
               <Mail className="mr-2 h-4 w-4" />
               Message Attendees
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => comingSoon("Duplicate event")}>
+            <DropdownMenuItem onSelect={() => setAction("duplicate")}>
               <Copy className="mr-2 h-4 w-4" />
               Duplicate Event
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => comingSoon("Schedule again")}>
+            <DropdownMenuItem onSelect={() => setAction("schedule_again")}>
               <CalendarPlus className="mr-2 h-4 w-4" />
               Schedule Again
             </DropdownMenuItem>
@@ -143,7 +148,7 @@ export function EventQuickActions(props: EventQuickActionsProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-destructive focus:text-destructive"
-              onSelect={() => comingSoon("Cancel event")}
+              onSelect={() => setAction("cancel")}
             >
               <XCircle className="mr-2 h-4 w-4" />
               Cancel Event
@@ -157,6 +162,14 @@ export function EventQuickActions(props: EventQuickActionsProps) {
           </Link>
         </Button>
       </div>
+
+      <EventActionsDrawer
+        action={action}
+        onOpenChange={(o) => {
+          if (!o) setAction(null);
+        }}
+        onEdit={props.onEdit}
+      />
     </div>
   );
 }

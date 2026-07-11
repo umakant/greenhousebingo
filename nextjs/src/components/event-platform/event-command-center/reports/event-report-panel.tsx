@@ -53,7 +53,7 @@ export function EventReportPanel(props: { eventId: string }) {
     <Card className="shadow-sm">
       <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
         <div>
-          <CardTitle className="text-base">Event report & exports</CardTitle>
+          <CardTitle className="text-base">Event Report & Exports</CardTitle>
           <CardDescription>
             Unified post-event report with scorecard and downloadable exports.
           </CardDescription>

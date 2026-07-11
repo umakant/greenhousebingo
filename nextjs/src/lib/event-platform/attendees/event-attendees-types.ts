@@ -98,12 +98,28 @@ export type EventAttendeesListQuery = {
   spendMin?: number;
   spendMax?: number;
   newOrReturning?: "new" | "returning" | "all";
+  /** Scope results to walk-in guest registrations only (used by the Guests tab). */
+  guestsOnly?: boolean;
   sort?: EventAttendeeSortField;
   sortDir?: "asc" | "desc";
 };
 
+export type EventAttendeesAnalytics = {
+  capacity: number | null;
+  seatsLeft: number | null;
+  revenue: number;
+  currency: string;
+  vipGuests: number;
+  plantRequestsTotal: number;
+  registrationsByDay: Array<{ date: string; label: string; count: number }>;
+  topBonusBuyers: Array<{ registrationId: string; name: string; count: number; spend: number }>;
+  mostRequestedPlants: Array<{ name: string; count: number }>;
+  attendeeTypes: { vip: number; returning: number; new: number };
+};
+
 export type EventAttendeesListResult = {
   summary: EventAttendeesSummary;
+  analytics: EventAttendeesAnalytics;
   rows: EventAttendeeRow[];
   total: number;
   page: number;

@@ -105,6 +105,7 @@ export type WalkInInput = {
   amount: number;
   checkInNow?: boolean;
   marketingConsent?: boolean;
+  photoUrl?: string | null;
 };
 
 export type BonusCardSaleInput = {

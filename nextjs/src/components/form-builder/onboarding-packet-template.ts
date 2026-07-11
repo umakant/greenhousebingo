@@ -41,7 +41,7 @@ export function getOnboardingPacketTemplate(): {
     row("onb_middle", "Middle name", "text", { options: G4 }),
     row("onb_last", "Last name", "text", { required: true, options: G4 }),
     row("onb_suffix", "Suffix", "select", { options: ["Select", "Jr.", "Sr.", "II", "III", "IV"] }),
-    row("onb_phone", "Phone", "tel", { required: true, placeholder: "(555) 000-0000", options: G4 }),
+    row("onb_phone", "Phone", "tel", { required: true, placeholder: "(000) 000-0000", options: G4 }),
     row("onb_email", "Email", "email", { required: true, options: G4 }),
     row("onb_dob", "Date of birth", "date", { required: true, options: G4 }),
     row("onb_h_addr", "Address", "heading"),

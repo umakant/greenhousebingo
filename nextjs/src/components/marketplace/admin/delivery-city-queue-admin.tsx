@@ -17,6 +17,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { TimeInput12h } from "@/components/ui/time-input-12h";
 import { Textarea } from "@/components/ui/textarea";
@@ -535,9 +536,9 @@ export default function DeliveryCityQueueAdmin({
               </div>
               <div className="space-y-1.5">
                 <Label>{t("Driver phone")}</Label>
-                <Input
+                <PhoneInput
                   value={scheduleForm.driverPhone}
-                  onChange={(e) => setScheduleForm((f) => ({ ...f, driverPhone: e.target.value }))}
+                  onChange={(v) => setScheduleForm((f) => ({ ...f, driverPhone: v }))}
                 />
               </div>
             </div>

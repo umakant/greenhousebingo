@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { TableActionButton } from "@/components/ui/table-action-button";
@@ -731,10 +732,9 @@ export default function HrmEmployeesAdmin({ permissions }: { permissions: string
             <div className="space-y-2">
               <Label>{t("Phone")}</Label>
               <div className="flex flex-wrap items-center gap-2">
-                <Input
+                <PhoneInput
                   value={form.phone}
-                  onChange={e => { set("phone")(maskPhone(e.target.value)); setPhoneVerified(false); setPhoneOtpSent(false); setPhoneOtpInput(""); }}
-                  placeholder="(000) 000-0000"
+                  onChange={v => { set("phone")(v); setPhoneVerified(false); setPhoneOtpSent(false); setPhoneOtpInput(""); }}
                   maxLength={14}
                   className="min-w-[140px] flex-1"
                 />

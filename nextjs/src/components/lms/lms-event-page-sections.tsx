@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { ExternalLink, Plus, X } from "lucide-react";
+import { Building2, ExternalLink, Plus, User, X } from "lucide-react";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -63,7 +64,42 @@ function LibraryAdminLink({ href, label, className }: { href: string; label: str
   );
 }
 
+type PickerOption = { id: string; label: string; imageUrl?: string | null };
+
+function pickerInitials(label: string): string {
+  const name = label.split(" — ")[0]?.trim() || label.trim();
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
+
+function PickerIcon({
+  kind,
+  option,
+}: {
+  kind: "host" | "sponsor";
+  option: PickerOption | undefined;
+}) {
+  const shape = kind === "sponsor" ? "rounded-md" : "rounded-full";
+  const FallbackIcon = kind === "sponsor" ? Building2 : User;
+  const imageUrl = option?.imageUrl?.trim() || "";
+  return (
+    <Avatar className={cn("h-9 w-9 shrink-0 border bg-muted", shape)}>
+      {imageUrl ? <AvatarImage src={imageUrl} alt="" className={kind === "sponsor" ? "object-contain" : undefined} /> : null}
+      <AvatarFallback className={cn("bg-muted text-muted-foreground", shape)}>
+        {option ? (
+          <span className="text-xs font-semibold">{pickerInitials(option.label)}</span>
+        ) : (
+          <FallbackIcon className="h-4 w-4" aria-hidden />
+        )}
+      </AvatarFallback>
+    </Avatar>
+  );
+}
+
 function HostSponsorPickerRows({
+  kind,
   rows,
   loading,
   placeholder,
@@ -74,10 +110,11 @@ function HostSponsorPickerRows({
   onChangeRow,
   onRemoveRow,
 }: {
+  kind: "host" | "sponsor";
   rows: string[];
   loading: boolean;
   placeholder: string;
-  options: { id: string; label: string }[];
+  options: PickerOption[];
   isOptionDisabled: (rowIndex: number, optionId: string) => boolean;
   addLabel: string;
   onAddRow: () => void;
@@ -86,8 +123,11 @@ function HostSponsorPickerRows({
 }) {
   return (
     <div className="space-y-3">
-      {rows.map((rowValue, index) => (
+      {rows.map((rowValue, index) => {
+        const selected = options.find((option) => option.id === rowValue);
+        return (
         <div key={`picker-row-${index}`} className="flex items-center gap-2">
+          <PickerIcon kind={kind} option={selected} />
           <Select
             value={rowValue || undefined}
             onValueChange={(value) => onChangeRow(index, value)}
@@ -102,7 +142,10 @@ function HostSponsorPickerRows({
                   value={option.id}
                   disabled={isOptionDisabled(index, option.id)}
                 >
-                  {option.label}
+                  <span className="flex items-center gap-2">
+                    <PickerIcon kind={kind} option={option} />
+                    {option.label}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -122,7 +165,8 @@ function HostSponsorPickerRows({
             <div className="w-9 shrink-0" />
           )}
         </div>
-      ))}
+        );
+      })}
       <Button type="button" variant="outline" size="sm" className="gap-2" onClick={onAddRow}>
         <Plus className="h-4 w-4" />
         {addLabel}
@@ -315,12 +359,14 @@ export function LmsEventHostSponsorFields({
             <LibraryAdminLink href={EVENT_PLATFORM_PATHS.hosts} label="Manage hosts" />
           </div>
           <HostSponsorPickerRows
+            kind="host"
             rows={hostRows}
             loading={hostsLoading}
             placeholder="Select a saved host"
             options={hosts.map((host) => ({
               id: host.id,
               label: `${host.displayName}${host.email ? ` — ${host.email}` : ""}`,
+              imageUrl: host.imageUrl,
             }))}
             isOptionDisabled={(rowIndex, optionId) =>
               hostRows.some((id, i) => i !== rowIndex && id === optionId)
@@ -352,12 +398,14 @@ export function LmsEventHostSponsorFields({
             <LibraryAdminLink href={EVENT_PLATFORM_PATHS.sponsors} label="Manage sponsors" />
           </div>
           <HostSponsorPickerRows
+            kind="sponsor"
             rows={sponsorRows}
             loading={sponsorsLoading}
             placeholder="Select a saved sponsor"
             options={sponsors.map((sponsor) => ({
               id: sponsor.id,
               label: `${sponsor.name}${sponsor.address ? ` — ${sponsor.address}` : ""}`,
+              imageUrl: sponsor.imageUrl,
             }))}
             isOptionDisabled={(rowIndex, optionId) =>
               sponsorRows.some((id, i) => i !== rowIndex && id === optionId)

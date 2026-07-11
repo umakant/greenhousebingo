@@ -158,7 +158,7 @@ export function EventMarketingTab(props: { eventId: string }) {
       <Card className="shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <div>
-            <CardTitle className="text-base">Source performance</CardTitle>
+            <CardTitle className="text-base">Source Performance</CardTitle>
             <CardDescription>Each registration counted once under its primary source.</CardDescription>
           </div>
           <Button variant="outline" size="sm" className="h-8 gap-1 text-xs" asChild>
@@ -205,7 +205,7 @@ export function EventMarketingTab(props: { eventId: string }) {
 
       <Card className="shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-base">Affiliate performance</CardTitle>
+          <CardTitle className="text-base">Affiliate Performance</CardTitle>
           <Button variant="outline" size="sm" className="h-8 gap-1 text-xs" asChild>
             <a href={`/api/event-platform/events/${encodeURIComponent(props.eventId)}/marketing/export?section=affiliates`} download>
               <Download className="h-3.5 w-3.5" /> Export
@@ -301,7 +301,7 @@ export function EventMarketingTab(props: { eventId: string }) {
       {overview.sponsor ? (
         <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base">Event sponsor</CardTitle>
+            <CardTitle className="text-base">Event Sponsor</CardTitle>
             <Button variant="outline" size="sm" className="h-8 gap-1 text-xs" asChild>
               <a href={`/api/event-platform/events/${encodeURIComponent(props.eventId)}/marketing/export?section=sponsor`} download>
                 <Download className="h-3.5 w-3.5" /> Export

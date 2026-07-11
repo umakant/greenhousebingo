@@ -12,6 +12,7 @@ export type EventBingoGameDto = {
   description: string | null;
   sortOrder: number;
   status: EventBingoGameStatus;
+  updatedByName: string | null;
   createdAt: string;
   updatedAt: string | null;
 };

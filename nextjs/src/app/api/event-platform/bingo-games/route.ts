@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { writeEventAuditLog } from "@/lib/event-platform/dashboard-service";
 import { eventBingoGameCreateSchema } from "@/lib/event-platform/bingo-games/bingo-game-schemas";
-import { listEventBingoGames, serializeEventBingoGame } from "@/lib/event-platform/bingo-games/bingo-game-service";
+import {
+  listEventBingoGames,
+  resolveBingoGameUpdaterNames,
+  serializeEventBingoGame,
+} from "@/lib/event-platform/bingo-games/bingo-game-service";
 import {
   isEventPlatformApiError,
   requireEventPlatformApi,
@@ -15,8 +19,17 @@ export async function GET(req: NextRequest) {
   const actor = await requireEventPlatformApi(req, "bingoGames.view");
   if (isEventPlatformApiError(actor)) return actor;
   try {
-    const rows = await listEventBingoGames(actor.organizationId);
-    return NextResponse.json({ ok: true, items: rows.map(serializeEventBingoGame) });
+    const rows = await listEventBingoGames(actor.organizationId, true);
+    const updaterNames = await resolveBingoGameUpdaterNames(rows);
+    const items = rows.map((row) =>
+      serializeEventBingoGame(
+        row,
+        (row.updatedById ?? row.createdById)
+          ? updaterNames.get((row.updatedById ?? row.createdById)!.toString()) || null
+          : null,
+      ),
+    );
+    return NextResponse.json({ ok: true, items });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "List failed.";
     return NextResponse.json({ ok: false, message }, { status: 500 });

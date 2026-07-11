@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     const rows = await listEventBingoGames(actor.organizationId);
     const items = rows
       .filter((g: { status: string }) => g.status === "active")
-      .map(serializeEventBingoGame);
+      .map((g) => serializeEventBingoGame(g));
     return NextResponse.json({ ok: true, items });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Could not load bingo games.";

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import {
@@ -828,37 +829,6 @@ export function LmsEventCreateWizard(props: {
           {values.deliveryMode !== "online" ? (
             <>
               <div className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <Label>Venue</Label>
-                  <a
-                    href={EVENT_PLATFORM_PATHS.venues}
-                    className="text-xs text-primary hover:underline"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Manage venues
-                  </a>
-                </div>
-                <Select value={selectedVenueId || undefined} onValueChange={handleVenueSelect}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={venuesLoading ? "Loading venues…" : "Select a saved venue"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {venues.map((venue) => (
-                      <SelectItem key={venue.id} value={venue.id}>
-                        {venue.name}
-                        {venueLocationLabel(venue) ? ` — ${venueLocationLabel(venue)}` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  {selectedVenue
-                    ? "Address, city, coordinates, and phone below are filled from your saved venue."
-                    : "Select a saved venue to auto-fill the location fields below."}
-                </p>
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="ev-address">Address</Label>
                 <AddressAutocomplete
                   id="ev-address"
@@ -930,11 +900,11 @@ export function LmsEventCreateWizard(props: {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="ev-venue-phone">Venue phone</Label>
-                  <Input
+                  <PhoneInput
                     id="ev-venue-phone"
                     value={values.venuePhone ?? ""}
-                    onChange={(e) => patch({ venuePhone: e.target.value })}
-                    placeholder="(214) 555-0100"
+                    onChange={(v) => patch({ venuePhone: v })}
+                    placeholder="(000) 000-0000"
                   />
                 </div>
                 <div className="space-y-2">

@@ -60,7 +60,7 @@ export function EventAlerts(props: EventAlertsProps) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="grid gap-3 sm:grid-cols-2">
       {alerts.map((alert) => {
         const Icon = alertIcon(alert.severity);
         const tab = tabForActionKind(alert.actionKind);

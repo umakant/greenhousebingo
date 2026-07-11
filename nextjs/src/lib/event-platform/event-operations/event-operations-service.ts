@@ -168,6 +168,7 @@ export async function getEventOperationsOverview(
   options?: {
     canManage?: boolean;
     canAssign?: boolean;
+    currentUserId?: bigint;
     filters?: EventOperationsFilters;
   },
 ): Promise<EventOperationsOverview | null> {
@@ -260,6 +261,7 @@ export async function getEventOperationsOverview(
     canManage: options?.canManage ?? false,
     canAssignTasks: options?.canAssign ?? false,
     canExport: true,
+    currentUserId: options?.currentUserId?.toString() ?? null,
     filters,
     checklist: {
       percent: checklist.percent,

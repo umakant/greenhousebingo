@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/contexts/translation-context";
 import { hasAccountPermission } from "@/lib/authz";
+import { formatPhoneDisplay } from "@/lib/phone";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -422,7 +423,7 @@ export default function AccountCustomerView({
                 <SnapshotField label={t("Customer code")}>{detail.customer_code}</SnapshotField>
                 <SnapshotField label={t("Contact person")}>{detail.contact_person_name}</SnapshotField>
                 <SnapshotField label={t("Email")}>{detail.contact_person_email}</SnapshotField>
-                <SnapshotField label={t("Mobile")}>{detail.contact_person_mobile ?? "—"}</SnapshotField>
+                <SnapshotField label={t("Mobile")}>{formatPhoneDisplay(detail.contact_person_mobile, "—")}</SnapshotField>
                 <SnapshotField label={t("Tax number")}>{detail.tax_number ?? "—"}</SnapshotField>
                 <SnapshotField label={t("Payment terms")}>{detail.payment_terms ?? "—"}</SnapshotField>
                 <SnapshotField label={t("Linked user")}>

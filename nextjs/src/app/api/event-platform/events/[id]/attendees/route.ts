@@ -35,6 +35,7 @@ function parseListQuery(req: NextRequest): EventAttendeesListQuery {
     spendMin: spendMin != null && spendMin !== "" ? Number(spendMin) : undefined,
     spendMax: spendMax != null && spendMax !== "" ? Number(spendMax) : undefined,
     newOrReturning: (sp.get("newOrReturning") as EventAttendeesListQuery["newOrReturning"]) ?? undefined,
+    guestsOnly: sp.get("guestsOnly") === "true" ? true : undefined,
     sort: (sp.get("sort") as EventAttendeesListQuery["sort"]) ?? undefined,
     sortDir: sp.get("sortDir") === "asc" ? "asc" : "desc",
   };

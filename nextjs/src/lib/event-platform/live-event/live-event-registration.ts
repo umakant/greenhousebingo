@@ -32,12 +32,19 @@ async function findOrCreateWalkInGuestUser(params: {
   email: string;
   phone: string;
   createdById: bigint;
+  avatar?: string | null;
 }): Promise<bigint> {
   const existing = await prisma.user.findFirst({
     where: { email: params.email },
-    select: { id: true },
+    select: { id: true, avatar: true },
   });
-  if (existing) return existing.id;
+  if (existing) {
+    // Refresh the avatar if a new photo was captured for a returning guest.
+    if (params.avatar && params.avatar !== existing.avatar) {
+      await prisma.user.update({ where: { id: existing.id }, data: { avatar: params.avatar } });
+    }
+    return existing.id;
+  }
 
   await ensureCustomerClientRoleWithPermissions();
   const hashed = await bcrypt.hash(crypto.randomBytes(12).toString("base64url"), 10);
@@ -52,6 +59,7 @@ async function findOrCreateWalkInGuestUser(params: {
       isActive: true,
       isEnableLogin: false,
       mobileNo: params.phone.trim() || null,
+      avatar: params.avatar ?? null,
       createdBy: params.createdById,
     },
   });
@@ -86,6 +94,7 @@ export async function createWalkInRegistration(params: {
     email: primaryEmail,
     phone: input.phone,
     createdById: params.actorUserId,
+    avatar: input.photoUrl?.trim() || null,
   });
 
   const existingReg = await prisma.lmsEventRegistration.findFirst({

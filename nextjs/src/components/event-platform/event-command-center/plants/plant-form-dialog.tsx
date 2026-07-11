@@ -6,12 +6,12 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -97,12 +97,12 @@ export function PlantFormDialog(props: PlantFormDialogProps) {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit plant" : "Add plant"}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
+    <Sheet open={props.open} onOpenChange={props.onOpenChange}>
+      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>{isEdit ? "Edit plant" : "Add plant"}</SheetTitle>
+        </SheetHeader>
+        <div className="mt-6 space-y-3">
           <div className="space-y-2">
             <Label>Name</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} />
@@ -136,15 +136,15 @@ export function PlantFormDialog(props: PlantFormDialogProps) {
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </div>
         </div>
-        <DialogFooter>
+        <SheetFooter className="mt-6">
           <Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>
             Cancel
           </Button>
           <Button type="button" disabled={busy} onClick={() => void submit()}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : isEdit ? "Save" : "Add plant"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

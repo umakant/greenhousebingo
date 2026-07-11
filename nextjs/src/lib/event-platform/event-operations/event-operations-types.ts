@@ -49,6 +49,7 @@ export type EventOperationsOverview = {
   canManage: boolean;
   canAssignTasks: boolean;
   canExport: boolean;
+  currentUserId: string | null;
   filters: EventOperationsFilters;
   checklist: {
     percent: number;

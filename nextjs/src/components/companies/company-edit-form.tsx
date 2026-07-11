@@ -469,7 +469,7 @@ export default function CompanyEditForm({
               id="edit_mobile_no"
               value={mobile_no}
               onChange={(e) => setMobile(formatPhone(e.target.value))}
-              placeholder="(555) 555-5555"
+              placeholder="(000) 000-0000"
             />
           </div>
 

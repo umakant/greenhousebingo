@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { TimeInput12h } from "@/components/ui/time-input-12h";
 import { Progress } from "@/components/ui/progress";
@@ -385,10 +386,10 @@ export default function CityQueueDetail({ param, canSchedule }: { param: string;
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="driverPhone">Driver phone</Label>
-                <Input
+                <PhoneInput
                   id="driverPhone"
                   value={form.driverPhone}
-                  onChange={(e) => setForm((f) => ({ ...f, driverPhone: e.target.value }))}
+                  onChange={(v) => setForm((f) => ({ ...f, driverPhone: v }))}
                 />
               </div>
               <div className="grid gap-2 sm:col-span-2">

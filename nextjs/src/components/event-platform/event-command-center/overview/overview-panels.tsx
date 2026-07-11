@@ -25,7 +25,7 @@ export function EventHealthScore(props: { health: CommandCenterHealth | null }) 
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Event health score</CardTitle>
+        <CardTitle className="text-base">Event Health Score</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-4">
@@ -82,7 +82,7 @@ export function OperationalAlertsPanel(props: {
     return (
       <Card className="shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Operational alerts</CardTitle>
+          <CardTitle className="text-base">Operational Alerts</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">No active alerts. Event operations look clear.</p>
@@ -94,7 +94,7 @@ export function OperationalAlertsPanel(props: {
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Operational alerts</CardTitle>
+        <CardTitle className="text-base">Operational Alerts</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {props.alerts.map((alert) => {
@@ -137,7 +137,7 @@ export function EventTimelinePanel(props: {
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Upcoming timeline</CardTitle>
+        <CardTitle className="text-base">Upcoming Timeline</CardTitle>
       </CardHeader>
       <CardContent>
         <ol className="relative space-y-4 border-l border-muted pl-4">
@@ -178,7 +178,7 @@ export function RecentActivityPanel(props: {
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Recent activity</CardTitle>
+        <CardTitle className="text-base">Recent Activity</CardTitle>
       </CardHeader>
       <CardContent>
         {props.items.length === 0 ? (
@@ -226,7 +226,7 @@ export function OverviewQuickActions(props: {
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Quick actions</CardTitle>
+        <CardTitle className="text-base">Quick Actions</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-wrap gap-2">
         {actions.map((action) => (

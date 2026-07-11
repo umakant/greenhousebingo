@@ -14,6 +14,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatPhone } from "@/lib/phone";
 import { companies, events } from "@/lib/greenhouse-bingo/mock";
 import { CompanyCard } from "@/components/greenhouse-bingo/company-card";
 import { EventCard } from "@/components/greenhouse-bingo/event-card";
@@ -273,7 +274,15 @@ export function GreenhouseBingoHome() {
                 </div>
                 <div>
                   <Label htmlFor="host-phone">Phone (optional)</Label>
-                  <Input id="host-phone" type="tel" className="mt-1.5" />
+                  <Input
+                    id="host-phone"
+                    type="tel"
+                    className="mt-1.5"
+                    placeholder="(000) 000-0000"
+                    onChange={(e) => {
+                      e.target.value = formatPhone(e.target.value);
+                    }}
+                  />
                 </div>
                 <div className="sm:col-span-2">
                   <Label htmlFor="host-facility">Facility name</Label>

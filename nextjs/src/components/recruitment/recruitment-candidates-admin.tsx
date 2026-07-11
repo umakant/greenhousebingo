@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -239,10 +240,9 @@ export default function RecruitmentCandidatesAdmin({ permissions }: { permission
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>{t("Phone")}</Label>
-                  <Input
+                  <PhoneInput
                     value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: formatPhone(e.target.value) })}
-                    placeholder="(000) 000-0000"
+                    onChange={(v) => setForm({ ...form, phone: v })}
                   />
                 </div>
                 <div className="space-y-1.5">

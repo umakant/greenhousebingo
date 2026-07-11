@@ -25,6 +25,7 @@ import {
   formatScheduleDisplay,
 } from "@/lib/lms-events/event-schedule-helpers";
 import type { LmsEventCreateWizardInput } from "@/lib/lms-events/schemas";
+import { formatPhoneDisplay } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
 function formatReviewTime(value: string | null | undefined): string {
@@ -200,7 +201,7 @@ export function LmsEventReviewStep({
             />
           ) : null}
           {values.capacity != null ? <ReviewField label="Capacity" value={values.capacity.toLocaleString()} /> : null}
-          {values.venuePhone?.trim() ? <ReviewField label="Phone" value={values.venuePhone} /> : null}
+          {values.venuePhone?.trim() ? <ReviewField label="Phone" value={formatPhoneDisplay(values.venuePhone)} /> : null}
         </ReviewSection>
       ) : null}
 

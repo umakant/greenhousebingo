@@ -17,6 +17,7 @@ export default async function EventPlatformEventTicketsPage({ params }: Props) {
       permissions={["events.view", "manage-lms-events"]}
       path={`/admin/event-platform/events/${id}/tickets`}
       title="Event tickets"
+      hidePageTitle
       breadcrumbs={[
         { label: "Events", url: EVENT_PLATFORM_PATHS.events },
         { label: "Tickets" },

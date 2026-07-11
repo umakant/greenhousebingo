@@ -35,6 +35,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { TableActionButton, type TableActionItem } from "@/components/ui/table-action-button";
 import { t } from "@/lib/admin-t";
+import { formatPhoneDisplay } from "@/lib/phone";
 
 const ORG_STORAGE_KEY = "pf_sf_merchant_org_id";
 
@@ -457,7 +458,7 @@ export function StorefrontCustomersAdmin() {
               </div>
               <div className="flex justify-between gap-2">
                 <span className="text-muted-foreground">{t("Phone")}</span>
-                <span className="text-right">{detail.phone?.trim() || "—"}</span>
+                <span className="text-right">{formatPhoneDisplay(detail.phone, "—")}</span>
               </div>
               <div className="flex justify-between gap-2">
                 <span className="text-muted-foreground">{t("Orders")}</span>

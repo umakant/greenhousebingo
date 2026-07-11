@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -315,14 +316,12 @@ export function AuthPageContent() {
                   </div>
                   <div>
                     <Label htmlFor="s-phone">Phone</Label>
-                    <Input
+                    <PhoneInput
                       id="s-phone"
-                      type="tel"
                       required
-                      placeholder="(555) 123-4567"
                       className="mt-1.5"
                       value={signupData.phone}
-                      onChange={(e) => setSignupData((d) => ({ ...d, phone: e.target.value }))}
+                      onChange={(v) => setSignupData((d) => ({ ...d, phone: v }))}
                     />
                   </div>
                 </>

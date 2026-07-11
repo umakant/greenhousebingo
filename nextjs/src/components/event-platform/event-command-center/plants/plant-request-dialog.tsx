@@ -7,12 +7,12 @@ import { toast } from "sonner";
 import type { EventPlantDto } from "@/lib/event-platform/event-plants/event-plant-types";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -86,12 +86,12 @@ export function PlantRequestDialog(props: PlantRequestDialogProps) {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Plant request</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-3">
+    <Sheet open={props.open} onOpenChange={props.onOpenChange}>
+      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>Plant request</SheetTitle>
+        </SheetHeader>
+        <div className="mt-6 space-y-3">
           {props.registrationLabel ? (
             <p className="text-sm text-muted-foreground">Attendee: {props.registrationLabel}</p>
           ) : (
@@ -133,15 +133,15 @@ export function PlantRequestDialog(props: PlantRequestDialogProps) {
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </div>
         </div>
-        <DialogFooter>
+        <SheetFooter className="mt-6">
           <Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>
             Cancel
           </Button>
           <Button type="button" disabled={busy} onClick={() => void submit()}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save request"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

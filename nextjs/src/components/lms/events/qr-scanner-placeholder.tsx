@@ -15,11 +15,11 @@ export function QRScannerPlaceholder() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex aspect-video flex-col items-center justify-center rounded-lg border-2 border-dashed bg-muted/30 p-6 text-center">
-          <ScanLine className="mb-3 h-12 w-12 text-muted-foreground/60" aria-hidden />
-          <p className="text-sm font-medium">Scanner coming soon</p>
+        <div className="flex aspect-video flex-col items-center justify-center rounded-lg border-2 border-dashed border-green-300 bg-green-50/60 p-6 text-center">
+          <ScanLine className="mb-3 h-12 w-12 text-green-500" aria-hidden />
+          <p className="text-sm font-medium">Ready to scan</p>
           <p className="mt-1 max-w-xs text-xs text-muted-foreground">
-            Use manual check-in below until the camera scanner is connected in production.
+            Place QR code in front of the camera, or use manual check-in below.
           </p>
         </div>
       </CardContent>

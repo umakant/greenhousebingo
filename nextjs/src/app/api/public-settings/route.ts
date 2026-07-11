@@ -2,7 +2,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSuperadminId } from "@/lib/settings-service";
 
-const PUBLIC_KEYS = ["loginImage", "loginBgColor", "loginFormBgColor", "titleText", "footerText"] as const;
+const PUBLIC_KEYS = [
+  "loginImage",
+  "loginBgColor",
+  "loginFormBgColor",
+  "titleText",
+  "footerText",
+  // Maps key for public address autocomplete (browser key, referrer-restricted)
+  "googleMapsApiKey",
+] as const;
 
 export async function GET() {
   try {

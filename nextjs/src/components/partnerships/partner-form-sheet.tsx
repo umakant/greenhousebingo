@@ -201,7 +201,7 @@ export function PartnerFormSheet({ open, onOpenChange, mode, initial, onSaved }:
               type="tel"
               inputMode="tel"
               autoComplete="tel"
-              placeholder="(555) 555-5555"
+              placeholder="(000) 000-0000"
               maxLength={14}
               value={form.phone}
               onChange={(e) => setForm((f) => ({ ...f, phone: formatPhone(e.target.value) }))}

@@ -396,7 +396,7 @@ export default function ReferralLinksAdmin() {
                     type="tel"
                     value={newPhone}
                     onChange={(e) => setNewPhone(formatPhone(e.target.value))}
-                    placeholder="(555) 555-5555"
+                    placeholder="(000) 000-0000"
                   />
                 </div>
                 <div className="space-y-2">

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -145,7 +146,7 @@ export default function VendorProfile({ forceReset }: { forceReset?: boolean }) 
         </div>
         <div className="grid gap-2">
           <Label htmlFor="v-phone">Phone</Label>
-          <Input id="v-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <PhoneInput id="v-phone" value={phone} onChange={(v) => setPhone(v)} />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="v-logo">Logo URL</Label>

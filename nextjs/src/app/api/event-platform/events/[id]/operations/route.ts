@@ -36,6 +36,7 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     const overview = await getEventOperationsOverview(actor.organizationId, id, {
       canManage,
       canAssign,
+      currentUserId: actor.userId,
       filters: parseFilters(req.nextUrl.searchParams),
     });
     if (!overview) {

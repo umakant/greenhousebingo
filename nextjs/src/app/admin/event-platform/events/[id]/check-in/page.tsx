@@ -17,6 +17,7 @@ export default async function EventPlatformEventCheckInPage({ params }: Props) {
       permissions={["bookings.manage", "manage-lms-events", "manage-lms-event-checkin"]}
       path={`/admin/event-platform/events/${id}/check-in`}
       title="Event check-in"
+      hidePageTitle
       breadcrumbs={[
         { label: "Events", url: EVENT_PLATFORM_PATHS.events },
         { label: "Check-in" },

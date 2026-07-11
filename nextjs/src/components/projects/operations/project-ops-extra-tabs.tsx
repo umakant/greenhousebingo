@@ -21,6 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAppSettings } from "@/contexts/app-settings-context";
 import { formatDate as fmtDateLib } from "@/lib/format-date";
+import { formatPhoneDisplay } from "@/lib/phone";
 
 const FACILITY_TYPE_LABEL: Record<string, string> = {
   hospital: "Hospital",
@@ -295,7 +296,7 @@ export function MedicalFacilitiesTab({ projectId, canManage }: { projectId: numb
                     </td>
                     <td className="py-2 text-foreground">{r.name as string}</td>
                     <td className="py-2 text-muted-foreground"><MapPin className="mr-1 inline h-3 w-3 text-blue-400" />{r.address as string ?? "—"}</td>
-                    <td className="py-2 text-foreground">{r.phone as string ?? "—"}</td>
+                    <td className="py-2 text-foreground">{formatPhoneDisplay(r.phone as string | null | undefined, "—")}</td>
                     <td className="py-2 text-foreground">{r.distance as string ?? "—"}</td>
                     <td className="py-2 text-muted-foreground">{r.notes as string ?? "—"}</td>
                     {canManage ? (

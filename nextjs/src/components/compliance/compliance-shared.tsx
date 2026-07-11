@@ -6,12 +6,12 @@ import { Eye, FileText, History } from "lucide-react";
 import { FormattedDate } from "@/components/formatted-date";
 import { AddressAutocomplete, type AddressComponents } from "@/components/ui/address-autocomplete";
 import { DatePickerInput } from "@/components/ui/date-picker-input";
-import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { TableActionButton, type TableActionItem } from "@/components/ui/table-action-button";
 import { useAppSettings } from "@/contexts/app-settings-context";
 import { formatDate, formatDateTime } from "@/lib/format-date";
-import { formatPhone, formatPhoneDisplay, unformatPhone } from "@/lib/phone";
+import { formatPhoneDisplay, unformatPhone } from "@/lib/phone";
 
 /** App-wide date/time formatting using tenant settings (dateFormat, timeFormat). */
 export function useComplianceFormat() {
@@ -118,13 +118,11 @@ export function CompliancePhoneField({
   return (
     <div className={className}>
       <Label htmlFor={id}>{label}</Label>
-      <Input
+      <PhoneInput
         id={id}
         className="mt-1"
         value={value}
-        onChange={(e) => onChange(formatPhone(e.target.value))}
-        inputMode="tel"
-        autoComplete="tel"
+        onChange={onChange}
       />
     </div>
   );

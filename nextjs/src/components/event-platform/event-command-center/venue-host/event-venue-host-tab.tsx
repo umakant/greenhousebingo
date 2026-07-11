@@ -3,13 +3,18 @@
 import * as React from "react";
 import Link from "next/link";
 import {
+  Building2,
   CalendarPlus,
   Download,
   ExternalLink,
+  Info,
   Loader2,
   Mail,
   MapPin,
+  Phone,
   StickyNote,
+  Users,
+  Utensils,
   UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -18,6 +23,7 @@ import {
   ChartFilterSelect,
   DetailRow,
   HostMetricsGrid,
+  IconDetailRow,
   PerformanceChartBlock,
   VenueMetricsGrid,
 } from "@/components/event-platform/event-command-center/venue-host/venue-host-panels";
@@ -25,12 +31,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -134,8 +140,11 @@ export function EventVenueHostTab(props: { eventId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-muted-foreground">{overview.ratingSystem.message}</p>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-sky-200 bg-sky-50/70 px-4 py-3 dark:border-sky-900/50 dark:bg-sky-950/20">
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Info className="h-4 w-4 shrink-0 text-sky-500" />
+          {overview.ratingSystem.message}
+        </p>
         <ChartFilterSelect value={chartFilter} onChange={setChartFilter} />
       </div>
 
@@ -152,34 +161,59 @@ export function EventVenueHostTab(props: { eventId: string }) {
                 <CardDescription>Details and operational status for this event.</CardDescription>
               </div>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p className="text-lg font-semibold">{venue.current.name ?? "No venue assigned"}</p>
-              <DetailRow label="Type" value={venue.current.venueType} />
-              <DetailRow label="Address" value={venue.current.address} />
-              <DetailRow label="Contact" value={venue.current.contactPerson} />
-              <DetailRow label="Phone" value={formatPhoneDisplay(venue.current.phone, "—")} />
-              <DetailRow label="Email" value={venue.current.email} />
-              <DetailRow label="Capacity" value={venue.current.capacity != null ? String(venue.current.capacity) : null} />
-              <DetailRow
-                label="Venue fee"
-                value={venue.current.venueFee != null ? money(venue.current.venueFee, currency) : null}
-              />
-              <DetailRow label="Contract status" value={venue.current.contractStatus} />
-              <DetailRow label="Payment status" value={venue.current.paymentStatus} />
-              <DetailRow label="Food & drink" value={venue.current.foodAndDrink} />
-              <DetailRow label="Parking" value={venue.current.parking} />
-              <DetailRow label="Accessibility" value={venue.current.accessibility} />
-              <DetailRow label="Setup instructions" value={venue.current.setupInstructions} />
-              {venue.current.businessHours ? (
-                <DetailRow label="Business hours" value={JSON.stringify(venue.current.businessHours)} />
-              ) : null}
-              <DetailRow label="Notes" value={venue.current.notes} />
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex flex-col gap-4 sm:flex-row">
+                <div className="h-32 w-full shrink-0 overflow-hidden rounded-lg bg-muted sm:h-auto sm:w-40">
+                  {venue.current.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={venue.current.imageUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full min-h-[8rem] w-full items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 text-emerald-400">
+                      <MapPin className="h-8 w-8" />
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-lg font-semibold">{venue.current.name ?? "No venue assigned"}</p>
+                    <Badge className="border-0 bg-emerald-100 text-xs font-medium text-emerald-700 hover:bg-emerald-100">
+                      Active Event
+                    </Badge>
+                  </div>
+                  <div className="mt-1 divide-y divide-border/50">
+                    <IconDetailRow icon={Building2} label="Type" value={venue.current.venueType} />
+                    <IconDetailRow icon={MapPin} label="Address" value={venue.current.address} />
+                    <IconDetailRow icon={Phone} label="Phone" value={formatPhoneDisplay(venue.current.phone, "—")} />
+                    <IconDetailRow
+                      icon={Users}
+                      label="Capacity"
+                      value={venue.current.capacity != null ? String(venue.current.capacity) : null}
+                    />
+                    <IconDetailRow icon={Utensils} label="Food & drink" value={venue.current.foodAndDrink} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-1 border-t pt-3 sm:grid-cols-2">
+                <DetailRow label="Contact" value={venue.current.contactPerson} />
+                <DetailRow label="Email" value={venue.current.email} />
+                <DetailRow
+                  label="Venue fee"
+                  value={venue.current.venueFee != null ? money(venue.current.venueFee, currency) : null}
+                />
+                <DetailRow label="Contract status" value={venue.current.contractStatus} />
+                <DetailRow label="Payment status" value={venue.current.paymentStatus} />
+                <DetailRow label="Parking" value={venue.current.parking} />
+                <DetailRow label="Accessibility" value={venue.current.accessibility} />
+                <DetailRow label="Setup instructions" value={venue.current.setupInstructions} />
+                <DetailRow label="Notes" value={venue.current.notes} />
+              </div>
             </CardContent>
           </Card>
 
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Venue usage metrics</CardTitle>
+              <CardTitle className="text-base">Venue Usage Metrics</CardTitle>
               <CardDescription>
                 Calculated from {venue.metrics.timesUsed} event{venue.metrics.timesUsed === 1 ? "" : "s"} at this venue
                 (company-scoped).
@@ -198,7 +232,7 @@ export function EventVenueHostTab(props: { eventId: string }) {
 
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-base">Venue event history</CardTitle>
+              <CardTitle className="text-base">Venue Event History</CardTitle>
               <Button variant="outline" size="sm" className="h-8 gap-1 text-xs" asChild>
                 <a
                   href={`/api/event-platform/events/${encodeURIComponent(props.eventId)}/venue-host/export?section=venue`}
@@ -334,30 +368,34 @@ export function EventVenueHostTab(props: { eventId: string }) {
                   </div>
                 </div>
               </div>
-              <DetailRow label="Phone" value={formatPhoneDisplay(host.current.phone, "—")} />
-              <DetailRow label="Email" value={host.current.email} />
-              <DetailRow
-                label="Scheduled arrival"
-                value={host.current.scheduledArrival ? new Date(host.current.scheduledArrival).toLocaleString() : null}
-              />
-              <DetailRow
-                label="Actual arrival"
-                value={host.current.actualArrival ? new Date(host.current.actualArrival).toLocaleString() : null}
-              />
-              <DetailRow label="Payment type" value={host.current.paymentType} />
-              <DetailRow
-                label="Payment amount"
-                value={host.current.paymentAmount != null ? money(host.current.paymentAmount, currency) : null}
-              />
-              <DetailRow label="Payment status" value={host.current.paymentStatus} />
-              <DetailRow label="Agreement" value={host.current.agreementUrl ? "On file" : null} />
-              <DetailRow label="Notes" value={host.current.notes} />
+              <div className="divide-y divide-border/50">
+                <IconDetailRow icon={Phone} label="Phone" value={formatPhoneDisplay(host.current.phone, "—")} />
+                <IconDetailRow icon={Mail} label="Email" value={host.current.email} />
+              </div>
+              <div className="grid gap-1 border-t pt-2 sm:grid-cols-2">
+                <DetailRow
+                  label="Scheduled arrival"
+                  value={host.current.scheduledArrival ? new Date(host.current.scheduledArrival).toLocaleString() : null}
+                />
+                <DetailRow
+                  label="Actual arrival"
+                  value={host.current.actualArrival ? new Date(host.current.actualArrival).toLocaleString() : null}
+                />
+                <DetailRow label="Payment type" value={host.current.paymentType} />
+                <DetailRow
+                  label="Payment amount"
+                  value={host.current.paymentAmount != null ? money(host.current.paymentAmount, currency) : null}
+                />
+                <DetailRow label="Payment status" value={host.current.paymentStatus} />
+                <DetailRow label="Agreement" value={host.current.agreementUrl ? "On file" : null} />
+                <DetailRow label="Notes" value={host.current.notes} />
+              </div>
             </CardContent>
           </Card>
 
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">Host performance metrics</CardTitle>
+              <CardTitle className="text-base">Host Performance Metrics</CardTitle>
               <CardDescription>From prior events assigned to this host (company-scoped).</CardDescription>
             </CardHeader>
             <CardContent>
@@ -374,7 +412,7 @@ export function EventVenueHostTab(props: { eventId: string }) {
           {host.performanceNotes.length > 0 ? (
             <Card className="shadow-sm">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">Performance notes</CardTitle>
+                <CardTitle className="text-base">Performance Notes</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {host.performanceNotes.map((n) => (
@@ -391,7 +429,7 @@ export function EventVenueHostTab(props: { eventId: string }) {
 
           <Card className="shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-base">Host event history</CardTitle>
+              <CardTitle className="text-base">Host Event History</CardTitle>
               <Button variant="outline" size="sm" className="h-8 gap-1 text-xs" asChild>
                 <a
                   href={`/api/event-platform/events/${encodeURIComponent(props.eventId)}/venue-host/export?section=host`}
@@ -503,12 +541,31 @@ export function EventVenueHostTab(props: { eventId: string }) {
         </div>
       </div>
 
-      <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Host performance note</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
+      <Card className="shadow-sm">
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-600">
+              <Info className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">Additional Information</p>
+              <p className="text-xs text-muted-foreground">
+                All data is based on completed event records and may exclude current in-progress activities.
+              </p>
+            </div>
+          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`${EVENT_PLATFORM_PATHS.eventDetail(props.eventId)}?tab=overview`}>View Event Details</Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Sheet open={noteOpen} onOpenChange={setNoteOpen}>
+        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Host performance note</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6 space-y-2">
             <Label htmlFor="host-note">Note</Label>
             <Textarea
               id="host-note"
@@ -518,7 +575,7 @@ export function EventVenueHostTab(props: { eventId: string }) {
               placeholder="Observations about host performance for this event…"
             />
           </div>
-          <DialogFooter>
+          <SheetFooter className="mt-6">
             <Button
               onClick={async () => {
                 if (!host.current.hostId || !noteText.trim()) return;
@@ -535,9 +592,9 @@ export function EventVenueHostTab(props: { eventId: string }) {
             >
               Save note
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

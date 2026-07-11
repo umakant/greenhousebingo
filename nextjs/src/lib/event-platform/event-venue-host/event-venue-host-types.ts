@@ -10,6 +10,7 @@ export type VenueHostRatingInfo = {
 
 export type VenueCurrentDetails = {
   venueId: string | null;
+  imageUrl: string | null;
   name: string | null;
   venueType: string | null;
   address: string | null;

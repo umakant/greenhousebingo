@@ -96,12 +96,12 @@ const initialForm: FormState = {
   country: "",
 };
 
-/** Normalize a Google-provided phone to the form's 10-digit `###-###-####` mask. */
+/** Normalize a Google-provided phone to the form's `(000) 000-0000` mask. */
 function toPhoneMask(raw: string): string | null {
   const digits = raw.replace(/\D/g, "");
   const ten = digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
   if (ten.length !== 10) return null;
-  return `${ten.slice(0, 3)}-${ten.slice(3, 6)}-${ten.slice(6)}`;
+  return formatPhone(ten);
 }
 
 export function MembershipJoinClient({ plan }: { plan: MembershipPlanView }) {

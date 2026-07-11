@@ -14,13 +14,13 @@ import type { EventBingoCardType } from "@/lib/event-platform/bingo-rounds/bingo
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -39,16 +39,18 @@ type RecordWinnerDialogProps = {
   eventId: string;
   rounds: EventBingoRoundDto[];
   defaultRoundId?: string | null;
+  defaultRegistrationId?: string | null;
+  defaultRegistrationLabel?: string | null;
   onSaved: () => void;
 };
 
 export function RecordWinnerDialog(props: RecordWinnerDialogProps) {
   const [roundId, setRoundId] = React.useState(props.defaultRoundId ?? "");
-  const [search, setSearch] = React.useState("");
+  const [search, setSearch] = React.useState(props.defaultRegistrationLabel ?? "");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
   const [attendees, setAttendees] = React.useState<EventAttendeeRow[]>([]);
   const [searchLoading, setSearchLoading] = React.useState(false);
-  const [registrationId, setRegistrationId] = React.useState("");
+  const [registrationId, setRegistrationId] = React.useState(props.defaultRegistrationId ?? "");
   const [winningCardNumber, setWinningCardNumber] = React.useState("");
   const [cardType, setCardType] = React.useState<EventBingoCardType>("included");
   const [prizeLabel, setPrizeLabel] = React.useState("");
@@ -64,6 +66,13 @@ export function RecordWinnerDialog(props: RecordWinnerDialogProps) {
   React.useEffect(() => {
     if (props.open && props.defaultRoundId) setRoundId(props.defaultRoundId);
   }, [props.open, props.defaultRoundId]);
+
+  React.useEffect(() => {
+    if (props.open && props.defaultRegistrationId) {
+      setRegistrationId(props.defaultRegistrationId);
+      setSearch(props.defaultRegistrationLabel ?? "");
+    }
+  }, [props.open, props.defaultRegistrationId, props.defaultRegistrationLabel]);
 
   React.useEffect(() => {
     if (selectedRound && !prizeLabel) setPrizeLabel(selectedRound.assignedPrize);
@@ -149,14 +158,14 @@ export function RecordWinnerDialog(props: RecordWinnerDialogProps) {
   }
 
   return (
-    <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Record winner</DialogTitle>
-          <DialogDescription>Validate card and prize before completing the round.</DialogDescription>
-        </DialogHeader>
+    <Sheet open={props.open} onOpenChange={props.onOpenChange}>
+      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
+        <SheetHeader>
+          <SheetTitle>Record winner</SheetTitle>
+          <SheetDescription>Validate card and prize before completing the round.</SheetDescription>
+        </SheetHeader>
 
-        <div className="space-y-4 py-2">
+        <div className="mt-6 space-y-4">
           <div className="space-y-2">
             <Label>Game round</Label>
             <Select value={roundId} onValueChange={setRoundId}>
@@ -278,7 +287,7 @@ export function RecordWinnerDialog(props: RecordWinnerDialogProps) {
           ) : null}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <SheetFooter className="mt-6 gap-2 sm:gap-0">
           {validation?.warnings.length && !validation.errors.length ? (
             <Button type="button" variant="secondary" disabled={submitting} onClick={() => void submit(true)}>
               Save with warnings
@@ -287,8 +296,8 @@ export function RecordWinnerDialog(props: RecordWinnerDialogProps) {
           <Button type="button" disabled={submitting} onClick={() => void submit(false)}>
             {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Record winner"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

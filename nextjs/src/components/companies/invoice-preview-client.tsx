@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/contexts/translation-context";
+import { formatPhoneDisplay } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
 type InvoicePayload = {
@@ -245,7 +246,7 @@ export default function InvoicePreviewClient({
                   <p className="font-semibold">{inv.customer.companyName}</p>
                   <p>{inv.customer.contactPersonName}</p>
                   <p className="text-muted-foreground">{inv.customer.contactPersonEmail}</p>
-                  {inv.customer.contactPersonMobile ? <p>{inv.customer.contactPersonMobile}</p> : null}
+                  {inv.customer.contactPersonMobile ? <p>{formatPhoneDisplay(inv.customer.contactPersonMobile)}</p> : null}
                   {formatBillingLines(inv.customer.billingAddress).map((line, i) => (
                     <p key={i} className="text-muted-foreground">
                       {line}

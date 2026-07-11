@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -344,15 +345,10 @@ export function VendorFormSheet({ open, onOpenChange, mode, initial, onSaved }: 
             </div>
             <div className="grid gap-2">
               <Label htmlFor="v-phone">Phone</Label>
-              <Input
+              <PhoneInput
                 id="v-phone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                placeholder="(555) 555-5555"
-                maxLength={14}
                 value={form.phone}
-                onChange={(e) => setForm((f) => ({ ...f, phone: formatPhone(e.target.value) }))}
+                onChange={(v) => setForm((f) => ({ ...f, phone: v }))}
               />
             </div>
             <VendorLogoField

@@ -40,6 +40,7 @@ import {
 } from "@/lib/project-routes-data";
 import { loadGoogleMapsApi, resolveGoogleMapsApiKey } from "@/lib/google-maps-loader";
 import { t } from "@/lib/admin-t";
+import { formatPhoneDisplay } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
 const STATUS_BADGE: Record<EmployeeRoute["status"], string> = {
@@ -250,7 +251,7 @@ export function RouteDetailClient({
               <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                 <span className="inline-flex items-center gap-1">
                   <Phone className="h-3.5 w-3.5" />
-                  {route.phone}
+                  {formatPhoneDisplay(route.phone)}
                 </span>
                 <span>{route.email}</span>
               </div>

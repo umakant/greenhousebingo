@@ -13,6 +13,7 @@ import {
 } from "@/lib/event-platform/attendees/event-attendees-helpers";
 import type {
   EventAttendeeActivityItem,
+  EventAttendeesAnalytics,
   EventAttendeeCheckInStatus,
   EventAttendeeCustomerType,
   EventAttendeeDetail,
@@ -231,6 +232,7 @@ async function loadLifetimeByUser(
 async function buildRowsForEvent(
   organizationId: bigint,
   eventId: bigint,
+  opts?: { guestsOnly?: boolean },
 ): Promise<{
   rows: EnrichedRow[];
   bonusCounts: number[];
@@ -245,7 +247,11 @@ async function buildRowsForEvent(
 
   const [registrations, tickets, commissionRegs, bingoWinsByReg, plantRequestsByReg] = await Promise.all([
     prisma.lmsEventRegistration.findMany({
-      where: { organizationId, eventId },
+      where: {
+        organizationId,
+        eventId,
+        ...(opts?.guestsOnly ? { registrationSource: "walk_in" } : {}),
+      },
       include: {
         ticket: true,
         student: { select: { id: true, mobileNo: true, avatar: true, referralSource: true } },
@@ -385,6 +391,13 @@ async function buildRowsForEvent(
       showBadge,
       eventAverage: buyerAverage,
     };
+    // Promote high-value guests to VIP: power buyers or frequent returners.
+    if (
+      row.customerType !== "affiliate_referral" &&
+      (tier === "power_buyer" || row.priorEventsAttended >= 2 || row.bingoWinCount >= 2)
+    ) {
+      row.customerType = "vip";
+    }
   }
 
   return { rows: draftRows, bonusCounts, ticketTiers, sources };
@@ -507,6 +520,77 @@ function buildSummary(rows: EnrichedRow[], buyerAverage: number | null): EventAt
   };
 }
 
+async function buildAttendeesAnalytics(
+  organizationId: bigint,
+  eventId: bigint,
+  validRows: EnrichedRow[],
+  capacity: number | null,
+): Promise<EventAttendeesAnalytics> {
+  const currency = validRows[0]?.currency ?? "USD";
+  const revenue = Math.round(validRows.reduce((s, r) => s + r.totalSpend, 0) * 100) / 100;
+  const vipGuests = validRows.filter((r) => r.customerType === "vip").length;
+  const returning = validRows.filter((r) => r.customerType === "returning").length;
+  const fresh = validRows.filter((r) => r.customerType === "new").length;
+  const totalAttendees = validRows.length;
+  const seatsLeft = capacity != null ? Math.max(0, capacity - totalAttendees) : null;
+
+  // Registrations grouped by day (chronological).
+  const byDay = new Map<string, number>();
+  for (const r of validRows) {
+    const d = new Date(r.registeredAt);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    byDay.set(key, (byDay.get(key) ?? 0) + 1);
+  }
+  const registrationsByDay = [...byDay.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .slice(-14)
+    .map(([date, count]) => ({
+      date,
+      label: new Date(`${date}T00:00:00`).toLocaleDateString(undefined, { weekday: "short" }),
+      count,
+    }));
+
+  // Top bonus-card buyers.
+  const topBonusBuyers = validRows
+    .filter((r) => r.bonusCards > 0)
+    .sort((a, b) => b.bonusCards - a.bonusCards || b.totalSpend - a.totalSpend)
+    .slice(0, 5)
+    .map((r) => ({
+      registrationId: r.registrationId,
+      name: r.fullName,
+      count: r.bonusCards,
+      spend: r.totalSpend,
+    }));
+
+  // Plant request aggregates (from raw request rows).
+  const plantReqRows = await prisma.eventPlantRequest.findMany({
+    where: { organizationId, eventId },
+    include: { eventPlant: { select: { name: true } } },
+  });
+  const plantCounts = new Map<string, number>();
+  for (const row of plantReqRows) {
+    const name = row.eventPlant?.name ?? row.requestedPlantName ?? "Plant request";
+    plantCounts.set(name, (plantCounts.get(name) ?? 0) + 1);
+  }
+  const mostRequestedPlants = [...plantCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, count]) => ({ name, count }));
+
+  return {
+    capacity,
+    seatsLeft,
+    revenue,
+    currency,
+    vipGuests,
+    plantRequestsTotal: plantReqRows.length,
+    registrationsByDay,
+    topBonusBuyers,
+    mostRequestedPlants,
+    attendeeTypes: { vip: vipGuests, returning, new: fresh },
+  };
+}
+
 export async function listEventAttendees(
   organizationId: bigint,
   eventIdRaw: string,
@@ -521,11 +605,13 @@ export async function listEventAttendees(
 
   const exists = await prisma.lmsTrainingEvent.findFirst({
     where: { id: eventId, organizationId },
-    select: { id: true },
+    select: { id: true, capacity: true },
   });
   if (!exists) return null;
 
-  const { rows: allRows, ticketTiers, sources } = await buildRowsForEvent(organizationId, eventId);
+  const { rows: allRows, ticketTiers, sources } = await buildRowsForEvent(organizationId, eventId, {
+    guestsOnly: query.guestsOnly === true,
+  });
   const buyerAverage =
     allRows.filter((r) => r.bonusCards > 0).length > 0
       ? allRows.filter((r) => r.bonusCards > 0).reduce((s, r) => s + r.bonusCards, 0) /
@@ -545,8 +631,17 @@ export async function listEventAttendees(
   const start = (safePage - 1) * pageSize;
   const pageRows = sorted.slice(start, start + pageSize);
 
+  const validRows = allRows.filter((r) => isCommandCenterValidRegistration(r.bookingStatus));
+  const analytics = await buildAttendeesAnalytics(
+    organizationId,
+    eventId,
+    validRows,
+    exists.capacity ?? null,
+  );
+
   return {
     summary: buildSummary(allRows, buyerAverage != null ? Math.round(buyerAverage * 100) / 100 : null),
+    analytics,
     rows: pageRows,
     total,
     page: safePage,
@@ -737,7 +832,9 @@ export async function exportEventAttendees(
   });
   if (!exists) return null;
 
-  const { rows: allRows } = await buildRowsForEvent(organizationId, eventId);
+  const { rows: allRows } = await buildRowsForEvent(organizationId, eventId, {
+    guestsOnly: query.guestsOnly === true,
+  });
   const filtered = sortRows(
     applyFilters(allRows, query),
     query.sort ?? "registered_at",
@@ -746,6 +843,6 @@ export async function exportEventAttendees(
 
   return {
     csv: eventAttendeesToCsv(filtered),
-    filename: `event-${eventIdRaw}-attendees.csv`,
+    filename: `event-${eventIdRaw}-${query.guestsOnly ? "guests" : "attendees"}.csv`,
   };
 }

@@ -33,6 +33,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAppSettings } from "@/contexts/app-settings-context";
 import { formatDate as fmtDateLib } from "@/lib/format-date";
+import { formatPhoneDisplay } from "@/lib/phone";
 
 function statusBadgeClass(role: string) {
   if (role === "medic") return "border-red-200 text-red-700 bg-red-50";
@@ -84,7 +85,7 @@ export function VendorsTab({ projectId, canManage }: { projectId: number; canMan
                 <li key={v.id} className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
                   <div>
                     <div className="font-medium text-foreground">{v.name}</div>
-                    <div className="text-xs text-muted-foreground">{v.email ?? v.phone ?? "—"}</div>
+                    <div className="text-xs text-muted-foreground">{v.email ?? (v.phone ? formatPhoneDisplay(v.phone) : "—")}</div>
                   </div>
                   {canManage ? (
                     <Button type="button" variant="ghost" size="icon" onClick={() => void (async () => {

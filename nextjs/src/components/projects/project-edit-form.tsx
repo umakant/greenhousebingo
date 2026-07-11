@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -437,10 +438,10 @@ export function ProjectEditForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="edit-sec-phone">Phone</Label>
-            <Input
+            <PhoneInput
               id="edit-sec-phone"
               value={securityDirectorPhone}
-              onChange={(e) => setSecurityDirectorPhone(e.target.value)}
+              onChange={(v) => setSecurityDirectorPhone(v)}
             />
           </div>
           <div className="space-y-2">

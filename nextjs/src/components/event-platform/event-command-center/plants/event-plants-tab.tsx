@@ -1,29 +1,41 @@
 "use client";
 
 import * as React from "react";
-import { Download, Leaf, Loader2, Plus, Upload } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Leaf,
+  ListFilter,
+  Loader2,
+  Plus,
+  Search,
+  Upload,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { PlantDrawer } from "@/components/event-platform/event-command-center/plants/plant-drawer";
 import { PlantFormDialog } from "@/components/event-platform/event-command-center/plants/plant-form-dialog";
 import { PlantRequestDialog } from "@/components/event-platform/event-command-center/plants/plant-request-dialog";
 import {
-  InventoryGapPanel,
-  PlantAnalyticsCharts,
+  PlantAttendeeRequests,
+  PlantBottomStats,
   PlantImageThumb,
+  PlantInventoryOverview,
   PlantSummaryCards,
+  PlantTopRequested,
   plantStatusBadge,
+  popularityMeta,
 } from "@/components/event-platform/event-command-center/plants/plant-panels";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -43,6 +55,17 @@ import {
 } from "@/components/ui/table";
 import { TableActionButton } from "@/components/ui/table-action-button";
 import type { EventPlantsOverview } from "@/lib/event-platform/event-plants/event-plant-types";
+import { cn } from "@/lib/utils";
+
+const PAGE_SIZE = 8;
+
+function money(value: number): string {
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: value % 1 === 0 ? 0 : 2,
+  }).format(value);
+}
 
 export function EventPlantsTab(props: { eventId: string }) {
   const [overview, setOverview] = React.useState<EventPlantsOverview | null>(null);
@@ -60,6 +83,11 @@ export function EventPlantsTab(props: { eventId: string }) {
   const [addQty, setAddQty] = React.useState("5");
   const [importOpen, setImportOpen] = React.useState(false);
   const [importCsv, setImportCsv] = React.useState("");
+
+  const [query, setQuery] = React.useState("");
+  const [categoryFilter, setCategoryFilter] = React.useState("all");
+  const [gameFilter, setGameFilter] = React.useState("all");
+  const [page, setPage] = React.useState(1);
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -81,8 +109,55 @@ export function EventPlantsTab(props: { eventId: string }) {
     void load();
   }, [load]);
 
-  const plants = overview?.plants.filter((p) => p.status !== "removed") ?? [];
+  const plants = React.useMemo(
+    () => overview?.plants.filter((p) => p.status !== "removed") ?? [],
+    [overview],
+  );
   const canManage = overview?.canManagePlants ?? false;
+  const requests = overview?.requests ?? [];
+
+  const categories = React.useMemo(() => {
+    const set = new Set<string>();
+    for (const p of plants) if (p.category?.trim()) set.add(p.category.trim());
+    return [...set].sort();
+  }, [plants]);
+
+  const games = React.useMemo(() => {
+    const set = new Set<string>();
+    for (const p of plants) if (p.assignedGameLabel?.trim()) set.add(p.assignedGameLabel.trim());
+    return [...set].sort();
+  }, [plants]);
+
+  const filtered = React.useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return plants.filter((p) => {
+      if (categoryFilter !== "all" && (p.category?.trim() ?? "") !== categoryFilter) return false;
+      if (gameFilter !== "all" && (p.assignedGameLabel?.trim() ?? "") !== gameFilter) return false;
+      if (q) {
+        const hay = `${p.name} ${p.variety ?? ""} ${p.category ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [plants, query, categoryFilter, gameFilter]);
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [query, categoryFilter, gameFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageStart = (safePage - 1) * PAGE_SIZE;
+  const pageRows = filtered.slice(pageStart, pageStart + PAGE_SIZE);
+  const maxPopularity = Math.max(1, ...plants.map((p) => p.popularityScore));
+
+  const healthPercent = React.useMemo(() => {
+    if (!overview) return 100;
+    const lowStock = plants.filter((p) => p.status === "low_stock").length;
+    const outStock = plants.filter((p) => p.status === "out_of_stock").length;
+    const gaps = overview.summary.inventoryGaps;
+    return Math.max(0, Math.min(100, 100 - gaps * 8 - lowStock * 6 - outStock * 15));
+  }, [overview, plants]);
 
   async function runAction(plantId: string, action: string, extra?: Record<string, unknown>) {
     const res = await fetch(
@@ -148,11 +223,9 @@ export function EventPlantsTab(props: { eventId: string }) {
     window.open(`/api/event-platform/events/${encodeURIComponent(props.eventId)}/plants/export`, "_blank");
   }
 
-  function exportRequests() {
-    window.open(
-      `/api/event-platform/events/${encodeURIComponent(props.eventId)}/plants/requests/export`,
-      "_blank",
-    );
+  function openDrawer(plantId: string) {
+    setDrawerId(plantId);
+    setDrawerOpen(true);
   }
 
   if (loading && !overview) {
@@ -166,16 +239,15 @@ export function EventPlantsTab(props: { eventId: string }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div />
+      <div className="flex flex-wrap items-center justify-end gap-2">
         {canManage ? (
           <div className="flex flex-wrap gap-2">
             <Button type="button" size="sm" variant="outline" onClick={() => void seedFromRounds()}>
-              Import from rounds
+              Import from Rounds
             </Button>
             <Button type="button" size="sm" variant="outline" onClick={() => setImportOpen(true)}>
               <Upload className="mr-1.5 h-4 w-4" />
-              Bulk import
+              Bulk Import
             </Button>
             <Button type="button" size="sm" variant="outline" onClick={exportPlants}>
               <Download className="mr-1.5 h-4 w-4" />
@@ -183,18 +255,70 @@ export function EventPlantsTab(props: { eventId: string }) {
             </Button>
             <Button type="button" size="sm" onClick={() => { setEditPlant(null); setFormOpen(true); }}>
               <Plus className="mr-1.5 h-4 w-4" />
-              Add plant
+              Add Plant
             </Button>
           </div>
         ) : null}
       </div>
 
-      <PlantSummaryCards summary={overview?.summary ?? null} loading={loading} />
+      <PlantSummaryCards
+        summary={overview?.summary ?? null}
+        requestsCount={requests.length}
+        healthPercent={healthPercent}
+        loading={loading}
+      />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
         <Card className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Plant inventory</CardTitle>
+          <CardHeader className="flex flex-col gap-3 pb-3 lg:flex-row lg:items-center lg:justify-between">
+            <CardTitle className="text-base">Plant Inventory</CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative min-w-[160px] flex-1">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search plants…"
+                  className="h-9 pl-9"
+                />
+              </div>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="h-9 w-[140px]">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={gameFilter} onValueChange={setGameFilter}>
+                <SelectTrigger className="h-9 w-[130px]">
+                  <SelectValue placeholder="All Games" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Games</SelectItem>
+                  {games.map((g) => (
+                    <SelectItem key={g} value={g}>
+                      {g}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9"
+                onClick={() => toast.info("Advanced filters coming soon.")}
+              >
+                <ListFilter className="mr-1.5 h-4 w-4" />
+                Filters
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="overflow-x-auto p-0">
             {plants.length === 0 ? (
@@ -209,163 +333,196 @@ export function EventPlantsTab(props: { eventId: string }) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12" />
                     <TableHead>Plant</TableHead>
                     <TableHead className="hidden md:table-cell">Category</TableHead>
-                    <TableHead className="hidden lg:table-cell">Purchased</TableHead>
+                    <TableHead className="hidden lg:table-cell text-right">Purchased</TableHead>
                     <TableHead className="hidden lg:table-cell">Remaining</TableHead>
                     <TableHead className="hidden xl:table-cell">Cost</TableHead>
-                    <TableHead className="hidden xl:table-cell">Requests</TableHead>
+                    <TableHead className="hidden xl:table-cell text-right">Requests</TableHead>
+                    <TableHead className="hidden xl:table-cell text-right">Assigned</TableHead>
                     <TableHead>Popularity</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="w-12" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {plants.map((plant) => (
-                    <TableRow
-                      key={plant.id}
-                      className="cursor-pointer"
-                      onClick={() => {
-                        setDrawerId(plant.id);
-                        setDrawerOpen(true);
-                      }}
-                    >
-                      <TableCell>
-                        <PlantImageThumb imageUrl={plant.imageUrl} name={plant.name} />
-                      </TableCell>
-                      <TableCell>
-                        <p className="font-medium">{plant.name}</p>
-                        <p className="text-xs text-muted-foreground">{plant.variety ?? plant.supplierName ?? "—"}</p>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">{plant.category ?? "—"}</TableCell>
-                      <TableCell className="hidden tabular-nums lg:table-cell">{plant.quantityPurchased}</TableCell>
-                      <TableCell className="hidden tabular-nums lg:table-cell">{plant.quantityRemaining}</TableCell>
-                      <TableCell className="hidden tabular-nums xl:table-cell">${plant.totalCost.toFixed(2)}</TableCell>
-                      <TableCell className="hidden tabular-nums xl:table-cell">{plant.requestCount}</TableCell>
-                      <TableCell>
-                        <span className="text-sm tabular-nums font-medium">{plant.popularityScore}</span>
-                        <p className="text-[10px] text-muted-foreground">{plant.popularityLabel}</p>
-                      </TableCell>
-                      <TableCell>{plantStatusBadge(plant.status)}</TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <TableActionButton
-                          label="Actions"
-                          items={[
-                            { label: "View details", onSelect: () => { setDrawerId(plant.id); setDrawerOpen(true); } },
-                            ...(canManage
-                              ? [
-                                  {
-                                    label: "Edit",
-                                    onSelect: () => {
-                                      setEditPlant(plant);
-                                      setFormOpen(true);
+                  {pageRows.map((plant) => {
+                    const remainingPct =
+                      plant.quantityPurchased > 0
+                        ? Math.round((plant.quantityRemaining / plant.quantityPurchased) * 100)
+                        : 0;
+                    const pop = popularityMeta(plant.popularityLabel);
+                    return (
+                      <TableRow
+                        key={plant.id}
+                        className="cursor-pointer"
+                        onClick={() => openDrawer(plant.id)}
+                      >
+                        <TableCell>
+                          <div className="flex items-center gap-2.5">
+                            <PlantImageThumb imageUrl={plant.imageUrl} name={plant.name} />
+                            <div className="min-w-0">
+                              <p className="truncate font-medium">{plant.name}</p>
+                              <p className="truncate text-xs italic text-muted-foreground">
+                                {plant.variety ?? plant.supplierName ?? "—"}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                          {plant.category ?? "—"}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell text-right tabular-nums">
+                          {plant.quantityPurchased}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <div className="flex items-center gap-2">
+                            <span className="tabular-nums">{plant.quantityRemaining}</span>
+                            <div className="h-1.5 w-12 overflow-hidden rounded-full bg-muted">
+                              <div
+                                className={cn(
+                                  "h-full rounded-full",
+                                  remainingPct <= 20
+                                    ? "bg-red-500"
+                                    : remainingPct <= 50
+                                      ? "bg-amber-500"
+                                      : "bg-emerald-500",
+                                )}
+                                style={{ width: `${remainingPct}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] text-muted-foreground tabular-nums">{remainingPct}%</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden xl:table-cell">
+                          <p className="tabular-nums">{money(plant.totalCost)}</p>
+                          <p className="text-[10px] text-muted-foreground tabular-nums">
+                            {money(plant.unitCost)} each
+                          </p>
+                        </TableCell>
+                        <TableCell className="hidden xl:table-cell text-right tabular-nums">
+                          {plant.requestCount}
+                        </TableCell>
+                        <TableCell className="hidden xl:table-cell text-right tabular-nums">
+                          {plant.quantityAssigned}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <span className={pop.color}>{pop.icon}</span>
+                            <div className="min-w-0">
+                              <p className="text-xs font-medium">{plant.popularityLabel}</p>
+                              <div className="mt-0.5 h-1 w-14 overflow-hidden rounded-full bg-muted">
+                                <div
+                                  className={cn("h-full rounded-full", pop.color.replace("text-", "bg-"))}
+                                  style={{ width: `${(plant.popularityScore / maxPopularity) * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{plantStatusBadge(plant.status)}</TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <TableActionButton
+                            label="Actions"
+                            items={[
+                              { label: "View details", onSelect: () => openDrawer(plant.id) },
+                              ...(canManage
+                                ? [
+                                    {
+                                      label: "Edit",
+                                      onSelect: () => {
+                                        setEditPlant(plant);
+                                        setFormOpen(true);
+                                      },
                                     },
-                                  },
-                                  {
-                                    label: "Add quantity",
-                                    onSelect: () => {
-                                      setAddQtyPlantId(plant.id);
-                                      setAddQtyOpen(true);
+                                    {
+                                      label: "Add quantity",
+                                      onSelect: () => {
+                                        setAddQtyPlantId(plant.id);
+                                        setAddQtyOpen(true);
+                                      },
                                     },
-                                  },
-                                  {
-                                    label: "Assign to game",
-                                    onSelect: () => {
-                                      setAssignPlantId(plant.id);
-                                      setAssignRoundId(overview?.rounds[0]?.id ?? "");
-                                      setAssignOpen(true);
+                                    {
+                                      label: "Assign to game",
+                                      onSelect: () => {
+                                        setAssignPlantId(plant.id);
+                                        setAssignRoundId(overview?.rounds[0]?.id ?? "");
+                                        setAssignOpen(true);
+                                      },
                                     },
-                                  },
-                                  {
-                                    label: "Mark awarded",
-                                    onSelect: () => void runAction(plant.id, "mark_awarded", { quantity: 1 }),
-                                  },
-                                  {
-                                    label: "View requests",
-                                    onSelect: () => {
-                                      setDrawerId(plant.id);
-                                      setDrawerOpen(true);
+                                    {
+                                      label: "Mark awarded",
+                                      onSelect: () => void runAction(plant.id, "mark_awarded", { quantity: 1 }),
                                     },
-                                  },
-                                  {
-                                    label: "Duplicate",
-                                    onSelect: () => void runAction(plant.id, "duplicate"),
-                                  },
-                                  {
-                                    label: "Remove from event",
-                                    onSelect: () => void runAction(plant.id, "remove_from_event"),
-                                  },
-                                ]
-                              : []),
-                          ]}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                                    {
+                                      label: "View requests",
+                                      onSelect: () => openDrawer(plant.id),
+                                    },
+                                    {
+                                      label: "Duplicate",
+                                      onSelect: () => void runAction(plant.id, "duplicate"),
+                                    },
+                                    {
+                                      label: "Remove from event",
+                                      onSelect: () => void runAction(plant.id, "remove_from_event"),
+                                    },
+                                  ]
+                                : []),
+                            ]}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
           </CardContent>
+          {filtered.length > 0 ? (
+            <div className="flex items-center justify-between gap-2 border-t px-4 py-2 text-xs text-muted-foreground">
+              <span>
+                Showing {pageStart + 1} to {Math.min(pageStart + PAGE_SIZE, filtered.length)} of {filtered.length}{" "}
+                plants
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  className="h-7 w-7"
+                  disabled={safePage <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="px-1 tabular-nums">{safePage}</span>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  className="h-7 w-7"
+                  disabled={safePage >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </Card>
 
         <div className="space-y-4">
-          <InventoryGapPanel
-            gaps={overview?.gaps ?? []}
+          <PlantInventoryOverview plants={plants} />
+          <PlantTopRequested plants={plants} onView={openDrawer} />
+          <PlantAttendeeRequests
+            requests={requests}
             canManage={canManage}
-            onAddInventory={(plantId) => {
-              setAddQtyPlantId(plantId);
-              setAddQtyOpen(true);
-            }}
+            onAdd={() => setRequestOpen(true)}
           />
-
-          <Card className="shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-base">Attendee requests</CardTitle>
-              {canManage ? (
-                <Button type="button" size="sm" variant="outline" onClick={() => setRequestOpen(true)}>
-                  Add request
-                </Button>
-              ) : null}
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {(overview?.requests.length ?? 0) === 0 ? (
-                <p className="text-sm text-muted-foreground">No plant requests yet.</p>
-              ) : (
-                overview!.requests.slice(0, 8).map((r) => (
-                  <div key={r.id} className="rounded-lg border p-2 text-sm">
-                    <p className="font-medium">{r.attendeeName}</p>
-                    <p className="text-xs text-muted-foreground">{r.plantName}</p>
-                  </div>
-                ))
-              )}
-              {canManage ? (
-                <Button type="button" size="sm" variant="ghost" className="w-full" onClick={exportRequests}>
-                  Export requests
-                </Button>
-              ) : null}
-            </CardContent>
-          </Card>
-
-          {overview?.activity.length ? (
-            <Card className="shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Activity</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {overview.activity.map((item) => (
-                  <div key={item.id} className="text-sm">
-                    <p className="font-medium capitalize">{item.title}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(item.at).toLocaleString()}</p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          ) : null}
         </div>
       </div>
 
-      <PlantAnalyticsCharts analytics={overview?.analytics ?? null} />
+      <PlantBottomStats plants={plants} />
 
       <PlantFormDialog
         open={formOpen}
@@ -392,12 +549,12 @@ export function EventPlantsTab(props: { eventId: string }) {
         />
       ) : null}
 
-      <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Assign to game</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
+      <Sheet open={assignOpen} onOpenChange={setAssignOpen}>
+        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Assign to Game</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6 space-y-3">
             <div className="space-y-2">
               <Label>Round</Label>
               <Select value={assignRoundId} onValueChange={setAssignRoundId}>
@@ -414,7 +571,7 @@ export function EventPlantsTab(props: { eventId: string }) {
               </Select>
             </div>
           </div>
-          <DialogFooter>
+          <SheetFooter className="mt-6">
             <Button type="button" variant="outline" onClick={() => setAssignOpen(false)}>
               Cancel
             </Button>
@@ -430,20 +587,20 @@ export function EventPlantsTab(props: { eventId: string }) {
             >
               Assign
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
-      <Dialog open={addQtyOpen} onOpenChange={setAddQtyOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add inventory</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label>Quantity to add</Label>
+      <Sheet open={addQtyOpen} onOpenChange={setAddQtyOpen}>
+        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Add Inventory</SheetTitle>
+          </SheetHeader>
+          <div className="mt-6 space-y-2">
+            <Label>Quantity to Add</Label>
             <Input type="number" min={1} value={addQty} onChange={(e) => setAddQty(e.target.value)} />
           </div>
-          <DialogFooter>
+          <SheetFooter className="mt-6">
             <Button type="button" variant="outline" onClick={() => setAddQtyOpen(false)}>
               Cancel
             </Button>
@@ -458,34 +615,34 @@ export function EventPlantsTab(props: { eventId: string }) {
             >
               Add
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
-      <Dialog open={importOpen} onOpenChange={setImportOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Bulk import plants</DialogTitle>
-          </DialogHeader>
-          <p className="text-xs text-muted-foreground">
+      <Sheet open={importOpen} onOpenChange={setImportOpen}>
+        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle>Bulk Import Plants</SheetTitle>
+          </SheetHeader>
+          <p className="mt-6 text-xs text-muted-foreground">
             CSV columns: Name, Category, Variety, Qty Purchased, Unit Cost, Retail Value
           </p>
           <textarea
-            className="min-h-[160px] w-full rounded-md border bg-background p-3 text-sm"
+            className="mt-3 min-h-[160px] w-full rounded-md border bg-background p-3 text-sm"
             value={importCsv}
             onChange={(e) => setImportCsv(e.target.value)}
             placeholder="Name,Category,Variety,Qty,Unit Cost,Retail&#10;Monstera,Tropical,,10,8.50,24.00"
           />
-          <DialogFooter>
+          <SheetFooter className="mt-6">
             <Button type="button" variant="outline" onClick={() => setImportOpen(false)}>
               Cancel
             </Button>
             <Button type="button" onClick={() => void submitImport()}>
               Import
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

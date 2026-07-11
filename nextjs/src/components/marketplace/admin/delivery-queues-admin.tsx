@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CityPlacesSearchInput } from "@/components/ui/city-places-search-input";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import {
   Select,
   SelectContent,
@@ -746,9 +747,9 @@ export default function DeliveryQueuesAdmin({ canManage }: { canManage: boolean 
               </div>
               <div className="space-y-1.5">
                 <Label>{t("Driver phone")}</Label>
-                <Input
+                <PhoneInput
                   value={scheduleForm.driverPhone}
-                  onChange={(e) => setScheduleForm((f) => ({ ...f, driverPhone: e.target.value }))}
+                  onChange={(v) => setScheduleForm((f) => ({ ...f, driverPhone: v }))}
                 />
               </div>
             </div>

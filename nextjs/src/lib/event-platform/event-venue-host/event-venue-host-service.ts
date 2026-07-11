@@ -91,6 +91,7 @@ export async function getVenueHostOverview(
       capacity: true,
       foodAndDrinks: true,
       instructorName: true,
+      imageUrl: true,
       detailContent: true,
     },
   });
@@ -252,6 +253,7 @@ export async function getVenueHostOverview(
     venue: {
       current: {
         venueId: catalogVenue?.id ?? ops.catalogVenueId ?? null,
+        imageUrl: catalogVenue?.imageUrl ?? event.imageUrl ?? null,
         name: catalogVenue?.name ?? event.venueName,
         venueType: catalogVenue?.venueType ?? event.venueType,
         address: catalogVenue

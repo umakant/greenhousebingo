@@ -483,6 +483,278 @@ async function main() {
         created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    await pg.query(`ALTER TABLE event_audit_logs ADD COLUMN IF NOT EXISTS event_id BIGINT NULL;`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_audit_logs_org_created_idx ON event_audit_logs(organization_id, created_at);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_audit_logs_org_entity_type_idx ON event_audit_logs(organization_id, entity_type);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_audit_logs_org_event_created_idx ON event_audit_logs(organization_id, event_id, created_at);`);
+
+    // --- Command Center / live-event tables (plants, rounds, winners, financials, ops) ---
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_bingo_round_instances (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        event_id BIGINT NOT NULL REFERENCES lms_events(id) ON DELETE CASCADE,
+        round_number INT NOT NULL,
+        bingo_game_id BIGINT NULL REFERENCES event_bingo_games(id) ON DELETE SET NULL,
+        name VARCHAR(255) NOT NULL,
+        pattern VARCHAR(512) NOT NULL,
+        difficulty VARCHAR(32) NOT NULL,
+        assigned_prize VARCHAR(255) NOT NULL,
+        prize_cost DECIMAL(12,2) NULL,
+        prize_retail_value DECIMAL(12,2) NULL,
+        scheduled_at TIMESTAMP(3) NULL,
+        actual_start_at TIMESTAMP(3) NULL,
+        actual_end_at TIMESTAMP(3) NULL,
+        status VARCHAR(32) NOT NULL DEFAULT 'scheduled',
+        created_by_id BIGINT NULL,
+        updated_by_id BIGINT NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL,
+        UNIQUE (event_id, round_number)
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_bingo_round_instances_org_event_status_idx ON event_bingo_round_instances(organization_id, event_id, status);`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_bingo_winners (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        event_id BIGINT NOT NULL REFERENCES lms_events(id) ON DELETE CASCADE,
+        round_instance_id BIGINT NOT NULL REFERENCES event_bingo_round_instances(id) ON DELETE CASCADE,
+        bingo_game_id BIGINT NULL,
+        registration_id BIGINT NOT NULL REFERENCES lms_event_registrations(id) ON DELETE CASCADE,
+        winning_card_number VARCHAR(64) NOT NULL,
+        card_type VARCHAR(32) NOT NULL DEFAULT 'included',
+        prize_label VARCHAR(255) NOT NULL,
+        prize_cost DECIMAL(12,2) NULL,
+        prize_retail_value DECIMAL(12,2) NULL,
+        verified BOOLEAN NOT NULL DEFAULT FALSE,
+        verified_by_id BIGINT NULL,
+        verified_at TIMESTAMP(3) NULL,
+        verification_notes TEXT NULL,
+        winner_photo_url VARCHAR(2048) NULL,
+        notes TEXT NULL,
+        invalidated BOOLEAN NOT NULL DEFAULT FALSE,
+        created_by_id BIGINT NULL,
+        updated_by_id BIGINT NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_bingo_winners_org_event_idx ON event_bingo_winners(organization_id, event_id);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_bingo_winners_round_idx ON event_bingo_winners(round_instance_id);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_bingo_winners_registration_idx ON event_bingo_winners(registration_id);`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_plants (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        event_id BIGINT NOT NULL REFERENCES lms_events(id) ON DELETE CASCADE,
+        pos_product_id BIGINT NULL,
+        event_vendor_id BIGINT NULL REFERENCES event_vendors(id) ON DELETE SET NULL,
+        name VARCHAR(255) NOT NULL,
+        category VARCHAR(128) NULL,
+        variety VARCHAR(128) NULL,
+        description TEXT NULL,
+        image_url VARCHAR(2048) NULL,
+        quantity_purchased INT NOT NULL DEFAULT 0,
+        quantity_assigned INT NOT NULL DEFAULT 0,
+        quantity_awarded INT NOT NULL DEFAULT 0,
+        quantity_removed INT NOT NULL DEFAULT 0,
+        unit_cost DECIMAL(12,2) NOT NULL DEFAULT 0,
+        retail_value DECIMAL(12,2) NULL,
+        status VARCHAR(32) NOT NULL DEFAULT 'available',
+        notes TEXT NULL,
+        created_by_id BIGINT NULL,
+        updated_by_id BIGINT NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_plants_org_event_status_idx ON event_plants(organization_id, event_id, status);`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_plant_requests (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        event_id BIGINT NOT NULL REFERENCES lms_events(id) ON DELETE CASCADE,
+        registration_id BIGINT NOT NULL REFERENCES lms_event_registrations(id) ON DELETE CASCADE,
+        event_plant_id BIGINT NULL REFERENCES event_plants(id) ON DELETE SET NULL,
+        requested_plant_name VARCHAR(255) NULL,
+        priority INT NULL DEFAULT 1,
+        notes TEXT NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_plant_requests_org_event_idx ON event_plant_requests(organization_id, event_id);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_plant_requests_registration_idx ON event_plant_requests(registration_id);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_plant_requests_plant_idx ON event_plant_requests(event_plant_id);`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_plant_assignments (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        event_id BIGINT NOT NULL REFERENCES lms_events(id) ON DELETE CASCADE,
+        event_plant_id BIGINT NOT NULL REFERENCES event_plants(id) ON DELETE CASCADE,
+        round_instance_id BIGINT NULL REFERENCES event_bingo_round_instances(id) ON DELETE SET NULL,
+        bingo_game_id BIGINT NULL REFERENCES event_bingo_games(id) ON DELETE SET NULL,
+        quantity INT NOT NULL DEFAULT 1,
+        status VARCHAR(32) NOT NULL DEFAULT 'assigned',
+        assigned_by_id BIGINT NULL,
+        assigned_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_plant_assignments_org_event_idx ON event_plant_assignments(organization_id, event_id);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_plant_assignments_plant_idx ON event_plant_assignments(event_plant_id);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_plant_assignments_round_idx ON event_plant_assignments(round_instance_id);`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_revenue_entries (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        event_id BIGINT NOT NULL REFERENCES lms_events(id) ON DELETE CASCADE,
+        category VARCHAR(64) NOT NULL,
+        payee_name VARCHAR(255) NULL,
+        description VARCHAR(512) NULL,
+        amount DECIMAL(12,2) NOT NULL,
+        currency VARCHAR(3) NOT NULL DEFAULT 'USD',
+        payment_status VARCHAR(32) NOT NULL DEFAULT 'paid',
+        received_at TIMESTAMP(3) NULL,
+        source_type VARCHAR(64) NULL,
+        source_id VARCHAR(128) NULL,
+        notes TEXT NULL,
+        created_by_id BIGINT NULL,
+        updated_by_id BIGINT NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_revenue_entries_org_event_idx ON event_revenue_entries(organization_id, event_id);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_revenue_entries_org_event_source_idx ON event_revenue_entries(organization_id, event_id, source_type, source_id);`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_expenses (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        event_id BIGINT NOT NULL REFERENCES lms_events(id) ON DELETE CASCADE,
+        category VARCHAR(64) NOT NULL,
+        payee_type VARCHAR(32) NULL,
+        payee_id BIGINT NULL,
+        payee_name VARCHAR(255) NULL,
+        description VARCHAR(512) NULL,
+        quantity DECIMAL(12,4) NOT NULL DEFAULT 1,
+        unit_cost DECIMAL(12,2) NOT NULL DEFAULT 0,
+        subtotal DECIMAL(12,2) NOT NULL DEFAULT 0,
+        tax DECIMAL(12,2) NOT NULL DEFAULT 0,
+        total DECIMAL(12,2) NOT NULL DEFAULT 0,
+        currency VARCHAR(3) NOT NULL DEFAULT 'USD',
+        payment_status VARCHAR(32) NOT NULL DEFAULT 'pending',
+        due_date TIMESTAMP(3) NULL,
+        paid_at TIMESTAMP(3) NULL,
+        receipt_url VARCHAR(2048) NULL,
+        accounting_expense_id BIGINT NULL,
+        source_type VARCHAR(64) NULL,
+        source_id VARCHAR(128) NULL,
+        notes TEXT NULL,
+        created_by_id BIGINT NULL,
+        approved_by_id BIGINT NULL,
+        updated_by_id BIGINT NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_expenses_org_event_idx ON event_expenses(organization_id, event_id);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_expenses_org_event_category_idx ON event_expenses(organization_id, event_id, category);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_expenses_org_event_source_idx ON event_expenses(organization_id, event_id, source_type, source_id);`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_financial_locks (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        event_id BIGINT NOT NULL UNIQUE REFERENCES lms_events(id) ON DELETE CASCADE,
+        locked BOOLEAN NOT NULL DEFAULT FALSE,
+        locked_at TIMESTAMP(3) NULL,
+        locked_by_id BIGINT NULL,
+        unlocked_at TIMESTAMP(3) NULL,
+        notes TEXT NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_financial_locks_org_event_idx ON event_financial_locks(organization_id, event_id);`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_host_performance_notes (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        event_id BIGINT NOT NULL REFERENCES lms_events(id) ON DELETE CASCADE,
+        host_id BIGINT NOT NULL REFERENCES event_hosts(id) ON DELETE CASCADE,
+        note TEXT NOT NULL,
+        created_by_id BIGINT NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_host_performance_notes_org_event_host_idx ON event_host_performance_notes(organization_id, event_id, host_id);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_host_performance_notes_org_host_idx ON event_host_performance_notes(organization_id, host_id);`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_operational_tasks (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        event_id BIGINT NOT NULL REFERENCES lms_events(id) ON DELETE CASCADE,
+        template_key VARCHAR(64) NULL,
+        title VARCHAR(255) NOT NULL,
+        category VARCHAR(64) NOT NULL,
+        status VARCHAR(32) NOT NULL DEFAULT 'pending',
+        assigned_to_id BIGINT NULL,
+        due_at TIMESTAMP(3) NULL,
+        completed_at TIMESTAMP(3) NULL,
+        completed_by_id BIGINT NULL,
+        notes TEXT NULL,
+        is_custom BOOLEAN NOT NULL DEFAULT FALSE,
+        created_by_id BIGINT NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL,
+        UNIQUE (event_id, template_key)
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_operational_tasks_org_event_status_idx ON event_operational_tasks(organization_id, event_id, status);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_operational_tasks_org_event_category_idx ON event_operational_tasks(organization_id, event_id, category);`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_alert_dismissals (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        event_id BIGINT NOT NULL REFERENCES lms_events(id) ON DELETE CASCADE,
+        alert_key VARCHAR(128) NOT NULL,
+        dismissed_by_id BIGINT NULL,
+        dismissed_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (event_id, alert_key)
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_alert_dismissals_org_event_idx ON event_alert_dismissals(organization_id, event_id);`);
+
+    await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_live_incidents (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        event_id BIGINT NOT NULL REFERENCES lms_events(id) ON DELETE CASCADE,
+        category VARCHAR(64) NOT NULL,
+        description TEXT NOT NULL,
+        severity VARCHAR(32) NOT NULL DEFAULT 'info',
+        registration_id BIGINT NULL REFERENCES lms_event_registrations(id) ON DELETE SET NULL,
+        follow_up_status VARCHAR(32) NOT NULL DEFAULT 'open',
+        reported_by_id BIGINT NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_live_incidents_org_event_created_idx ON event_live_incidents(organization_id, event_id, created_at);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_live_incidents_org_event_follow_idx ON event_live_incidents(organization_id, event_id, follow_up_status);`);
 
     console.log("Event Platform schema ensured.");
   } finally {

@@ -99,7 +99,7 @@ export function OverviewTab(props: OverviewTabProps) {
         {event.description ? (
           <Card className="shadow-sm">
             <CardHeader>
-              <CardTitle className="text-base">Event description</CardTitle>
+              <CardTitle className="text-base">Event Description</CardTitle>
             </CardHeader>
             <CardContent className="whitespace-pre-wrap text-sm text-muted-foreground">
               {event.description}
@@ -111,7 +111,7 @@ export function OverviewTab(props: OverviewTabProps) {
 
         <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base">Event experience</CardTitle>
+            <CardTitle className="text-base">Event Experience</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2 text-sm">
             <div>

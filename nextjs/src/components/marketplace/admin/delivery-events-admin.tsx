@@ -26,6 +26,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatPhoneDisplay } from "@/lib/phone";
 import { Pagination } from "@/components/ui/pagination";
 import {
   Select,
@@ -378,7 +379,7 @@ function EventDetailSheet({
             <span>
               {row.driverName ?? "—"}
               {row.driverPhone ? (
-                <span className="block text-right text-xs text-muted-foreground">{row.driverPhone}</span>
+                <span className="block text-right text-xs text-muted-foreground">{formatPhoneDisplay(row.driverPhone)}</span>
               ) : null}
             </span>
           </div>
@@ -1205,7 +1206,7 @@ export default function DeliveryEventsAdmin({
                               <span>
                                 <span className="block font-medium">{row.driverName}</span>
                                 {row.driverPhone ? (
-                                  <span className="text-xs text-muted-foreground">{row.driverPhone}</span>
+                                  <span className="text-xs text-muted-foreground">{formatPhoneDisplay(row.driverPhone)}</span>
                                 ) : null}
                               </span>
                             </span>

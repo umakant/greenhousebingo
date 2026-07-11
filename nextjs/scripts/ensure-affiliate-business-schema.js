@@ -86,6 +86,13 @@ async function main() {
       CREATE INDEX IF NOT EXISTS affiliate_commissions_org_status_idx
       ON affiliate_commissions(organization_id, status);
     `);
+    // Event attribution columns (event platform commission tracking).
+    await pg.query(`ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS event_id BIGINT NULL;`);
+    await pg.query(`ALTER TABLE affiliate_commissions ADD COLUMN IF NOT EXISTS registration_id BIGINT NULL;`);
+    await pg.query(`
+      CREATE INDEX IF NOT EXISTS affiliate_commissions_org_event_idx
+      ON affiliate_commissions(organization_id, event_id);
+    `);
 
     await pg.query(`
       CREATE TABLE IF NOT EXISTS affiliate_payouts (

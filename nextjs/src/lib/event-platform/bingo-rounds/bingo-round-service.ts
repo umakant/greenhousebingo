@@ -112,36 +112,46 @@ export async function syncEventBingoRounds(
   const rounds = detail?.bingoRounds ?? [];
   const gameIds = detail?.bingoGameIds ?? [];
 
-  const library = (await listEventBingoGames(organizationId)).map(serializeEventBingoGame);
+  const library = (await listEventBingoGames(organizationId)).map((g) => serializeEventBingoGame(g));
   const orderedGames = gameIds.length ? orderBingoGamesByIds(library, gameIds) : [];
 
   const existing = await prisma.eventBingoRoundInstance.findMany({
     where: { organizationId, eventId },
     select: { roundNumber: true },
   });
-  const existingNums = new Set(existing.map((r) => r.roundNumber));
+  // Tracks round numbers already present or created in this run so duplicate
+  // entries in detailContent (or a concurrent sync) don't violate the
+  // (event_id, round_number) unique constraint.
+  const seenNums = new Set(existing.map((r) => r.roundNumber));
 
   for (let i = 0; i < rounds.length; i++) {
     const round = rounds[i];
     const game = orderedGames[i] ?? orderedGames.find((g) => g.name === round.name);
-    if (existingNums.has(round.roundNumber)) continue;
+    if (seenNums.has(round.roundNumber)) continue;
+    seenNums.add(round.roundNumber);
 
-    await prisma.eventBingoRoundInstance.create({
-      data: {
-        organizationId,
-        eventId,
-        roundNumber: round.roundNumber,
-        bingoGameId: game ? BigInt(game.id) : null,
-        name: round.name,
-        pattern: round.pattern,
-        difficulty: round.difficulty,
-        assignedPrize: round.prize,
-        status: "scheduled",
-        scheduledAt: event.startsAt,
-        createdById: actorUserId ?? null,
-        updatedById: actorUserId ?? null,
-      },
-    });
+    try {
+      await prisma.eventBingoRoundInstance.create({
+        data: {
+          organizationId,
+          eventId,
+          roundNumber: round.roundNumber,
+          bingoGameId: game ? BigInt(game.id) : null,
+          name: round.name,
+          pattern: round.pattern,
+          difficulty: round.difficulty,
+          assignedPrize: round.prize,
+          status: "scheduled",
+          scheduledAt: event.startsAt,
+          createdById: actorUserId ?? null,
+          updatedById: actorUserId ?? null,
+        },
+      });
+    } catch (e) {
+      // Ignore races where a concurrent sync already inserted this round.
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") continue;
+      throw e;
+    }
   }
 }
 
@@ -321,6 +331,71 @@ const ACTION_STATUS: Record<EventBingoRoundAction, EventBingoRoundStatus | null>
   cancel: "cancelled",
   verify_winner: "winner_verification",
 };
+
+export async function createEventBingoRound(input: {
+  organizationId: bigint;
+  eventId: bigint;
+  actorUserId?: bigint;
+  name: string;
+  pattern: string;
+  difficulty: string;
+  assignedPrize: string;
+  prizeCost?: number | null;
+  prizeRetailValue?: number | null;
+  scheduledAt?: string | null;
+}): Promise<EventBingoRoundDto> {
+  const event = await prisma.lmsTrainingEvent.findFirst({
+    where: { id: input.eventId, organizationId: input.organizationId },
+    select: { id: true, startsAt: true },
+  });
+  if (!event) throw new Error("Event not found.");
+
+  const name = input.name.trim();
+  const pattern = input.pattern.trim();
+  const assignedPrize = input.assignedPrize.trim();
+  if (!name) throw new Error("Round name is required.");
+  if (!pattern) throw new Error("Pattern / rule is required.");
+
+  // Append after the highest existing round number so we never collide with
+  // rounds synced from the event's detailContent (which only adds, never removes).
+  const agg = await prisma.eventBingoRoundInstance.aggregate({
+    where: { organizationId: input.organizationId, eventId: input.eventId },
+    _max: { roundNumber: true },
+  });
+  const roundNumber = (agg._max.roundNumber ?? 0) + 1;
+
+  const created = await prisma.eventBingoRoundInstance.create({
+    data: {
+      organizationId: input.organizationId,
+      eventId: input.eventId,
+      roundNumber,
+      bingoGameId: null,
+      name,
+      pattern,
+      difficulty: input.difficulty || "Easy",
+      assignedPrize: assignedPrize || "—",
+      prizeCost: input.prizeCost != null ? new Prisma.Decimal(input.prizeCost) : null,
+      prizeRetailValue: input.prizeRetailValue != null ? new Prisma.Decimal(input.prizeRetailValue) : null,
+      status: "scheduled",
+      scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : event.startsAt,
+      createdById: input.actorUserId ?? null,
+      updatedById: input.actorUserId ?? null,
+    },
+    include: { winners: true },
+  });
+
+  await writeEventAuditLog({
+    organizationId: input.organizationId,
+    eventId: input.eventId,
+    actorUserId: input.actorUserId,
+    action: "bingo_round.created",
+    entityType: "event_bingo_round",
+    entityId: created.id.toString(),
+    metadata: { eventId: input.eventId.toString(), roundNumber, name },
+  });
+
+  return serializeRound(created, new Map());
+}
 
 export async function applyRoundAction(input: {
   organizationId: bigint;

@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { formatPhoneDisplay } from "@/lib/phone";
 import { Pagination } from "@/components/ui/pagination";
 import {
   Select,
@@ -701,7 +702,7 @@ export default function OrdersAdmin({
                           <div className="min-w-0">
                             <div className="truncate font-medium">{row.customerName}</div>
                             <div className="truncate text-xs text-muted-foreground">
-                              {row.customerPhone ?? row.customerEmail ?? "—"}
+                              {row.customerPhone ? formatPhoneDisplay(row.customerPhone) : (row.customerEmail ?? "—")}
                             </div>
                           </div>
                         </div>

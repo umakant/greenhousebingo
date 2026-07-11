@@ -414,7 +414,7 @@ export default function CompanyCreateForm({
 
           <div className="space-y-2">
             <Label htmlFor="mobile_no">{t("Mobile No")}</Label>
-            <Input id="mobile_no" value={data.mobile_no} onChange={(e) => set("mobile_no", formatPhone(e.target.value))} placeholder="(555) 555-5555" />
+            <Input id="mobile_no" value={data.mobile_no} onChange={(e) => set("mobile_no", formatPhone(e.target.value))} placeholder="(000) 000-0000" />
           </div>
 
           <div className="space-y-2">

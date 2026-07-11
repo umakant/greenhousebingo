@@ -35,6 +35,7 @@ import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { t } from "@/lib/admin-t";
+import { formatPhone, formatPhoneDisplay } from "@/lib/phone";
 import { SETTINGS_TABS, type SettingsTabId } from "@/lib/compliance/compliance-settings-data";
 
 type SettingsPayload = {
@@ -353,8 +354,14 @@ export function ComplianceSettingsClient() {
                           <Label>{label}</Label>
                           <Input
                             className="mt-1"
-                            value={orgForm[key]}
-                            onChange={(e) => setOrgForm((f) => ({ ...f, [key]: e.target.value }))}
+                            value={key === "phone" ? formatPhone(orgForm[key]) : orgForm[key]}
+                            placeholder={key === "phone" ? "(000) 000-0000" : undefined}
+                            onChange={(e) =>
+                              setOrgForm((f) => ({
+                                ...f,
+                                [key]: key === "phone" ? formatPhone(e.target.value) : e.target.value,
+                              }))
+                            }
                           />
                         </div>
                       ))}
@@ -367,7 +374,7 @@ export function ComplianceSettingsClient() {
                       <ReadOnlyField label={t("Primary Email")} value={data.organization.primaryEmail} />
                       <ReadOnlyField label={t("Industry")} value={data.organization.industry} />
                       <ReadOnlyField label={t("Country")} value={data.organization.country} />
-                      <ReadOnlyField label={t("Phone")} value={data.organization.phone} />
+                      <ReadOnlyField label={t("Phone")} value={formatPhoneDisplay(data.organization.phone)} />
                       <ReadOnlyField label={t("Time Zone")} value={data.organization.timezone} />
                     </div>
                   )}
