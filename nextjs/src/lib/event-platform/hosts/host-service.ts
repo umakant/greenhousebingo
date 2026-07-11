@@ -120,6 +120,12 @@ export async function getEventHostById(organizationId: bigint, id: bigint) {
   });
 }
 
+export async function getEventHostByIdForOrg(organizationId: bigint, id: bigint) {
+  return prisma.eventHost.findFirst({
+    where: { id, organizationId },
+  });
+}
+
 export async function applyAcceptedHostToEvent(params: {
   organizationId: bigint;
   eventId: bigint;

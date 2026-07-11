@@ -7,7 +7,7 @@ export const eventBingoGameCreateSchema = z.object({
   name: z.string().trim().min(1, "Name is required.").max(255),
   pattern: z.string().trim().min(1, "Pattern is required.").max(512),
   difficulty: z.enum(LMS_EVENT_BINGO_DIFFICULTIES).default("Easy"),
-  prize: z.string().trim().min(1, "Prize is required.").max(255),
+  imageUrl: z.string().trim().max(2048).optional().or(z.literal("")),
   description: z.string().trim().max(5000).optional().or(z.literal("")),
   sortOrder: z.coerce.number().int().min(0).optional(),
   status: z.enum(EVENT_BINGO_GAME_STATUSES).optional(),

@@ -6,7 +6,12 @@ import {
   requireEventPlatformApi,
 } from "@/lib/event-platform/event-platform-api-auth";
 import { eventHostUpdateSchema } from "@/lib/event-platform/hosts/host-schemas";
-import { getEventHostById, hostDisplayNameFromFields, serializeEventHost } from "@/lib/event-platform/hosts/host-service";
+import {
+  getEventHostById,
+  getEventHostByIdForOrg,
+  hostDisplayNameFromFields,
+  serializeEventHost,
+} from "@/lib/event-platform/hosts/host-service";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -80,6 +85,7 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
   if (isEventPlatformApiError(actor)) return actor;
   try {
     const { id: idRaw } = await ctx.params;
+    const permanent = new URL(req.url).searchParams.get("permanent") === "1";
     let id: bigint;
     try {
       id = BigInt(idRaw);
@@ -87,9 +93,23 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
       return NextResponse.json({ ok: false, message: "Invalid host id." }, { status: 400 });
     }
 
-    const existing = await getEventHostById(actor.organizationId, id);
+    const existing = permanent
+      ? await getEventHostByIdForOrg(actor.organizationId, id)
+      : await getEventHostById(actor.organizationId, id);
     if (!existing) {
       return NextResponse.json({ ok: false, message: "Host not found." }, { status: 404 });
+    }
+
+    if (permanent) {
+      await prisma.eventHost.delete({ where: { id: existing.id } });
+      await writeEventAuditLog({
+        organizationId: actor.organizationId,
+        actorUserId: actor.userId,
+        action: "host.deleted",
+        entityType: "event_host",
+        entityId: existing.id.toString(),
+      });
+      return NextResponse.json({ ok: true });
     }
 
     await prisma.eventHost.update({
@@ -107,7 +127,8 @@ export async function DELETE(req: NextRequest, ctx: RouteContext) {
 
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Archive failed.";
+    const permanent = new URL(req.url).searchParams.get("permanent") === "1";
+    const message = e instanceof Error ? e.message : permanent ? "Delete failed." : "Archive failed.";
     return NextResponse.json({ ok: false, message }, { status: 500 });
   }
 }

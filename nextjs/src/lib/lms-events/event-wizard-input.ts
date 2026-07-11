@@ -37,7 +37,7 @@ export function eventToWizardInput(event: LmsEvent, tickets: LmsEventTicket[] = 
   });
 
   return {
-    title: event.title,
+    title: event.venueName?.trim() || event.title,
     slug: event.slug,
     description: event.description ?? "",
     shortDescription: event.shortDescription ?? "",
@@ -74,6 +74,9 @@ export function eventToWizardInput(event: LmsEvent, tickets: LmsEventTicket[] = 
     venueFood: pageFields.venueFood ?? false,
     cardsIncluded: event.cardsIncluded ?? 2,
     extraCardPrice: event.extraCardPrice ?? bonusTicket?.price ?? 5,
+    bonusCardsAllowed:
+      pageFields.bonusCardsAllowed ??
+      (event.extraCardPrice != null && Number(event.extraCardPrice) > 0),
     bonusCardName: bonusTicket?.name ?? DEFAULT_BONUS_CARD_NAME,
     foodAndDrinks: event.foodAndDrinks ?? "",
     attire: event.attire ?? "Casual",
@@ -88,10 +91,14 @@ export function eventToWizardInput(event: LmsEvent, tickets: LmsEventTicket[] = 
     hostName: pageFields.hostName ?? "",
     hostBio: pageFields.hostBio ?? "",
     hostImageUrl: pageFields.hostImageUrl ?? "",
+    hostIds: pageFields.hostIds ?? [],
+    hosts: pageFields.hosts ?? [],
     sponsorName: pageFields.sponsorName ?? "",
     sponsorAddress: pageFields.sponsorAddress ?? "",
     sponsorPhone: pageFields.sponsorPhone ?? "",
     sponsorPerk: pageFields.sponsorPerk ?? "",
+    sponsorIds: pageFields.sponsorIds ?? [],
+    sponsors: pageFields.sponsors ?? [],
     whatsIncludedText: pageFields.whatsIncludedText ?? "",
     checkInStepsText: pageFields.checkInStepsText ?? "",
     bingoRounds: pageFields.bingoRounds ?? [...DEFAULT_BINGO_ROUNDS],

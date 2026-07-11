@@ -15,7 +15,7 @@ export function serializeEventBingoGame(row: EventBingoGame): EventBingoGameDto 
     name: row.name,
     pattern: row.pattern,
     difficulty: row.difficulty as LmsEventBingoDifficulty,
-    prize: row.prize,
+    imageUrl: row.imageUrl,
     description: row.description,
     sortOrder: row.sortOrder,
     status: row.status as EventBingoGameStatus,

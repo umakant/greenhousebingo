@@ -604,8 +604,12 @@ export const getCompanyMenu = (): NavItem[] => [
     order: 2964,
     dashboardScope: "venuemanagement",
     children: [
-      { title: t("Dashboard"), href: "/admin/venue-management", permission: "manage-venue-management-dashboard" },
-      { title: t("Venues"), href: "/admin/venue-management", permission: "venues.view" },
+      {
+        title: t("Venues"),
+        href: "/admin/venue-management",
+        permission: "venues.view",
+        name: "venue-management-venues",
+      },
       { title: t("Venue Categories"), href: "/admin/venue-management/categories", permission: "venues.manage" },
       { title: t("Venue Types"), href: "/admin/venue-management/types", permission: "venues.manage" },
     ],

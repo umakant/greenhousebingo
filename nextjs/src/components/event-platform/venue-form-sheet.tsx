@@ -318,7 +318,7 @@ export function VenueFormSheet({
                       id="venue-phone"
                       value={form.phone}
                       onChange={(e) => setForm((f) => ({ ...f, phone: formatPhone(e.target.value) }))}
-                      placeholder="(000) 000 0000"
+                      placeholder="(000) 000-0000"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -500,7 +500,7 @@ export function VenueFormSheet({
                       id="contact-phone"
                       value={form.contactPhone}
                       onChange={(e) => setForm((f) => ({ ...f, contactPhone: formatPhone(e.target.value) }))}
-                      placeholder="(000) 000 0000"
+                      placeholder="(000) 000-0000"
                     />
                   </div>
                   <div className="space-y-1.5">

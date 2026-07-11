@@ -20,7 +20,7 @@ import {
 import { lmsEventAdminDetailPath } from "@/lib/lms-events/paths";
 import type { LmsEventAttendee } from "@/lib/lms-events/types";
 
-export function LmsEventAdminAttendeesClient(props: { eventId: string }) {
+export function LmsEventAdminAttendeesClient(props: { eventId: string; embedded?: boolean }) {
   const [loading, setLoading] = React.useState(true);
   const [attendees, setAttendees] = React.useState<LmsEventAttendee[]>([]);
 
@@ -54,9 +54,11 @@ export function LmsEventAdminAttendeesClient(props: { eventId: string }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">{attendees.length} registration(s)</p>
-        <Button asChild variant="outline" size="sm">
-          <Link href={lmsEventAdminDetailPath(props.eventId)}>Back to event</Link>
-        </Button>
+        {!props.embedded ? (
+          <Button asChild variant="outline" size="sm">
+            <Link href={lmsEventAdminDetailPath(props.eventId)}>Back to event</Link>
+          </Button>
+        ) : null}
       </div>
       <Table>
         <TableHeader>

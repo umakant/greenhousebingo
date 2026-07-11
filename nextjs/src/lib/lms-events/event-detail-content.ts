@@ -9,6 +9,7 @@ export type LmsEventBingoRound = {
   pattern: string;
   difficulty: LmsEventBingoDifficulty;
   prize: string;
+  imageUrl?: string;
 };
 
 export type LmsEventFaq = {
@@ -20,6 +21,7 @@ export type LmsEventDetailHost = {
   name: string;
   bio: string;
   imageUrl?: string;
+  catalogHostId?: string;
 };
 
 export type LmsEventDetailSponsor = {
@@ -27,12 +29,41 @@ export type LmsEventDetailSponsor = {
   address: string;
   phone: string;
   perk: string;
+  catalogSponsorId?: string;
+  package?: string;
+  contribution?: number;
+  paymentStatus?: string;
+  deliverables?: string[];
+  completedDeliverables?: string[];
+  notes?: string;
+  agreementUrl?: string;
 };
 
 export type LmsEventVenueAmenities = {
   age21Plus?: boolean;
   drinksAlcohol?: boolean;
   food?: boolean;
+};
+
+/** Event-scoped venue/host operational fields (not catalog duplicates). */
+export type LmsEventVenueHostOps = {
+  catalogVenueId?: string;
+  catalogHostId?: string;
+  venueFee?: number;
+  contractStatus?: string;
+  venuePaymentStatus?: string;
+  setupInstructions?: string;
+  parking?: string;
+  accessibility?: string;
+  venueNotes?: string;
+  contractUrl?: string;
+  scheduledHostArrival?: string;
+  actualHostArrival?: string;
+  hostPaymentType?: string;
+  hostPaymentAmount?: number;
+  hostPaymentStatus?: string;
+  agreementUrl?: string;
+  hostNotes?: string;
 };
 
 /** Rich public event page content (Plant Bingo detail template). */
@@ -46,14 +77,20 @@ export type LmsEventDetailContent = {
   cardFeePercent?: number;
   soldOut?: boolean;
   venueAmenities?: LmsEventVenueAmenities;
+  venueHostOps?: LmsEventVenueHostOps;
   host?: LmsEventDetailHost;
+  hosts?: LmsEventDetailHost[];
+  hostIds?: string[];
   sponsor?: LmsEventDetailSponsor;
+  sponsors?: LmsEventDetailSponsor[];
+  sponsorIds?: string[];
   whatsIncluded?: string[];
   checkInSteps?: string[];
   bingoRounds?: LmsEventBingoRound[];
   bingoGameIds?: string[];
   faqIds?: string[];
   faqs?: LmsEventFaq[];
+  bonusCardsAllowed?: boolean;
 };
 
 export const DEFAULT_BINGO_ROUNDS: LmsEventBingoRound[] = [
@@ -154,23 +191,64 @@ export function buildDetailContentFromWizardInput(input: LmsEventCreateWizardInp
   const checkInSteps = linesFromText(input.checkInStepsText);
 
   const hostName = input.hostName?.trim() || input.instructorName?.trim();
-  const host: LmsEventDetailHost | undefined = hostName
+  const fallbackHost: LmsEventDetailHost | undefined = hostName
     ? {
         name: hostName,
         bio: input.hostBio?.trim() || "",
         imageUrl: input.hostImageUrl?.trim() || undefined,
+        catalogHostId: input.hostIds?.[0],
       }
     : undefined;
 
   const sponsorName = input.sponsorName?.trim();
-  const sponsor: LmsEventDetailSponsor | undefined = sponsorName
+  const fallbackSponsor: LmsEventDetailSponsor | undefined = sponsorName
     ? {
         name: sponsorName,
         address: input.sponsorAddress?.trim() || "",
         phone: input.sponsorPhone?.trim() || "",
         perk: input.sponsorPerk?.trim() || "",
+        catalogSponsorId: input.sponsorIds?.[0],
       }
     : undefined;
+
+  const normalizeHost = (h: {
+    name: string;
+    catalogHostId?: string;
+    bio?: string;
+    imageUrl?: string;
+  }): LmsEventDetailHost => ({
+    name: h.name,
+    bio: h.bio?.trim() || "",
+    imageUrl: h.imageUrl?.trim() || undefined,
+    catalogHostId: h.catalogHostId,
+  });
+
+  const normalizeSponsor = (s: {
+    name: string;
+    catalogSponsorId?: string;
+    address?: string;
+    phone?: string;
+    perk?: string;
+  }): LmsEventDetailSponsor => ({
+    name: s.name,
+    address: s.address?.trim() || "",
+    phone: s.phone?.trim() || "",
+    perk: s.perk?.trim() || "",
+    catalogSponsorId: s.catalogSponsorId,
+  });
+
+  const rosterHosts = input.hosts?.length
+    ? input.hosts.map(normalizeHost)
+    : fallbackHost
+      ? [fallbackHost]
+      : undefined;
+  const rosterSponsors = input.sponsors?.length
+    ? input.sponsors.map(normalizeSponsor)
+    : fallbackSponsor
+      ? [fallbackSponsor]
+      : undefined;
+  const primaryHost = rosterHosts?.[0];
+  const primarySponsor = rosterSponsors?.[0];
 
   return {
     regionTag: input.regionTag?.trim() || regionTagFromState(input.venueState) || undefined,
@@ -190,14 +268,24 @@ export function buildDetailContentFromWizardInput(input: LmsEventCreateWizardInp
       drinksAlcohol: input.venueDrinksAlcohol ?? false,
       food: input.venueFood ?? false,
     },
-    host,
-    sponsor,
+    host: primaryHost,
+    hosts: rosterHosts,
+    hostIds: input.hostIds?.length ? input.hostIds : primaryHost?.catalogHostId ? [primaryHost.catalogHostId] : undefined,
+    sponsor: primarySponsor,
+    sponsors: rosterSponsors,
+    sponsorIds:
+      input.sponsorIds?.length
+        ? input.sponsorIds
+        : primarySponsor?.catalogSponsorId
+          ? [primarySponsor.catalogSponsorId]
+          : undefined,
     whatsIncluded: whatsIncluded.length > 0 ? whatsIncluded : [...DEFAULT_WHATS_INCLUDED],
     checkInSteps: checkInSteps.length > 0 ? checkInSteps : [...DEFAULT_CHECKIN_STEPS],
     bingoRounds: input.bingoRounds?.length ? input.bingoRounds : [...DEFAULT_BINGO_ROUNDS],
     bingoGameIds: input.bingoGameIds?.length ? input.bingoGameIds : undefined,
     faqIds: input.faqIds?.length ? input.faqIds : undefined,
     faqs: input.faqs?.length ? input.faqs : undefined,
+    bonusCardsAllowed: input.bonusCardsAllowed !== false,
   };
 }
 
@@ -225,8 +313,18 @@ export function parseDetailContent(raw: unknown): LmsEventDetailContent | null {
       o.venueAmenities && typeof o.venueAmenities === "object"
         ? (o.venueAmenities as LmsEventVenueAmenities)
         : undefined,
+    venueHostOps:
+      o.venueHostOps && typeof o.venueHostOps === "object"
+        ? (o.venueHostOps as LmsEventVenueHostOps)
+        : undefined,
     host: o.host && typeof o.host === "object" ? (o.host as LmsEventDetailHost) : undefined,
+    hosts: Array.isArray(o.hosts) ? (o.hosts as LmsEventDetailHost[]) : undefined,
+    hostIds: Array.isArray(o.hostIds) ? o.hostIds.filter((x): x is string => typeof x === "string") : undefined,
     sponsor: o.sponsor && typeof o.sponsor === "object" ? (o.sponsor as LmsEventDetailSponsor) : undefined,
+    sponsors: Array.isArray(o.sponsors) ? (o.sponsors as LmsEventDetailSponsor[]) : undefined,
+    sponsorIds: Array.isArray(o.sponsorIds)
+      ? o.sponsorIds.filter((x): x is string => typeof x === "string")
+      : undefined,
     whatsIncluded: Array.isArray(o.whatsIncluded)
       ? o.whatsIncluded.filter((x): x is string => typeof x === "string")
       : undefined,
@@ -239,6 +337,7 @@ export function parseDetailContent(raw: unknown): LmsEventDetailContent | null {
       : undefined,
     faqIds: Array.isArray(o.faqIds) ? o.faqIds.filter((x): x is string => typeof x === "string") : undefined,
     faqs: Array.isArray(o.faqs) ? (o.faqs as LmsEventFaq[]) : undefined,
+    bonusCardsAllowed: o.bonusCardsAllowed === false ? false : o.bonusCardsAllowed === true ? true : undefined,
   };
 }
 
@@ -256,19 +355,30 @@ export function detailContentToWizardFields(content: LmsEventDetailContent | nul
     venueAge21Plus: content.venueAmenities?.age21Plus ?? false,
     venueDrinksAlcohol: content.venueAmenities?.drinksAlcohol ?? false,
     venueFood: content.venueAmenities?.food ?? false,
-    hostName: content.host?.name ?? "",
-    hostBio: content.host?.bio ?? "",
-    hostImageUrl: content.host?.imageUrl ?? "",
-    sponsorName: content.sponsor?.name ?? "",
-    sponsorAddress: content.sponsor?.address ?? "",
-    sponsorPhone: content.sponsor?.phone ?? "",
-    sponsorPerk: content.sponsor?.perk ?? "",
+    hostName: content.host?.name ?? content.hosts?.[0]?.name ?? "",
+    hostBio: content.host?.bio ?? content.hosts?.[0]?.bio ?? "",
+    hostImageUrl: content.host?.imageUrl ?? content.hosts?.[0]?.imageUrl ?? "",
+    hostIds: content.hostIds?.length
+      ? content.hostIds
+      : content.hosts?.map((h) => h.catalogHostId).filter((id): id is string => Boolean(id)) ??
+        (content.host?.catalogHostId ? [content.host.catalogHostId] : []),
+    hosts: content.hosts?.length ? content.hosts : content.host ? [content.host] : [],
+    sponsorName: content.sponsor?.name ?? content.sponsors?.[0]?.name ?? "",
+    sponsorAddress: content.sponsor?.address ?? content.sponsors?.[0]?.address ?? "",
+    sponsorPhone: content.sponsor?.phone ?? content.sponsors?.[0]?.phone ?? "",
+    sponsorPerk: content.sponsor?.perk ?? content.sponsors?.[0]?.perk ?? "",
+    sponsorIds: content.sponsorIds?.length
+      ? content.sponsorIds
+      : content.sponsors?.map((s) => s.catalogSponsorId).filter((id): id is string => Boolean(id)) ??
+        (content.sponsor?.catalogSponsorId ? [content.sponsor.catalogSponsorId] : []),
+    sponsors: content.sponsors?.length ? content.sponsors : content.sponsor ? [content.sponsor] : [],
     whatsIncludedText: (content.whatsIncluded ?? []).join("\n"),
     checkInStepsText: (content.checkInSteps ?? []).join("\n"),
     bingoRounds: content.bingoRounds?.length ? content.bingoRounds : [...DEFAULT_BINGO_ROUNDS],
     bingoGameIds: content.bingoGameIds ?? [],
     faqIds: content.faqIds ?? [],
     faqs: content.faqs ?? [],
+    bonusCardsAllowed: content.bonusCardsAllowed !== false,
   };
 }
 

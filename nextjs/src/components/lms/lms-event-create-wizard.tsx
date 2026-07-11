@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -47,10 +48,12 @@ import type { FeaturedEventsStats } from "@/lib/event-platform/featured-events-t
 import { EVENT_PLATFORM_PATHS } from "@/lib/event-platform/paths";
 import {
   applyEventDateToSchedule,
+  combineScheduleDateTime,
   defaultScheduleTimes,
   eventDateFromIso,
   normalizeEventScheduleInput,
   patchScheduleIso,
+  scheduleValueToIso,
   splitScheduleIso,
 } from "@/lib/lms-events/event-schedule-helpers";
 import { cn } from "@/lib/utils";
@@ -108,6 +111,7 @@ const DEFAULT_VALUES: LmsEventCreateWizardInput = {
   venueFood: false,
   cardsIncluded: 2,
   extraCardPrice: 5,
+  bonusCardsAllowed: true,
   bonusCardName: "Bonus card",
   foodAndDrinks: "",
   attire: "Casual",
@@ -122,10 +126,14 @@ const DEFAULT_VALUES: LmsEventCreateWizardInput = {
   hostName: "",
   hostBio: "",
   hostImageUrl: "",
+  hostIds: [],
+  hosts: [],
   sponsorName: "",
   sponsorAddress: "",
   sponsorPhone: "",
   sponsorPerk: "",
+  sponsorIds: [],
+  sponsors: [],
   whatsIncludedText: "",
   checkInStepsText: "",
   bingoRounds: [...DEFAULT_BINGO_ROUNDS],
@@ -144,38 +152,38 @@ const DEFAULT_VALUES: LmsEventCreateWizardInput = {
   status: "registration_open",
 };
 
-function ScheduleDateTimeField(props: {
+function ScheduleTimeField(props: {
   id: string;
   label: string;
   required?: boolean;
   eventDate: string;
   iso: string;
-  onEventDateChange: (date: string) => void;
   onChange: (iso: string) => void;
 }) {
-  const { id, label, required, eventDate, iso, onEventDateChange, onChange } = props;
-  const { date, time } = splitScheduleIso(iso);
-  const displayDate = eventDate || date;
+  const { id, label, required, eventDate, iso, onChange } = props;
+  const effectiveIso =
+    iso.includes("T") || !iso.trim() ? iso : scheduleValueToIso(iso, eventDate, iso);
+  const { time } = splitScheduleIso(effectiveIso);
   return (
     <div className="space-y-2">
-      <Label htmlFor={`${id}-date`}>
+      <Label htmlFor={`${id}-time`}>
         {label}
         {required ? <span className="text-destructive"> *</span> : null}
       </Label>
-      <div className="grid grid-cols-1 gap-2">
-        <DatePickerInput
-          id={`${id}-date`}
-          value={displayDate}
-          onChange={(e) => onEventDateChange(e.target.value)}
-          placeholder="Pick date"
-        />
-        <TimeInput12h
-          id={`${id}-time`}
-          value={time}
-          onChange={(nextTime) => onChange(patchScheduleIso(iso, { date: displayDate, time: nextTime }))}
-          aria-label={`${label} time`}
-        />
-      </div>
+      <TimeInput12h
+        id={`${id}-time`}
+        value={time}
+        onChange={(nextTime) => {
+          const baseDate = eventDate || splitScheduleIso(effectiveIso).date;
+          onChange(
+            patchScheduleIso(effectiveIso || combineScheduleDateTime(baseDate, "00:00"), {
+              date: baseDate,
+              time: nextTime,
+            }),
+          );
+        }}
+        aria-label={label}
+      />
     </div>
   );
 }
@@ -187,6 +195,7 @@ function venueLocationLabel(v: EventVenueDto): string {
 function applyVenueToEventForm(venue: EventVenueDto): Partial<LmsEventCreateWizardInput> {
   const address = [venue.address, venue.address2].filter(Boolean).join(", ");
   return {
+    title: venue.name,
     venueName: venue.name,
     venueAddress: address,
     venueCity: venue.city ?? "",
@@ -201,13 +210,14 @@ function applyVenueToEventForm(venue: EventVenueDto): Partial<LmsEventCreateWiza
     venueDrinksAlcohol: venue.drinksAlcohol,
     venueFood: venue.food,
     ageRule: venue.age21Plus ? "21+" : "All ages",
-    ...(venue.seating != null && venue.seating > 0 ? { capacity: venue.seating } : {}),
+    ...(venue.seating != null && venue.seating > 0 ? { capacity: venue.seating, quantity: venue.seating } : {}),
   };
 }
 
 function applyVenueLocationToForm(venue: EventVenueDto): Partial<LmsEventCreateWizardInput> {
   const address = [venue.address, venue.address2].filter(Boolean).join(", ");
   return {
+    title: venue.name,
     venueName: venue.name,
     venueAddress: address,
     venueCity: venue.city ?? "",
@@ -320,7 +330,7 @@ export function LmsEventCreateWizard(props: {
       const snapshot = { ...DEFAULT_VALUES, ...input };
       const validate = (index: number): string | null => {
         if (index === 0) {
-          if (!snapshot.title.trim() || snapshot.title.trim().length < 3) return "Event title is required.";
+          if (!snapshot.venueName?.trim()) return "Select a venue.";
           if (!snapshot.categoryId) return "Select a category.";
         }
         if (index === 1) {
@@ -345,7 +355,12 @@ export function LmsEventCreateWizard(props: {
 
   React.useEffect(() => {
     if (initialValues) {
-      const merged = { ...DEFAULT_VALUES, ...initialValues, isFree: false };
+      const merged = {
+        ...DEFAULT_VALUES,
+        ...initialValues,
+        isFree: false,
+        title: initialValues.venueName?.trim() || initialValues.title,
+      };
       setValues(merged);
       if (mode === "edit") syncCompletedSteps(merged);
     }
@@ -377,7 +392,7 @@ export function LmsEventCreateWizard(props: {
 
   function validateStep(index: number): string | null {
     if (index === 0) {
-      if (!values.title.trim() || values.title.trim().length < 3) return "Event title is required.";
+      if (!values.venueName?.trim()) return "Select a venue.";
       if (!values.categoryId) return "Select a category.";
     }
     if (index === 1) {
@@ -442,9 +457,15 @@ export function LmsEventCreateWizard(props: {
     onSavingChange?.(true);
     setErr(null);
     try {
+      const venueTitle = values.venueName?.trim() || values.title.trim();
+      const bonusAllowed = values.bonusCardsAllowed !== false;
       await onSubmit(
         normalizeEventScheduleInput({
           ...values,
+          title: venueTitle,
+          quantity: values.capacity ?? values.quantity,
+          extraCardPrice: bonusAllowed ? values.extraCardPrice : null,
+          bonusCardsAllowed: bonusAllowed,
           instructorName: "",
           instructorUserId: "",
           isFree: false,
@@ -490,51 +511,56 @@ export function LmsEventCreateWizard(props: {
 
       {step === 0 ? (
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="ev-title">
-              Event title <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="ev-title"
-              value={values.title}
-              onChange={(e) => patch({ title: e.target.value })}
-              placeholder="CPR & First Aid Certification"
-            />
-          </div>
+          {values.deliveryMode !== "online" ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <Label>
+                  Venue <span className="text-destructive">*</span>
+                </Label>
+                <a
+                  href={EVENT_PLATFORM_PATHS.venues}
+                  className="text-xs text-primary hover:underline"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Manage venues
+                </a>
+              </div>
+              <Select value={selectedVenueId || undefined} onValueChange={handleVenueSelect}>
+                <SelectTrigger>
+                  <SelectValue placeholder={venuesLoading ? "Loading venues…" : "Select a venue"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {venues.map((venue) => (
+                    <SelectItem key={venue.id} value={venue.id}>
+                      {venue.name}
+                      {venueLocationLabel(venue) ? ` — ${venueLocationLabel(venue)}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                The event is named after the venue. Selecting a venue auto-fills type, location, amenities, and image.
+              </p>
+            </div>
+          ) : null}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>
-                Category <span className="text-destructive">*</span>
-              </Label>
-              <Select value={values.categoryId || undefined} onValueChange={(v) => patch({ categoryId: v })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Event type</Label>
-              <Select value={values.eventType} onValueChange={(v) => patch({ eventType: v })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {formOptions.eventTypes.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label>
+              Category <span className="text-destructive">*</span>
+            </Label>
+            <Select value={values.categoryId || undefined} onValueChange={(v) => patch({ categoryId: v })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -639,40 +665,6 @@ export function LmsEventCreateWizard(props: {
                 </p>
               ) : null}
             </div>
-            {values.deliveryMode !== "online" ? (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <Label>Venue</Label>
-                  <a
-                    href={EVENT_PLATFORM_PATHS.venues}
-                    className="text-xs text-primary hover:underline"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Manage venues
-                  </a>
-                </div>
-                <Select
-                  value={selectedVenueId || undefined}
-                  onValueChange={handleVenueSelect}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={venuesLoading ? "Loading venues…" : "Select a saved venue"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {venues.map((venue) => (
-                      <SelectItem key={venue.id} value={venue.id}>
-                        {venue.name}
-                        {venueLocationLabel(venue) ? ` — ${venueLocationLabel(venue)}` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Auto-fills venue type, age rule, amenities, location, and image from your venue directory.
-                </p>
-              </div>
-            ) : null}
             <div className="grid gap-4 sm:grid-cols-2">
               {values.deliveryMode !== "online" ? (
                 <div className="space-y-2">
@@ -808,30 +800,27 @@ export function LmsEventCreateWizard(props: {
           </div>
 
           <div className="grid min-w-0 gap-4 sm:grid-cols-3">
-            <ScheduleDateTimeField
+            <ScheduleTimeField
               id="ev-doors"
               label="Doors open"
               eventDate={values.eventDate?.trim() || eventDateFromIso(values.startsAt)}
               iso={values.doorsOpen ?? ""}
-              onEventDateChange={patchEventDate}
               onChange={(iso) => patch({ doorsOpen: iso })}
             />
-            <ScheduleDateTimeField
+            <ScheduleTimeField
               id="ev-bingo-start"
               label="Bingo start"
               required
               eventDate={values.eventDate?.trim() || eventDateFromIso(values.startsAt)}
               iso={values.bingoStart || values.startsAt}
-              onEventDateChange={patchEventDate}
               onChange={(iso) => patch({ bingoStart: iso, startsAt: iso })}
             />
-            <ScheduleDateTimeField
+            <ScheduleTimeField
               id="ev-bingo-end"
               label="Bingo end"
               required
               eventDate={values.eventDate?.trim() || eventDateFromIso(values.startsAt)}
               iso={values.bingoEnd || values.endsAt}
-              onEventDateChange={patchEventDate}
               onChange={(iso) => patch({ bingoEnd: iso, endsAt: iso })}
             />
           </div>
@@ -991,42 +980,58 @@ export function LmsEventCreateWizard(props: {
               placeholder="General admission"
             />
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="ev-price">
-                Price (USD) <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="ev-price"
-                type="number"
-                min={0.01}
-                step="0.01"
-                value={values.price}
-                onChange={(e) => patch({ price: Number(e.target.value), isFree: false })}
-              />
-            </div>
-            <div className="space-y-2">
+          <div className="grid grid-cols-2 items-start gap-4">
+            <CurrencyInput
+              id="ev-price"
+              label="Price (USD)"
+              required
+              value={values.price > 0 ? values.price : null}
+              onChange={(price) => patch({ price: price ?? 0, isFree: false })}
+            />
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="ev-qty">Number of seats</Label>
               <Input
                 id="ev-qty"
                 type="number"
-                min={1}
-                value={values.quantity ?? ""}
-                onChange={(e) => patch({ quantity: e.target.value ? Number(e.target.value) : null })}
+                readOnly
+                disabled
+                value={values.capacity ?? values.quantity ?? ""}
+                className="h-10 bg-muted/50"
               />
             </div>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Number of seats is set when you create or edit the venue in Venue Management.
+          </p>
 
-          <div className="space-y-2">
-            <Label htmlFor="ev-bonus-price">Bonus card price (USD)</Label>
-            <Input
+          <div className="grid grid-cols-2 items-start gap-4">
+            <CurrencyInput
               id="ev-bonus-price"
-              type="number"
-              min={0}
-              step="0.01"
-              value={values.extraCardPrice ?? ""}
-              onChange={(e) => patch({ extraCardPrice: e.target.value ? Number(e.target.value) : null })}
+              label="Bonus card price (USD)"
+              value={values.bonusCardsAllowed === false ? null : values.extraCardPrice}
+              onChange={(extraCardPrice) => patch({ extraCardPrice: extraCardPrice ?? 0 })}
+              disabled={values.bonusCardsAllowed === false}
             />
+            <div className="flex flex-col gap-1.5">
+              <Label>Bonus cards</Label>
+              <Select
+                value={values.bonusCardsAllowed === false ? "not_allowed" : "allowed"}
+                onValueChange={(v) =>
+                  patch({
+                    bonusCardsAllowed: v === "allowed",
+                    ...(v === "not_allowed" ? { extraCardPrice: null } : { extraCardPrice: values.extraCardPrice ?? 5 }),
+                  })
+                }
+              >
+                <SelectTrigger className="h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="allowed">Allowed</SelectItem>
+                  <SelectItem value="not_allowed">Not allowed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       ) : null}

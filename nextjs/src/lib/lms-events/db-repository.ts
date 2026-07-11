@@ -10,23 +10,14 @@ import {
   buildDetailContentFromWizardInput,
   parseDetailContent,
 } from "@/lib/lms-events/event-detail-content";
+import { shouldAutoArchiveEvent } from "@/lib/lms-events/event-lifecycle";
+import type { LmsEventStatus } from "@/lib/lms-events/constants";
 import { normalizeEventScheduleInput } from "@/lib/lms-events/event-schedule-helpers";
 import {
   BONUS_CARD_TICKET_DESCRIPTION,
   DEFAULT_BONUS_CARD_NAME,
 } from "@/lib/lms-events/event-wizard-input";
-
-function bonusCardNameFromInput(input: LmsEventCreateWizardInput): string {
-  return input.bonusCardName?.trim() || DEFAULT_BONUS_CARD_NAME;
-}
-
-function isBonusCardDbTicket(ticket: { name: string; description: string | null }): boolean {
-  return (
-    ticket.description === BONUS_CARD_TICKET_DESCRIPTION ||
-    ticket.name === "Extra bingo card" ||
-    ticket.name === DEFAULT_BONUS_CARD_NAME
-  );
-}
+import { buildRegistrationAttributionFields } from "@/lib/event-platform/event-marketing/attribution-resolver";
 import type {
   LmsEvent,
   LmsEventAttendee,
@@ -42,6 +33,23 @@ import type {
   LmsEventWishlistItem,
 } from "@/lib/lms-events/types";
 import { prisma } from "@/lib/prisma";
+
+function bonusCardNameFromInput(input: LmsEventCreateWizardInput): string {
+  return input.bonusCardName?.trim() || DEFAULT_BONUS_CARD_NAME;
+}
+
+function resolveExtraCardPrice(input: LmsEventCreateWizardInput): number | null {
+  if (input.bonusCardsAllowed === false) return null;
+  return input.extraCardPrice != null && input.extraCardPrice > 0 ? input.extraCardPrice : null;
+}
+
+function isBonusCardDbTicket(ticket: { name: string; description: string | null }): boolean {
+  return (
+    ticket.description === BONUS_CARD_TICKET_DESCRIPTION ||
+    ticket.name === "Extra bingo card" ||
+    ticket.name === DEFAULT_BONUS_CARD_NAME
+  );
+}
 
 export type LmsEventRepositoryScope = {
   organizationId: string;
@@ -234,6 +242,8 @@ function buildEventWhere(
   if (filters.status) {
     const statuses = Array.isArray(filters.status) ? filters.status : [filters.status];
     where.status = { in: statuses };
+  } else if (admin && !filters.includeArchived) {
+    where.status = { not: "archived" };
   }
   return where;
 }
@@ -295,6 +305,7 @@ export class LmsEventDbRepository {
   }
 
   async listEvents(filters: LmsEventListFiltersInput = {}): Promise<LmsEvent[]> {
+    await this.autoArchivePastEvents();
     const rows = await prisma.lmsTrainingEvent.findMany({
       where: buildEventWhere(this.orgId(), filters, false),
       include: { category: true },
@@ -304,12 +315,41 @@ export class LmsEventDbRepository {
   }
 
   async listAdminEvents(filters: LmsEventListFiltersInput = {}): Promise<LmsEvent[]> {
+    await this.autoArchivePastEvents();
     const rows = await prisma.lmsTrainingEvent.findMany({
       where: buildEventWhere(this.orgId(), filters, true),
       include: { category: true },
       orderBy: { startsAt: "desc" },
     });
     return rows.map(mapDbEvent);
+  }
+
+  /** Move finished events out of the active list. */
+  async autoArchivePastEvents(): Promise<number> {
+    const orgId = this.orgId();
+    const now = new Date();
+    const rows = await prisma.lmsTrainingEvent.findMany({
+      where: {
+        organizationId: orgId,
+        status: { notIn: ["draft", "archived", "cancelled"] },
+      },
+      select: { id: true, status: true, startsAt: true, endsAt: true },
+    });
+
+    const toArchive = rows.filter((row) =>
+      shouldAutoArchiveEvent({
+        status: row.status as LmsEventStatus,
+        startsAt: row.startsAt.toISOString(),
+        endsAt: row.endsAt.toISOString(),
+      }),
+    );
+    if (toArchive.length === 0) return 0;
+
+    await prisma.lmsTrainingEvent.updateMany({
+      where: { id: { in: toArchive.map((row) => row.id) }, organizationId: orgId },
+      data: { status: "archived", updatedAt: now },
+    });
+    return toArchive.length;
   }
 
   async createAdminEvent(
@@ -382,8 +422,7 @@ export class LmsEventDbRepository {
           bingoStart: input.bingoStart?.trim() || null,
           venueType: input.venueType ?? null,
           cardsIncluded: input.cardsIncluded ?? null,
-          extraCardPrice:
-            input.extraCardPrice != null && input.extraCardPrice > 0 ? input.extraCardPrice : null,
+          extraCardPrice: resolveExtraCardPrice(input),
           foodAndDrinks: input.foodAndDrinks?.trim() || null,
           attire: input.attire?.trim() || null,
           detailContent: detailContent as Prisma.InputJsonValue,
@@ -413,14 +452,14 @@ export class LmsEventDbRepository {
         },
       });
 
-      if (input.extraCardPrice != null && input.extraCardPrice > 0) {
+      if (resolveExtraCardPrice(input) != null) {
         await tx.lmsEventTicket.create({
           data: {
             organizationId: orgId,
             eventId: eventRow.id,
             name: bonusCardNameFromInput(input),
             description: BONUS_CARD_TICKET_DESCRIPTION,
-            price: input.extraCardPrice,
+            price: resolveExtraCardPrice(input)!,
             currency: input.currency || "USD",
             quantity: null,
             soldCount: 0,
@@ -526,8 +565,7 @@ export class LmsEventDbRepository {
           bingoStart: input.bingoStart?.trim() || null,
           venueType: input.venueType ?? null,
           cardsIncluded: input.cardsIncluded ?? null,
-          extraCardPrice:
-            input.extraCardPrice != null && input.extraCardPrice > 0 ? input.extraCardPrice : null,
+          extraCardPrice: resolveExtraCardPrice(input),
           foodAndDrinks: input.foodAndDrinks?.trim() || null,
           attire: input.attire?.trim() || null,
           detailContent: detailContent as Prisma.InputJsonValue,
@@ -582,14 +620,15 @@ export class LmsEventDbRepository {
         });
       }
 
+      const extraCardPrice = resolveExtraCardPrice(input);
       const extraTicket = tickets.find(isBonusCardDbTicket);
-      if (input.extraCardPrice != null && input.extraCardPrice > 0) {
+      if (extraCardPrice != null) {
         if (extraTicket) {
           await tx.lmsEventTicket.update({
             where: { id: extraTicket.id },
             data: {
               name: bonusCardNameFromInput(input),
-              price: input.extraCardPrice,
+              price: extraCardPrice,
               currency: input.currency || "USD",
               updatedById: actorId,
               updatedAt: new Date(),
@@ -602,7 +641,7 @@ export class LmsEventDbRepository {
               eventId: eventIdBig,
               name: bonusCardNameFromInput(input),
               description: BONUS_CARD_TICKET_DESCRIPTION,
-              price: input.extraCardPrice,
+              price: extraCardPrice,
               currency: input.currency || "USD",
               quantity: null,
               soldCount: 0,
@@ -686,6 +725,7 @@ export class LmsEventDbRepository {
     ticketId: string;
     attendeeName: string;
     attendeeEmail: string;
+    attribution?: import("@/lib/event-platform/event-marketing/attribution-resolver").RegistrationAttributionInput;
   }): Promise<LmsEventRegistration> {
     const uid = this.scope.studentUserId;
     if (!uid) throw new Error("Not signed in");
@@ -716,6 +756,7 @@ export class LmsEventDbRepository {
           qrToken: `QR-${params.eventId.toUpperCase()}-${Date.now()}`,
           createdById: BigInt(uid),
           updatedById: BigInt(uid),
+          ...buildRegistrationAttributionFields(params.attribution),
         },
       });
       await tx.lmsTrainingEvent.update({

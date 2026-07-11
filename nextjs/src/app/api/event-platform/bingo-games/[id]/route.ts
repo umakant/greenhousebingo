@@ -43,7 +43,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
         name: p.name?.trim() ?? undefined,
         pattern: p.pattern?.trim() ?? undefined,
         difficulty: p.difficulty ?? undefined,
-        prize: p.prize?.trim() ?? undefined,
+        imageUrl: p.imageUrl !== undefined ? p.imageUrl?.trim() || null : undefined,
         description: p.description !== undefined ? p.description?.trim() || null : undefined,
         sortOrder: p.sortOrder ?? undefined,
         status: p.status ?? undefined,

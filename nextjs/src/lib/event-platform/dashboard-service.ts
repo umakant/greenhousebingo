@@ -465,6 +465,7 @@ export async function getEventPlatformDashboardSummary(organizationId: bigint): 
 export async function writeEventAuditLog(input: {
   organizationId: bigint;
   actorUserId?: bigint | null;
+  eventId?: bigint | null;
   action: string;
   entityType: string;
   entityId?: string | null;
@@ -473,11 +474,16 @@ export async function writeEventAuditLog(input: {
   await prisma.eventAuditLog.create({
     data: {
       organizationId: input.organizationId,
+      eventId: input.eventId ?? null,
       actorUserId: input.actorUserId ?? null,
       action: input.action,
       entityType: input.entityType,
       entityId: input.entityId ?? null,
-      metadataJson: input.metadata ? (input.metadata as Prisma.InputJsonValue) : undefined,
+      metadataJson: input.metadata
+        ? ({ ...input.metadata, ...(input.eventId ? { eventId: input.eventId.toString() } : {}) } as Prisma.InputJsonValue)
+        : input.eventId
+          ? ({ eventId: input.eventId.toString() } as Prisma.InputJsonValue)
+          : undefined,
     },
   }).catch(() => null);
 }

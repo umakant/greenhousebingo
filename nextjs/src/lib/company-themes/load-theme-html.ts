@@ -3,14 +3,35 @@ import { join } from "node:path";
 
 import type { CompanyNextjsTheme } from "@/lib/company-themes/registry";
 
+export const PLANT_BINGO_BASH_DYNAMIC_EVENT_DETAIL_HTML = "events/_detail/index.html";
+
+function normalizePathname(pathname: string): string {
+  return pathname.endsWith("/") && pathname !== "/" ? pathname.slice(0, -1) : pathname;
+}
+
 function resolveHtmlFile(theme: CompanyNextjsTheme, pathname: string): string | null {
-  const normalized =
-    pathname.endsWith("/") && pathname !== "/" ? pathname.slice(0, -1) : pathname;
+  const normalized = normalizePathname(pathname);
 
   if (theme.htmlRoutes[pathname]) return theme.htmlRoutes[pathname];
   if (theme.htmlRoutes[normalized]) return theme.htmlRoutes[normalized];
   if (theme.htmlRoutes[`${normalized}/`]) return theme.htmlRoutes[`${normalized}/`];
+
+  if (theme.slug === "plant-bingo-bash" && normalized.startsWith("/events/")) {
+    const eventSlug = normalized.slice("/events/".length);
+    if (eventSlug) return PLANT_BINGO_BASH_DYNAMIC_EVENT_DETAIL_HTML;
+  }
+
   return null;
+}
+
+export function hasStaticCompanyThemeHtmlRoute(theme: CompanyNextjsTheme, pathname: string): boolean {
+  const normalized = normalizePathname(pathname);
+  return !!(theme.htmlRoutes[pathname] || theme.htmlRoutes[normalized] || theme.htmlRoutes[`${normalized}/`]);
+}
+
+export function isDynamicCompanySiteEventDetailPath(theme: CompanyNextjsTheme, pathname: string): boolean {
+  const normalized = normalizePathname(pathname);
+  return theme.slug === "plant-bingo-bash" && normalized.startsWith("/events/") && normalized !== "/events";
 }
 
 function escapeRegex(s: string): string {

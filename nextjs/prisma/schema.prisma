@@ -152,8 +152,26 @@ model User {
   epEventVendors              EventVendor[]            @relation("EpEventVendorOrganization")
   epEventHosts                EventHost[]              @relation("EpEventHostOrganization")
   epEventHostInvitations      EventHostInvitation[]    @relation("EpEventHostInvitationOrganization")
+  epEventHostPerformanceNotes EventHostPerformanceNote[] @relation("EpEventHostPerformanceNoteOrganization")
+  epEventHostPerformanceNotesCreated EventHostPerformanceNote[] @relation("EpEventHostPerformanceNoteCreatedBy")
   epEventSponsors             EventSponsor[]           @relation("EpEventSponsorOrganization")
   epEventBingoGames           EventBingoGame[]         @relation("EpEventBingoGameOrganization")
+  epEventBingoRoundInstances  EventBingoRoundInstance[] @relation("EpEventBingoRoundOrganization")
+  epEventBingoWinners         EventBingoWinner[]       @relation("EpEventBingoWinnerOrganization")
+  epEventBingoWinnersVerified EventBingoWinner[]       @relation("EpEventBingoWinnerVerifiedBy")
+  epEventBingoWinnersCreated  EventBingoWinner[]       @relation("EpEventBingoWinnerCreatedBy")
+  epEventPlants               EventPlant[]             @relation("EpEventPlantOrganization")
+  epEventPlantsCreated        EventPlant[]             @relation("EpEventPlantCreatedBy")
+  epEventPlantRequests        EventPlantRequest[]      @relation("EpEventPlantRequestOrganization")
+  epEventPlantAssignments     EventPlantAssignment[]   @relation("EpEventPlantAssignmentOrganization")
+  epEventPlantAssignmentsBy   EventPlantAssignment[]   @relation("EpEventPlantAssignmentAssignedBy")
+  epEventExpenses             EventExpense[]           @relation("EpEventExpenseOrganization")
+  epEventExpensesCreated      EventExpense[]           @relation("EpEventExpenseCreatedBy")
+  epEventExpensesApproved     EventExpense[]           @relation("EpEventExpenseApprovedBy")
+  epEventRevenueEntries       EventRevenueEntry[]      @relation("EpEventRevenueOrganization")
+  epEventRevenueEntriesCreated EventRevenueEntry[]     @relation("EpEventRevenueCreatedBy")
+  epEventFinancialLocks       EventFinancialLock[]     @relation("EpEventFinancialLockOrganization")
+  epEventFinancialLocksBy     EventFinancialLock[]     @relation("EpEventFinancialLockBy")
   epEventBingoFaqs            EventBingoFaq[]          @relation("EpEventBingoFaqOrganization")
   epEventVenues               EventVenue[]             @relation("EpEventVenueOrganization")
   epEventCommissionLedger     EventCommissionLedger[]  @relation("EpCommissionLedgerOrganization")
@@ -163,6 +181,14 @@ model User {
   epEventMenus                EventMenu[]              @relation("EpMenuOrganization")
   epEventAnnouncementPopups   EventAnnouncementPopup[] @relation("EpPopupOrganization")
   epEventAuditLogs            EventAuditLog[]          @relation("EpAuditLogOrganization")
+  epEventOperationalTasks     EventOperationalTask[]   @relation("EpEventOperationalTaskOrganization")
+  epEventOperationalTasksAssigned EventOperationalTask[] @relation("EpEventOperationalTaskAssignee")
+  epEventOperationalTasksCreated EventOperationalTask[] @relation("EpEventOperationalTaskCreatedBy")
+  epEventOperationalTasksCompleted EventOperationalTask[] @relation("EpEventOperationalTaskCompletedBy")
+  epEventAlertDismissals      EventAlertDismissal[]    @relation("EpEventAlertDismissalOrganization")
+  epEventAlertDismissalsBy    EventAlertDismissal[]    @relation("EpEventAlertDismissalBy")
+  epEventLiveIncidents        EventLiveIncident[]      @relation("EpEventLiveIncidentOrganization")
+  epEventLiveIncidentsReported EventLiveIncident[]     @relation("EpEventLiveIncidentReporter")
   lmsLiveAttendanceRows       LmsLiveAttendance[]      @relation("LmsLiveAttendanceOrganization")
   lmsLiveAttendanceMarked     LmsLiveAttendance[]      @relation("LmsLiveAttendanceMarkedBy")
   googleCalendarConnection       UserGoogleCalendarConnection? @relation("UserGoogleCalendarConnection")
@@ -6531,6 +6557,19 @@ model LmsTrainingEvent {
   notifications  LmsEventNotification[]
   wishlistItems   LmsEventWishlistItem[]
   hostInvitations EventHostInvitation[]
+  hostPerformanceNotes EventHostPerformanceNote[]
+  bingoRoundInstances EventBingoRoundInstance[]
+  bingoWinners        EventBingoWinner[]
+  eventPlants         EventPlant[]
+  plantRequests       EventPlantRequest[]
+  plantAssignments    EventPlantAssignment[]
+  eventExpenses       EventExpense[]
+  revenueEntries      EventRevenueEntry[]
+  financialLock       EventFinancialLock?
+  operationalTasks    EventOperationalTask[]
+  alertDismissals     EventAlertDismissal[]
+  liveIncidents       EventLiveIncident[]
+  auditLogs           EventAuditLog[]
 
   @@unique([organizationId, slug])
   @@index([organizationId, status, startsAt])
@@ -6579,6 +6618,23 @@ model LmsEventRegistration {
   registeredAt   DateTime  @default(now()) @map("registered_at")
   checkedInAt    DateTime? @map("checked_in_at")
   qrToken        String    @map("qr_token") @db.VarChar(128)
+  registrationSource String? @map("registration_source") @db.VarChar(64)
+  sourceName         String? @map("source_name") @db.VarChar(255)
+  campaignId         String? @map("campaign_id") @db.VarChar(128)
+  affiliatePartnerId BigInt? @map("affiliate_partner_id")
+  affiliateLinkId    BigInt? @map("affiliate_link_id")
+  referralCode       String? @map("referral_code") @db.VarChar(64)
+  couponId           BigInt? @map("coupon_id")
+  couponCode         String? @map("coupon_code") @db.VarChar(64)
+  utmSource          String? @map("utm_source") @db.VarChar(128)
+  utmMedium          String? @map("utm_medium") @db.VarChar(128)
+  utmCampaign        String? @map("utm_campaign") @db.VarChar(128)
+  utmContent         String? @map("utm_content") @db.VarChar(128)
+  utmTerm            String? @map("utm_term") @db.VarChar(128)
+  landingPage        String? @map("landing_page") @db.VarChar(512)
+  firstTouchAt       DateTime? @map("first_touch_at")
+  lastTouchAt        DateTime? @map("last_touch_at")
+  attributionMetadata Json?  @map("attribution_metadata")
   createdById    BigInt?   @map("created_by_id")
   updatedById    BigInt?   @map("updated_by_id")
   createdAt      DateTime  @default(now()) @map("created_at")
@@ -6590,9 +6646,17 @@ model LmsEventRegistration {
   ticket       LmsEventTicket?   @relation(fields: [ticketId], references: [id], onDelete: SetNull)
   certificate  LmsEventCertificate?
   transactions LmsEventTransaction[]
+  bingoWinners EventBingoWinner[]
+  plantRequests EventPlantRequest[]
+  affiliatePartner AffiliatePartner? @relation("LmsEventRegistrationAffiliatePartner", fields: [affiliatePartnerId], references: [id], onDelete: SetNull)
+  affiliateLink    AffiliateLink?    @relation("LmsEventRegistrationAffiliateLink", fields: [affiliateLinkId], references: [id], onDelete: SetNull)
+  liveIncidents    EventLiveIncident[]
 
   @@unique([eventId, studentUserId])
   @@index([organizationId, studentUserId])
+  @@index([organizationId, eventId, registrationSource])
+  @@index([organizationId, eventId, utmCampaign])
+  @@index([affiliatePartnerId])
   @@map("lms_event_registrations")
 }
 
@@ -6745,6 +6809,7 @@ model EventVendor {
   commissionRules EventVendorCommissionRule[]
   ledgerEntries  EventCommissionLedger[]
   payouts        EventVendorPayout[]
+  eventPlants    EventPlant[]
 
   @@index([organizationId, status])
   @@index([organizationId, email])
@@ -6855,10 +6920,31 @@ model EventHost {
 
   organization User                    @relation("EpEventHostOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
   invitations  EventHostInvitation[]
+  performanceNotes EventHostPerformanceNote[]
 
   @@index([organizationId, status])
   @@index([organizationId, email])
   @@map("event_hosts")
+}
+
+/// Post-event host performance note (scoped to event + catalog host).
+model EventHostPerformanceNote {
+  id             BigInt   @id @default(autoincrement())
+  organizationId BigInt   @map("organization_id")
+  eventId        BigInt   @map("event_id")
+  hostId         BigInt   @map("host_id")
+  note           String   @db.Text
+  createdById    BigInt?  @map("created_by_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization User             @relation("EpEventHostPerformanceNoteOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  event        LmsTrainingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  host         EventHost        @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  createdBy    User?            @relation("EpEventHostPerformanceNoteCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, eventId, hostId])
+  @@index([organizationId, hostId])
+  @@map("event_host_performance_notes")
 }
 
 model EventHostInvitation {
@@ -6917,6 +7003,7 @@ model EventBingoGame {
   pattern        String    @db.VarChar(512)
   difficulty     String    @db.VarChar(32)
   prize          String    @db.VarChar(255)
+  imageUrl       String?   @map("image_url") @db.VarChar(2048)
   description    String?   @db.Text
   sortOrder      Int       @default(0) @map("sort_order")
   status         String    @default("active") @db.VarChar(32)
@@ -6927,10 +7014,262 @@ model EventBingoGame {
   updatedAt      DateTime? @updatedAt @map("updated_at")
 
   organization User @relation("EpEventBingoGameOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  roundInstances EventBingoRoundInstance[]
+  plantAssignments EventPlantAssignment[]
 
   @@index([organizationId, status])
   @@index([organizationId, sortOrder])
   @@map("event_bingo_games")
+}
+
+/// Live bingo round instance for a specific event (execution state).
+model EventBingoRoundInstance {
+  id               BigInt    @id @default(autoincrement())
+  organizationId   BigInt    @map("organization_id")
+  eventId          BigInt    @map("event_id")
+  roundNumber      Int       @map("round_number")
+  bingoGameId      BigInt?   @map("bingo_game_id")
+  name             String    @db.VarChar(255)
+  pattern          String    @db.VarChar(512)
+  difficulty       String    @db.VarChar(32)
+  assignedPrize    String    @map("assigned_prize") @db.VarChar(255)
+  prizeCost        Decimal?  @map("prize_cost") @db.Decimal(12, 2)
+  prizeRetailValue Decimal?  @map("prize_retail_value") @db.Decimal(12, 2)
+  scheduledAt      DateTime? @map("scheduled_at")
+  actualStartAt    DateTime? @map("actual_start_at")
+  actualEndAt      DateTime? @map("actual_end_at")
+  status           String    @default("scheduled") @db.VarChar(32)
+  createdById      BigInt?   @map("created_by_id")
+  updatedById      BigInt?   @map("updated_by_id")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime? @updatedAt @map("updated_at")
+
+  organization User             @relation("EpEventBingoRoundOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  event        LmsTrainingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  bingoGame    EventBingoGame?  @relation(fields: [bingoGameId], references: [id], onDelete: SetNull)
+  winners      EventBingoWinner[]
+  plantAssignments EventPlantAssignment[]
+
+  @@unique([eventId, roundNumber])
+  @@index([organizationId, eventId, status])
+  @@map("event_bingo_round_instances")
+}
+
+/// Recorded bingo winner for an event round.
+model EventBingoWinner {
+  id                 BigInt    @id @default(autoincrement())
+  organizationId     BigInt    @map("organization_id")
+  eventId            BigInt    @map("event_id")
+  roundInstanceId    BigInt    @map("round_instance_id")
+  bingoGameId        BigInt?   @map("bingo_game_id")
+  registrationId     BigInt    @map("registration_id")
+  winningCardNumber  String    @map("winning_card_number") @db.VarChar(64)
+  cardType           String    @default("included") @map("card_type") @db.VarChar(32)
+  prizeLabel         String    @map("prize_label") @db.VarChar(255)
+  prizeCost          Decimal?  @map("prize_cost") @db.Decimal(12, 2)
+  prizeRetailValue   Decimal?  @map("prize_retail_value") @db.Decimal(12, 2)
+  verified           Boolean   @default(false)
+  verifiedById       BigInt?   @map("verified_by_id")
+  verifiedAt         DateTime? @map("verified_at")
+  verificationNotes  String?   @map("verification_notes") @db.Text
+  winnerPhotoUrl     String?   @map("winner_photo_url") @db.VarChar(2048)
+  notes              String?   @db.Text
+  invalidated        Boolean   @default(false)
+  createdById        BigInt?   @map("created_by_id")
+  updatedById        BigInt?   @map("updated_by_id")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime? @updatedAt @map("updated_at")
+
+  organization   User                    @relation("EpEventBingoWinnerOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  event          LmsTrainingEvent        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  roundInstance  EventBingoRoundInstance @relation(fields: [roundInstanceId], references: [id], onDelete: Cascade)
+  registration   LmsEventRegistration    @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  verifiedBy     User?                   @relation("EpEventBingoWinnerVerifiedBy", fields: [verifiedById], references: [id], onDelete: SetNull)
+  createdBy      User?                   @relation("EpEventBingoWinnerCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, eventId])
+  @@index([roundInstanceId])
+  @@index([registrationId])
+  @@map("event_bingo_winners")
+}
+
+/// Event-scoped plant inventory (optional link to POS product catalog).
+model EventPlant {
+  id                BigInt    @id @default(autoincrement())
+  organizationId    BigInt    @map("organization_id")
+  eventId           BigInt    @map("event_id")
+  posProductId      BigInt?   @map("pos_product_id")
+  eventVendorId     BigInt?   @map("event_vendor_id")
+  name              String    @db.VarChar(255)
+  category          String?   @db.VarChar(128)
+  variety           String?   @db.VarChar(128)
+  description       String?   @db.Text
+  imageUrl          String?   @map("image_url") @db.VarChar(2048)
+  quantityPurchased Int       @default(0) @map("quantity_purchased")
+  quantityAssigned  Int       @default(0) @map("quantity_assigned")
+  quantityAwarded   Int       @default(0) @map("quantity_awarded")
+  quantityRemoved   Int       @default(0) @map("quantity_removed")
+  unitCost          Decimal   @default(0) @map("unit_cost") @db.Decimal(12, 2)
+  retailValue       Decimal?  @map("retail_value") @db.Decimal(12, 2)
+  status            String    @default("available") @db.VarChar(32)
+  notes             String?   @db.Text
+  createdById       BigInt?   @map("created_by_id")
+  updatedById       BigInt?   @map("updated_by_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime? @updatedAt @map("updated_at")
+
+  organization User             @relation("EpEventPlantOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  event        LmsTrainingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventVendor  EventVendor?     @relation(fields: [eventVendorId], references: [id], onDelete: SetNull)
+  createdBy    User?            @relation("EpEventPlantCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  assignments  EventPlantAssignment[]
+  requests     EventPlantRequest[]
+
+  @@index([organizationId, eventId, status])
+  @@map("event_plants")
+}
+
+/// Attendee plant preference for an event.
+model EventPlantRequest {
+  id                 BigInt    @id @default(autoincrement())
+  organizationId     BigInt    @map("organization_id")
+  eventId            BigInt    @map("event_id")
+  registrationId     BigInt    @map("registration_id")
+  eventPlantId       BigInt?   @map("event_plant_id")
+  requestedPlantName String?   @map("requested_plant_name") @db.VarChar(255)
+  priority           Int?      @default(1)
+  notes              String?   @db.Text
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime? @updatedAt @map("updated_at")
+
+  organization User                 @relation("EpEventPlantRequestOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  event        LmsTrainingEvent     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  registration LmsEventRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  eventPlant   EventPlant?          @relation(fields: [eventPlantId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, eventId])
+  @@index([registrationId])
+  @@index([eventPlantId])
+  @@map("event_plant_requests")
+}
+
+/// Plant quantity assigned to a bingo round/game.
+model EventPlantAssignment {
+  id              BigInt    @id @default(autoincrement())
+  organizationId  BigInt    @map("organization_id")
+  eventId         BigInt    @map("event_id")
+  eventPlantId    BigInt    @map("event_plant_id")
+  roundInstanceId BigInt?   @map("round_instance_id")
+  bingoGameId     BigInt?   @map("bingo_game_id")
+  quantity        Int       @default(1)
+  status          String    @default("assigned") @db.VarChar(32)
+  assignedById    BigInt?   @map("assigned_by_id")
+  assignedAt      DateTime  @default(now()) @map("assigned_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime? @updatedAt @map("updated_at")
+
+  organization  User                     @relation("EpEventPlantAssignmentOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  event         LmsTrainingEvent         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventPlant    EventPlant               @relation(fields: [eventPlantId], references: [id], onDelete: Cascade)
+  roundInstance EventBingoRoundInstance? @relation(fields: [roundInstanceId], references: [id], onDelete: SetNull)
+  bingoGame     EventBingoGame?          @relation(fields: [bingoGameId], references: [id], onDelete: SetNull)
+  assignedBy    User?                    @relation("EpEventPlantAssignmentAssignedBy", fields: [assignedById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, eventId])
+  @@index([eventPlantId])
+  @@index([roundInstanceId])
+  @@map("event_plant_assignments")
+}
+
+/// Manual or supplemental event revenue (tickets use LmsEventTransaction).
+model EventRevenueEntry {
+  id             BigInt    @id @default(autoincrement())
+  organizationId BigInt    @map("organization_id")
+  eventId        BigInt    @map("event_id")
+  category       String    @db.VarChar(64)
+  payeeName      String?   @map("payee_name") @db.VarChar(255)
+  description    String?   @db.VarChar(512)
+  amount         Decimal   @db.Decimal(12, 2)
+  currency       String    @default("USD") @db.VarChar(3)
+  paymentStatus  String    @default("paid") @map("payment_status") @db.VarChar(32)
+  receivedAt     DateTime? @map("received_at")
+  sourceType     String?   @map("source_type") @db.VarChar(64)
+  sourceId       String?   @map("source_id") @db.VarChar(128)
+  notes          String?   @db.Text
+  createdById    BigInt?   @map("created_by_id")
+  updatedById    BigInt?   @map("updated_by_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
+
+  organization User             @relation("EpEventRevenueOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  event        LmsTrainingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdBy    User?            @relation("EpEventRevenueCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, eventId])
+  @@index([organizationId, eventId, sourceType, sourceId])
+  @@map("event_revenue_entries")
+}
+
+/// Event-scoped expense record (optional mirror to accounting Expense).
+model EventExpense {
+  id                  BigInt    @id @default(autoincrement())
+  organizationId      BigInt    @map("organization_id")
+  eventId             BigInt    @map("event_id")
+  category            String    @db.VarChar(64)
+  payeeType           String?   @map("payee_type") @db.VarChar(32)
+  payeeId             BigInt?   @map("payee_id")
+  payeeName           String?   @map("payee_name") @db.VarChar(255)
+  description         String?   @db.VarChar(512)
+  quantity            Decimal   @default(1) @db.Decimal(12, 4)
+  unitCost            Decimal   @default(0) @map("unit_cost") @db.Decimal(12, 2)
+  subtotal            Decimal   @default(0) @db.Decimal(12, 2)
+  tax                 Decimal   @default(0) @db.Decimal(12, 2)
+  total               Decimal   @default(0) @db.Decimal(12, 2)
+  currency            String    @default("USD") @db.VarChar(3)
+  paymentStatus       String    @default("pending") @map("payment_status") @db.VarChar(32)
+  dueDate             DateTime? @map("due_date")
+  paidAt              DateTime? @map("paid_at")
+  receiptUrl          String?   @map("receipt_url") @db.VarChar(2048)
+  accountingExpenseId BigInt?   @map("accounting_expense_id")
+  sourceType          String?   @map("source_type") @db.VarChar(64)
+  sourceId            String?   @map("source_id") @db.VarChar(128)
+  notes               String?   @db.Text
+  createdById         BigInt?   @map("created_by_id")
+  approvedById        BigInt?   @map("approved_by_id")
+  updatedById         BigInt?   @map("updated_by_id")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime? @updatedAt @map("updated_at")
+
+  organization User             @relation("EpEventExpenseOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  event        LmsTrainingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdBy    User?            @relation("EpEventExpenseCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  approvedBy   User?            @relation("EpEventExpenseApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, eventId])
+  @@index([organizationId, eventId, category])
+  @@index([organizationId, eventId, sourceType, sourceId])
+  @@map("event_expenses")
+}
+
+/// Financial lock state for a completed event.
+model EventFinancialLock {
+  id             BigInt    @id @default(autoincrement())
+  organizationId BigInt    @map("organization_id")
+  eventId        BigInt    @unique @map("event_id")
+  locked         Boolean   @default(false)
+  lockedAt       DateTime? @map("locked_at")
+  lockedById     BigInt?   @map("locked_by_id")
+  unlockedAt     DateTime? @map("unlocked_at")
+  notes          String?   @db.Text
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
+
+  organization User             @relation("EpEventFinancialLockOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  event        LmsTrainingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  lockedBy     User?            @relation("EpEventFinancialLockBy", fields: [lockedById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, eventId])
+  @@map("event_financial_locks")
 }
 
 model EventBingoFaq {
@@ -7132,6 +7471,7 @@ model EventAnnouncementPopup {
 model EventAuditLog {
   id             BigInt   @id @default(autoincrement())
   organizationId BigInt   @map("organization_id")
+  eventId        BigInt?  @map("event_id")
   actorUserId    BigInt?  @map("actor_user_id")
   action         String   @db.VarChar(128)
   entityType     String   @map("entity_type") @db.VarChar(64)
@@ -7139,11 +7479,86 @@ model EventAuditLog {
   metadataJson   Json?    @map("metadata_json")
   createdAt      DateTime @default(now()) @map("created_at")
 
-  organization User @relation("EpAuditLogOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  organization User              @relation("EpAuditLogOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  event        LmsTrainingEvent? @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@index([organizationId, createdAt])
   @@index([organizationId, entityType])
+  @@index([organizationId, eventId, createdAt])
   @@map("event_audit_logs")
+}
+
+/// Operational checklist task for an event.
+model EventOperationalTask {
+  id             BigInt    @id @default(autoincrement())
+  organizationId BigInt    @map("organization_id")
+  eventId        BigInt    @map("event_id")
+  templateKey    String?   @map("template_key") @db.VarChar(64)
+  title          String    @db.VarChar(255)
+  category       String    @db.VarChar(64)
+  status         String    @default("pending") @db.VarChar(32)
+  assignedToId   BigInt?   @map("assigned_to_id")
+  dueAt          DateTime? @map("due_at")
+  completedAt    DateTime? @map("completed_at")
+  completedById  BigInt?   @map("completed_by_id")
+  notes          String?   @db.Text
+  isCustom       Boolean   @default(false) @map("is_custom")
+  createdById    BigInt?   @map("created_by_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
+
+  organization User             @relation("EpEventOperationalTaskOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  event        LmsTrainingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  assignedTo   User?            @relation("EpEventOperationalTaskAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  completedBy  User?            @relation("EpEventOperationalTaskCompletedBy", fields: [completedById], references: [id], onDelete: SetNull)
+  createdBy    User?            @relation("EpEventOperationalTaskCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([eventId, templateKey])
+  @@index([organizationId, eventId, status])
+  @@index([organizationId, eventId, category])
+  @@map("event_operational_tasks")
+}
+
+/// Non-critical alert dismissals (critical alerts ignore dismissals while active).
+model EventAlertDismissal {
+  id             BigInt   @id @default(autoincrement())
+  organizationId BigInt   @map("organization_id")
+  eventId        BigInt   @map("event_id")
+  alertKey       String   @map("alert_key") @db.VarChar(128)
+  dismissedById  BigInt?  @map("dismissed_by_id")
+  dismissedAt    DateTime @default(now()) @map("dismissed_at")
+
+  organization User             @relation("EpEventAlertDismissalOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  event        LmsTrainingEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  dismissedBy  User?            @relation("EpEventAlertDismissalBy", fields: [dismissedById], references: [id], onDelete: SetNull)
+
+  @@unique([eventId, alertKey])
+  @@index([organizationId, eventId])
+  @@map("event_alert_dismissals")
+}
+
+/// Live event incident / staff note captured during event day.
+model EventLiveIncident {
+  id             BigInt    @id @default(autoincrement())
+  organizationId BigInt    @map("organization_id")
+  eventId        BigInt    @map("event_id")
+  category       String    @db.VarChar(64)
+  description    String    @db.Text
+  severity       String    @default("info") @db.VarChar(32)
+  registrationId BigInt?   @map("registration_id")
+  followUpStatus String    @default("open") @map("follow_up_status") @db.VarChar(32)
+  reportedById   BigInt?   @map("reported_by_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
+
+  organization User                 @relation("EpEventLiveIncidentOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+  event        LmsTrainingEvent     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  registration LmsEventRegistration? @relation(fields: [registrationId], references: [id], onDelete: SetNull)
+  reportedBy   User?                @relation("EpEventLiveIncidentReporter", fields: [reportedById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, eventId, createdAt])
+  @@index([organizationId, eventId, followUpStatus])
+  @@map("event_live_incidents")
 }
 
 /// Idempotent Expense Management notification dispatch log (email dedupe).
@@ -7203,6 +7618,7 @@ model AffiliatePartner {
   commissions  AffiliateCommission[]
   payouts      AffiliatePayout[]
   links        AffiliateLink[]
+  registrations LmsEventRegistration[] @relation("LmsEventRegistrationAffiliatePartner")
 
   @@unique([organizationId, referralCode])
   @@index([organizationId, status])
@@ -7246,6 +7662,7 @@ model AffiliateLink {
   organization User             @relation("AffiliateLinkOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
   partner      AffiliatePartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
   program      AffiliateProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  registrations LmsEventRegistration[] @relation("LmsEventRegistrationAffiliateLink")
 
   @@unique([organizationId, slug])
   @@index([organizationId, status])
@@ -7261,6 +7678,8 @@ model AffiliateCommission {
   programId      BigInt    @map("program_id")
   orderRef       String    @map("order_ref") @db.VarChar(128)
   customerEmail  String?   @map("customer_email") @db.VarChar(255)
+  eventId        BigInt?   @map("event_id")
+  registrationId BigInt?   @map("registration_id")
   amount         Decimal   @db.Decimal(14, 2)
   currency       String    @default("USD") @db.VarChar(8)
   status         String    @default("pending") @db.VarChar(32)
@@ -7275,6 +7694,7 @@ model AffiliateCommission {
   @@index([organizationId, status])
   @@index([partnerId])
   @@index([programId])
+  @@index([organizationId, eventId])
   @@map("affiliate_commissions")
 }
 

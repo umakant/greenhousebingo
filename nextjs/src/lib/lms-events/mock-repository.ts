@@ -1,4 +1,5 @@
 import type { LmsEventCreateWizardInput, LmsEventListFiltersInput } from "@/lib/lms-events/schemas";
+import { shouldAutoArchiveEvent } from "@/lib/lms-events/event-lifecycle";
 import type {
   LmsEventAttendee,
   LmsEvent,
@@ -66,6 +67,8 @@ function matchesFilters(event: LmsEvent, filters: LmsEventListFiltersInput): boo
   if (filters.status) {
     const statuses = Array.isArray(filters.status) ? filters.status : [filters.status];
     if (!statuses.includes(event.status)) return false;
+  } else if (!filters.includeArchived && event.status === "archived") {
+    return false;
   }
   return true;
 }
@@ -104,13 +107,22 @@ export class LmsEventMockRepository {
     return scopeOrg(MOCK_LMS_EVENT_CATEGORIES, this.scope.organizationId);
   }
 
+  private autoArchivePastEvents(): void {
+    const nowIso = new Date().toISOString();
+    eventStore = eventStore.map((event) =>
+      shouldAutoArchiveEvent(event) ? { ...event, status: "archived", updatedAt: nowIso } : event,
+    );
+  }
+
   async listEvents(filters: LmsEventListFiltersInput = {}): Promise<LmsEvent[]> {
     await delay();
+    this.autoArchivePastEvents();
     return this.events().filter((e) => learnerVisible(e) && matchesFilters(e, filters));
   }
 
   async listAdminEvents(filters: LmsEventListFiltersInput = {}): Promise<LmsEvent[]> {
     await delay();
+    this.autoArchivePastEvents();
     return this.events().filter((e) => matchesFilters(e, filters));
   }
 

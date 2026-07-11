@@ -20,7 +20,8 @@ const lmsEventBingoRoundSchema = z.object({
   name: z.string().trim().min(1),
   pattern: z.string().trim().min(1),
   difficulty: z.enum(LMS_EVENT_BINGO_DIFFICULTIES),
-  prize: z.string().trim().min(1),
+  prize: z.string().trim().max(255).optional().default(""),
+  imageUrl: z.string().trim().max(2048).optional().or(z.literal("")),
 });
 
 const lmsEventFaqSchema = z.object({
@@ -40,6 +41,7 @@ export const lmsEventListFiltersSchema = z.object({
   certificationOnly: z.coerce.boolean().optional(),
   deliveryMode: z.string().trim().min(1).optional(),
   status: z.union([z.enum(LMS_EVENT_STATUSES), z.array(z.enum(LMS_EVENT_STATUSES))]).optional(),
+  includeArchived: z.coerce.boolean().optional(),
 });
 
 export type LmsEventListFiltersInput = z.infer<typeof lmsEventListFiltersSchema>;
@@ -110,6 +112,7 @@ export const lmsEventExperienceSchema = z.object({
   venueFood: z.boolean().optional(),
   cardsIncluded: z.coerce.number().int().positive().optional().nullable(),
   extraCardPrice: z.coerce.number().min(0).optional().nullable(),
+  bonusCardsAllowed: z.boolean().optional().default(true),
   foodAndDrinks: z.string().trim().optional(),
   attire: z.string().trim().max(128).optional(),
 });
@@ -148,10 +151,33 @@ export const lmsEventPageContentSchema = z.object({
   hostName: z.string().trim().optional(),
   hostBio: z.string().trim().optional(),
   hostImageUrl: z.string().trim().max(2048).optional().or(z.literal("")),
+  hostIds: z.array(z.string().trim().min(1)).optional(),
+  hosts: z
+    .array(
+      z.object({
+        catalogHostId: z.string().trim().optional(),
+        name: z.string().trim(),
+        bio: z.string().trim().optional(),
+        imageUrl: z.string().trim().optional(),
+      }),
+    )
+    .optional(),
   sponsorName: z.string().trim().optional(),
   sponsorAddress: z.string().trim().optional(),
   sponsorPhone: z.string().trim().max(32).optional(),
   sponsorPerk: z.string().trim().optional(),
+  sponsorIds: z.array(z.string().trim().min(1)).optional(),
+  sponsors: z
+    .array(
+      z.object({
+        catalogSponsorId: z.string().trim().optional(),
+        name: z.string().trim(),
+        address: z.string().trim().optional(),
+        phone: z.string().trim().optional(),
+        perk: z.string().trim().optional(),
+      }),
+    )
+    .optional(),
   whatsIncludedText: z.string().trim().optional(),
   checkInStepsText: z.string().trim().optional(),
   bingoRounds: z.array(lmsEventBingoRoundSchema).optional(),

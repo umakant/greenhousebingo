@@ -3,8 +3,8 @@ import dynamic from "next/dynamic";
 import { EventPlatformPage } from "@/components/event-platform/event-platform-page";
 import { EVENT_PLATFORM_PATHS } from "@/lib/event-platform/paths";
 
-const LmsEventAdminDetailClient = dynamic(() =>
-  import("@/components/lms/lms-event-admin-detail-client").then((m) => m.LmsEventAdminDetailClient),
+const EventCommandCenter = dynamic(() =>
+  import("@/components/event-platform/event-command-center").then((m) => m.EventCommandCenter),
 );
 
 type Props = { params: Promise<{ id: string }> };
@@ -16,13 +16,13 @@ export default async function EventPlatformEventDetailPage({ params }: Props) {
     <EventPlatformPage
       permissions={["events.view", "manage-lms-events"]}
       path={`/admin/event-platform/events/${id}`}
-      title="Event overview"
+      title="Event command center"
       breadcrumbs={[
         { label: "Events", url: EVENT_PLATFORM_PATHS.events },
-        { label: "Overview" },
+        { label: "Command center" },
       ]}
     >
-      <LmsEventAdminDetailClient eventId={id} />
+      <EventCommandCenter eventId={id} />
     </EventPlatformPage>
   );
 }

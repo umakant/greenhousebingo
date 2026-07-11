@@ -60,6 +60,7 @@ import type { EventVendorListRow, EventVendorsSummary } from "@/lib/event-platfo
 import { EVENT_VENDOR_STATUSES } from "@/lib/event-platform/vendors/vendor-types";
 import { joinVendorContactName } from "@/lib/event-platform/vendors/vendor-contact-name";
 import { formatCurrency } from "@/lib/format-currency";
+import { formatPhone, formatPhoneDisplay, normalizeMobileForStorage } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 10;
@@ -298,7 +299,7 @@ export function EventPlatformVendorsAdmin() {
           companyName: form.companyName.trim() || null,
           contactName: joinVendorContactName(form.contactFirstName, form.contactLastName),
           email: form.email.trim() || null,
-          phone: form.phone.trim() || null,
+          phone: normalizeMobileForStorage(form.phone),
           website: form.website.trim() || null,
           status: form.status,
           defaultCommissionRate: form.defaultCommissionRate.trim() || null,
@@ -544,7 +545,9 @@ export function EventPlatformVendorsAdmin() {
                     <TableCell>
                       <p className="text-sm">{v.contactName ?? "—"}</p>
                       {v.email ? <p className="text-xs text-muted-foreground">{v.email}</p> : null}
-                      {v.phone ? <p className="text-xs text-muted-foreground">{v.phone}</p> : null}
+                      {v.phone ? (
+                        <p className="text-xs text-muted-foreground">{formatPhoneDisplay(v.phone)}</p>
+                      ) : null}
                     </TableCell>
                     <TableCell>
                       <span
@@ -712,7 +715,8 @@ export function EventPlatformVendorsAdmin() {
               <Input
                 id="phone"
                 value={form.phone}
-                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, phone: formatPhone(e.target.value) }))}
+                placeholder="(000) 000-0000"
               />
             </div>
             <div className="space-y-1.5">

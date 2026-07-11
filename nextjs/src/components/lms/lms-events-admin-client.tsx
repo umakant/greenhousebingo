@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { LmsEventListFiltersInput } from "@/lib/lms-events/schemas";
+import { isActiveAdminListEvent, isEventPast } from "@/lib/lms-events/event-lifecycle";
 import {
   lmsEventAdminAttendeesPath,
   lmsEventAdminCheckInPath,
@@ -38,7 +39,7 @@ import { cn } from "@/lib/utils";
 const DEFAULT_FILTERS: LmsEventListFiltersInput = {};
 const PER_PAGE_OPTIONS = [6, 12, 24] as const;
 
-type TimeTab = "all" | "upcoming" | "today" | "week" | "month";
+type TimeTab = "all" | "upcoming" | "today" | "week" | "month" | "archived";
 type ViewMode = "grid" | "list";
 type SortKey = "upcoming" | "title" | "price";
 
@@ -57,8 +58,9 @@ function endOfDay(d: Date): Date {
 function matchesTimeTab(event: LmsEvent, tab: TimeTab): boolean {
   const now = new Date();
   const start = new Date(event.startsAt);
-  if (tab === "all") return true;
-  if (tab === "upcoming") return start.getTime() >= now.getTime();
+  if (tab === "archived") return event.status === "archived";
+  if (tab === "all") return isActiveAdminListEvent(event);
+  if (tab === "upcoming") return start.getTime() >= now.getTime() && event.status !== "archived";
   if (tab === "today") {
     return start >= startOfDay(now) && start <= endOfDay(now);
   }
@@ -137,7 +139,7 @@ export function LmsEventsAdminClient() {
     [],
   );
 
-  const load = React.useCallback(async (nextFilters: LmsEventListFiltersInput) => {
+  const load = React.useCallback(async (nextFilters: LmsEventListFiltersInput, tab: TimeTab) => {
     setLoading(true);
     setErr(null);
     const params = new URLSearchParams();
@@ -151,6 +153,7 @@ export function LmsEventsAdminClient() {
     if (nextFilters.freeOnly) params.set("freeOnly", "true");
     if (nextFilters.paidOnly) params.set("paidOnly", "true");
     if (nextFilters.certificationOnly) params.set("certificationOnly", "true");
+    if (tab === "archived") params.set("status", "archived");
 
     const res = await fetch(`/api/lms/admin/events?${params.toString()}`, {
       credentials: "include",
@@ -174,9 +177,9 @@ export function LmsEventsAdminClient() {
   }, []);
 
   React.useEffect(() => {
-    const timer = window.setTimeout(() => void load(filters), filters.search ? 300 : 0);
+    const timer = window.setTimeout(() => void load(filters, timeTab), filters.search ? 300 : 0);
     return () => window.clearTimeout(timer);
-  }, [filters, load]);
+  }, [filters, timeTab, load]);
 
   React.useEffect(() => {
     setPage(1);
@@ -193,7 +196,7 @@ export function LmsEventsAdminClient() {
 
   const upcomingSidebar = React.useMemo(() => {
     return sortEvents(
-      events.filter((e) => new Date(e.startsAt).getTime() >= Date.now()),
+      events.filter((e) => !isEventPast(e) && e.status !== "archived"),
       "upcoming",
     ).slice(0, 4);
   }, [events]);
@@ -240,6 +243,7 @@ export function LmsEventsAdminClient() {
             <TabsTrigger value="today">Today</TabsTrigger>
             <TabsTrigger value="week">This Week</TabsTrigger>
             <TabsTrigger value="month">This Month</TabsTrigger>
+            <TabsTrigger value="archived">Archived</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -291,10 +295,14 @@ export function LmsEventsAdminClient() {
             </div>
           ) : paged.length === 0 ? (
             <EventEmptyState
-              title="No events yet"
-              description="Create your first bingo event or adjust filters to see seeded demo data."
-              actionLabel="Create Event"
-              onAction={openCreateSheet}
+              title={timeTab === "archived" ? "No archived events" : "No events yet"}
+              description={
+                timeTab === "archived"
+                  ? "Past events are archived automatically after their end time."
+                  : "Create your first bingo event or adjust filters to see seeded demo data."
+              }
+              actionLabel={timeTab === "archived" ? undefined : "Create Event"}
+              onAction={timeTab === "archived" ? undefined : openCreateSheet}
             />
           ) : view === "grid" ? (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
@@ -433,7 +441,7 @@ export function LmsEventsAdminClient() {
         eventId={sheetEventId}
         eventTitle={sheetEventTitle}
         categories={categories}
-        onSaved={() => void load(filters)}
+        onSaved={() => void load(filters, timeTab)}
       />
     </div>
   );

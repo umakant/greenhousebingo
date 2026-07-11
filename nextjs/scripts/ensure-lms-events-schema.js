@@ -173,6 +173,32 @@ async function main() {
     `);
     await pg.query(`CREATE INDEX IF NOT EXISTS lms_event_registrations_org_student_idx ON lms_event_registrations(organization_id, student_user_id);`);
 
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS registration_source VARCHAR(64) NULL;`);
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS source_name VARCHAR(255) NULL;`);
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS campaign_id VARCHAR(128) NULL;`);
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS affiliate_partner_id BIGINT NULL;`);
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS affiliate_link_id BIGINT NULL;`);
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS referral_code VARCHAR(64) NULL;`);
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS coupon_id BIGINT NULL;`);
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS coupon_code VARCHAR(64) NULL;`);
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS utm_source VARCHAR(128) NULL;`);
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS utm_medium VARCHAR(128) NULL;`);
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS utm_campaign VARCHAR(128) NULL;`);
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS utm_content VARCHAR(128) NULL;`);
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS utm_term VARCHAR(128) NULL;`);
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS landing_page VARCHAR(512) NULL;`);
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS first_touch_at TIMESTAMP(3) NULL;`);
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS last_touch_at TIMESTAMP(3) NULL;`);
+    await pg.query(`ALTER TABLE lms_event_registrations ADD COLUMN IF NOT EXISTS attribution_metadata JSONB NULL;`);
+    await pg.query(`
+      CREATE INDEX IF NOT EXISTS lms_event_registrations_org_event_registration_source_idx
+        ON lms_event_registrations(organization_id, event_id, registration_source);
+    `);
+    await pg.query(`
+      CREATE INDEX IF NOT EXISTS lms_event_registrations_org_event_utm_campaign_idx
+        ON lms_event_registrations(organization_id, event_id, utm_campaign);
+    `);
+
     await pg.query(`
       CREATE TABLE IF NOT EXISTS lms_event_certificates (
         id BIGSERIAL PRIMARY KEY,

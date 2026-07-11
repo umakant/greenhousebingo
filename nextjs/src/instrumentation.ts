@@ -35,13 +35,10 @@ export async function register() {
       await ensureRoutingSetup(prisma);
       const { ensureEventPlatformSetup } = await import("@/lib/event-platform/event-platform-permissions");
       await ensureEventPlatformSetup();
-      await ensureEventPlatformPlanMigration(prisma);
       const { ensureVenueManagementSetup } = await import("@/lib/venue-management/venue-management-permissions");
       await ensureVenueManagementSetup();
-      await ensureVenueManagementPlanMigration(prisma);
       const { ensureMarketplaceSetup } = await import("@/lib/marketplace-permissions");
       await ensureMarketplaceSetup();
-      await ensurePlanModulesIncludeAddons(prisma);
       await ensureUserManagementPermissions(prisma);
       const { ensureAllSystemPortalRoles } = await import("@/lib/system-portal-roles");
       await ensureAllSystemPortalRoles();
@@ -53,87 +50,6 @@ export async function register() {
       console.error("[instrumentation] failed to seed setup:", err);
     }
   });
-}
-
-/**
- * Ensures all plans include FormBuilder and ResumeBuilder in their modules array.
- * Plans with an empty modules array are left as-is (they already inherit all addons).
- * This runs on every server startup so it fixes both dev and production databases.
- */
-async function ensurePlanModulesIncludeAddons(prisma: any) {
-  const REQUIRED_MODULES = [
-    "FormBuilder",
-    "ResumeBuilder",
-    "SupportTicket",
-    "Assets",
-    "WhatsAppChat",
-    "Storefront",
-    "ExpenseManagement",
-    "Lms",
-    "AffiliateBusiness",
-    "Compliance",
-    "Routing",
-    "VenueManagement",
-    "Marketplace",
-  ];
-  try {
-    const plans = await prisma.plan.findMany({ select: { id: true, name: true, modules: true } });
-    for (const plan of plans) {
-      const existing: string[] = Array.isArray(plan.modules) ? plan.modules : [];
-      // Skip empty-module plans — they already show all addons
-      if (existing.length === 0) continue;
-      const existingLower = existing.map((m: string) => m.toLowerCase());
-      const toAdd = REQUIRED_MODULES.filter((m) => !existingLower.includes(m.toLowerCase()));
-      if (toAdd.length === 0) continue;
-      const updated = [...existing, ...toAdd];
-      await prisma.plan.update({ where: { id: plan.id }, data: { modules: updated } });
-      console.log(`[instrumentation] plan "${plan.name}": added ${toAdd.join(", ")} to modules`);
-    }
-  } catch (err) {
-    console.error("[instrumentation] ensurePlanModulesIncludeAddons failed:", err);
-  }
-}
-
-/**
- * Plans that include LMS historically bundled Event Platform access. Add EventPlatform to those
- * plans so existing tenants keep access until a superadmin removes it from the plan.
- */
-async function ensureEventPlatformPlanMigration(prisma: any) {
-  try {
-    const plans = await prisma.plan.findMany({ select: { id: true, name: true, modules: true } });
-    for (const plan of plans) {
-      const existing: string[] = Array.isArray(plan.modules) ? plan.modules : [];
-      if (existing.length === 0) continue;
-      const existingLower = existing.map((m: string) => m.toLowerCase());
-      const hasLms = existingLower.some((m) => m === "lms");
-      const hasEventPlatform = existingLower.some((m) => m === "eventplatform");
-      if (!hasLms || hasEventPlatform) continue;
-      const updated = [...existing, "EventPlatform"];
-      await prisma.plan.update({ where: { id: plan.id }, data: { modules: updated } });
-      console.log(`[instrumentation] plan "${plan.name}": added EventPlatform (LMS bundle migration)`);
-    }
-  } catch (err) {
-    console.error("[instrumentation] ensureEventPlatformPlanMigration failed:", err);
-  }
-}
-
-async function ensureVenueManagementPlanMigration(prisma: any) {
-  try {
-    const plans = await prisma.plan.findMany({ select: { id: true, name: true, modules: true } });
-    for (const plan of plans) {
-      const existing: string[] = Array.isArray(plan.modules) ? plan.modules : [];
-      if (existing.length === 0) continue;
-      const existingLower = existing.map((m: string) => m.toLowerCase());
-      const hasEventPlatform = existingLower.some((m) => m === "eventplatform");
-      const hasVenueManagement = existingLower.some((m) => m === "venuemanagement");
-      if (!hasEventPlatform || hasVenueManagement) continue;
-      const updated = [...existing, "VenueManagement"];
-      await prisma.plan.update({ where: { id: plan.id }, data: { modules: updated } });
-      console.log(`[instrumentation] plan "${plan.name}": added VenueManagement (Event Platform bundle migration)`);
-    }
-  } catch (err) {
-    console.error("[instrumentation] ensureVenueManagementPlanMigration failed:", err);
-  }
 }
 
 const TASKLY_PERMISSIONS: { id: number; name: string; label: string }[] = [

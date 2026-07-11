@@ -41,7 +41,7 @@ import {
 } from "@/lib/event-platform/sponsors/sponsor-display-name";
 import type { EventSponsorDto } from "@/lib/event-platform/sponsors/sponsor-types";
 import { appConfirm } from "@/lib/app-confirm";
-import { formatPhoneExtended, formatPhoneExtendedDisplay } from "@/lib/phone";
+import { formatPhone, formatPhoneDisplay, normalizeMobileForStorage } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
 const emptySponsorForm = {
@@ -66,7 +66,7 @@ function sponsorFormFromDto(sponsor: EventSponsorDto) {
     lastName: sponsor.lastName ?? "",
     company: sponsor.company?.trim() || legacyNameOnly,
     address: sponsor.address ?? "",
-    phone: formatPhoneExtendedDisplay(sponsor.phone ?? ""),
+    phone: formatPhone(sponsor.phone ?? ""),
     perk: sponsor.perk ?? "",
     imageUrl: sponsor.imageUrl ?? "",
     website: sponsor.website ?? "",
@@ -152,7 +152,10 @@ export function EventPlatformSponsorsAdmin() {
         method,
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          phone: normalizeMobileForStorage(form.phone),
+        }),
       });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
       if (!res.ok || !data?.ok) {
@@ -289,7 +292,7 @@ export function EventPlatformSponsorsAdmin() {
                   </TableCell>
                   <TableCell className="max-w-[180px] truncate">{sponsor.company?.trim() || "—"}</TableCell>
                   <TableCell className="max-w-[240px] truncate">{sponsor.address || "—"}</TableCell>
-                  <TableCell>{formatPhoneExtendedDisplay(sponsor.phone, "—")}</TableCell>
+                  <TableCell>{formatPhoneDisplay(sponsor.phone, "—")}</TableCell>
                   <TableCell>
                     <span
                       className={cn(
@@ -369,8 +372,8 @@ export function EventPlatformSponsorsAdmin() {
               <Input
                 id="sp-phone"
                 value={form.phone}
-                onChange={(e) => setForm((f) => ({ ...f, phone: formatPhoneExtended(e.target.value) }))}
-                placeholder="(000) 0000-000"
+                onChange={(e) => setForm((f) => ({ ...f, phone: formatPhone(e.target.value) }))}
+                placeholder="(000) 000-0000"
               />
             </div>
             <div className="space-y-2">

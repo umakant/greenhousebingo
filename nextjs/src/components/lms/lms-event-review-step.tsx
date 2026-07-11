@@ -168,7 +168,9 @@ export function LmsEventReviewStep({
             </div>
           ) : null}
           <div className="min-w-0 flex-1 space-y-1">
-            <p className="text-lg font-semibold leading-tight">{values.title || "Untitled event"}</p>
+            <p className="text-lg font-semibold leading-tight">
+              {values.venueName || values.title || "Untitled event"}
+            </p>
             <p className="text-sm text-muted-foreground">{categoryName}</p>
             {values.shortDescription?.trim() ? (
               <p className="line-clamp-2 text-sm text-muted-foreground">{values.shortDescription}</p>
@@ -215,18 +217,38 @@ export function LmsEventReviewStep({
           }
           className="sm:col-span-2"
         />
-        {values.quantity != null ? (
-          <ReviewField label="Number of seats" value={values.quantity.toLocaleString()} />
+        {(values.capacity ?? values.quantity) != null ? (
+          <ReviewField
+            label="Number of seats"
+            value={(values.capacity ?? values.quantity)!.toLocaleString()}
+          />
         ) : null}
-        {values.extraCardPrice != null ? (
+        {values.extraCardPrice != null && values.bonusCardsAllowed !== false ? (
           <ReviewField label="Bonus card price (USD)" value={`$${values.extraCardPrice.toFixed(2)}`} />
+        ) : null}
+        {values.bonusCardsAllowed === false ? (
+          <ReviewField label="Bonus cards" value="Not allowed" />
         ) : null}
       </ReviewSection>
 
-      {values.hostName || values.sponsorName ? (
+      {(values.hosts?.length || values.hostName || values.sponsors?.length || values.sponsorName) ? (
         <ReviewSection title="Host & sponsor" icon={Users}>
-          {values.hostName ? <ReviewField label="Host" value={values.hostName} /> : null}
-          {values.sponsorName ? <ReviewField label="Sponsor" value={values.sponsorName} /> : null}
+          {values.hosts?.length ? (
+            <ReviewField
+              label={values.hosts.length > 1 ? "Hosts" : "Host"}
+              value={values.hosts.map((host) => host.name).join(", ")}
+            />
+          ) : values.hostName ? (
+            <ReviewField label="Host" value={values.hostName} />
+          ) : null}
+          {values.sponsors?.length ? (
+            <ReviewField
+              label={values.sponsors.length > 1 ? "Sponsors" : "Sponsor"}
+              value={values.sponsors.map((sponsor) => sponsor.name).join(", ")}
+            />
+          ) : values.sponsorName ? (
+            <ReviewField label="Sponsor" value={values.sponsorName} />
+          ) : null}
         </ReviewSection>
       ) : null}
 

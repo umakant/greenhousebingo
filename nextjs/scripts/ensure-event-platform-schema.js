@@ -448,6 +448,10 @@ async function main() {
     `);
     await pg.query(`CREATE INDEX IF NOT EXISTS event_bingo_games_org_status_idx ON event_bingo_games(organization_id, status);`);
     await pg.query(`CREATE INDEX IF NOT EXISTS event_bingo_games_org_sort_idx ON event_bingo_games(organization_id, sort_order);`);
+    await pg.query(`
+      ALTER TABLE event_bingo_games
+      ADD COLUMN IF NOT EXISTS image_url VARCHAR(2048) NULL;
+    `);
 
     await pg.query(`
       CREATE TABLE IF NOT EXISTS event_bingo_faqs (

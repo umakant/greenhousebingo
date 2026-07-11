@@ -24,6 +24,7 @@ import {
   joinVendorContactName,
   splitVendorContactName,
 } from "@/lib/event-platform/vendors/vendor-contact-name";
+import { formatPhone, normalizeMobileForStorage } from "@/lib/phone";
 
 export function EventPlatformVendorDetailClient(props: { vendorId: string }) {
   const { vendorId } = props;
@@ -38,7 +39,7 @@ export function EventPlatformVendorDetailClient(props: { vendorId: string }) {
       const res = await fetch(`/api/event-platform/vendors/${vendorId}`, { credentials: "include" });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; item?: EventVendorDto } | null;
       if (res.ok && data?.ok && data.item) {
-        setItem(data.item);
+        setItem({ ...data.item, phone: formatPhone(data.item.phone ?? "") });
         const { firstName, lastName } = splitVendorContactName(data.item.contactName);
         setContactFirstName(firstName);
         setContactLastName(lastName);
@@ -59,6 +60,7 @@ export function EventPlatformVendorDetailClient(props: { vendorId: string }) {
         body: JSON.stringify({
           ...item,
           contactName: joinVendorContactName(contactFirstName, contactLastName),
+          phone: normalizeMobileForStorage(item.phone ?? ""),
         }),
       });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; item?: EventVendorDto; message?: string } | null;
@@ -118,7 +120,11 @@ export function EventPlatformVendorDetailClient(props: { vendorId: string }) {
             </div>
             <div className="space-y-1.5">
               <Label>Phone</Label>
-              <Input value={item.phone ?? ""} onChange={(e) => setItem({ ...item, phone: e.target.value })} />
+              <Input
+                value={item.phone ?? ""}
+                onChange={(e) => setItem({ ...item, phone: formatPhone(e.target.value) })}
+                placeholder="(000) 000-0000"
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Status</Label>

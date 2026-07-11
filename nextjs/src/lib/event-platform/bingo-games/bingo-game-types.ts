@@ -8,7 +8,7 @@ export type EventBingoGameDto = {
   name: string;
   pattern: string;
   difficulty: LmsEventBingoDifficulty;
-  prize: string;
+  imageUrl: string | null;
   description: string | null;
   sortOrder: number;
   status: EventBingoGameStatus;
@@ -26,7 +26,8 @@ export function bingoGamesToRounds(games: EventBingoGameDto[]): LmsEventBingoRou
     name: game.name,
     pattern: game.pattern,
     difficulty: game.difficulty,
-    prize: game.prize,
+    prize: "",
+    imageUrl: game.imageUrl?.trim() || undefined,
   }));
 }
 

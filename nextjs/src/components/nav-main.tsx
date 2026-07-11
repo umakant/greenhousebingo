@@ -88,6 +88,29 @@ const MODULE_SECTION_HOME_HREFS = new Set([
   "/admin/venue-management",
 ]);
 
+/** When multiple submenu links share a module home href, only this item stays active there. */
+const MODULE_HOME_PRIMARY_NAV_NAME: Record<string, string> = {
+  "/admin/venue-management": "venue-management-venues",
+};
+
+function isSubNavLinkActive(item: NavItem, pathname: string, siblings: NavItem[] = []): boolean {
+  if (!item.href || item.href === "#") return false;
+  const path = normalizeNavPath(pathname);
+  const target = normalizeNavPath(item.href.split("?")[0] ?? item.href);
+
+  if (path === target && MODULE_HOME_PRIMARY_NAV_NAME[target]) {
+    const preferredName = MODULE_HOME_PRIMARY_NAV_NAME[target];
+    const duplicates = siblings.filter(
+      (sibling) => sibling.href && normalizeNavPath(sibling.href.split("?")[0] ?? sibling.href) === target,
+    );
+    if (duplicates.length > 1) {
+      return item.name === preferredName;
+    }
+  }
+
+  return isLinkActive(item.href, pathname);
+}
+
 function isLinkActive(href: string | undefined, pathname: string): boolean {
   if (!href || href === "#") return false;
   const path = normalizeNavPath(pathname);
@@ -104,17 +127,22 @@ function isLinkActive(href: string | undefined, pathname: string): boolean {
 }
 
 /** Whether a nav item (or any descendant) matches the current route / module scope. */
-function isNavItemActive(item: NavItem, pathname: string): boolean {
-  if (item.href && isLinkActive(item.href, pathname)) return true;
+function isNavItemActive(item: NavItem, pathname: string, siblings: NavItem[] = []): boolean {
+  if (item.href && isSubNavLinkActive(item, pathname, siblings)) return true;
   const scope = resolveDashboardScopeFromPath(pathname);
   if (scope && item.dashboardScope && item.dashboardScope.toLowerCase() === scope) {
     if (item.name === "accounting") return isAccountingNavOpen(pathname);
+    if (item.name === "venue-management" && pathIsVenueManagementModuleHome(pathname)) return false;
     return true;
   }
   if (item.children?.length) {
-    return item.children.some((child) => isNavItemActive(child, pathname));
+    return item.children.some((child) => isNavItemActive(child, pathname, item.children));
   }
   return false;
+}
+
+function pathIsVenueManagementModuleHome(pathname: string): boolean {
+  return normalizeNavPath(pathname) === "/admin/venue-management";
 }
 
 function useAutoExpandCollapsible(shouldBeOpen: boolean, pathname: string) {
@@ -367,16 +395,18 @@ function SortableDashboardList({
 function NavSubMenuItem({
   subItem,
   pathname,
+  siblings,
   isDashboardGroup,
   dashboardPrefsTenantId,
 }: {
   subItem: NavItem;
   pathname: string;
+  siblings: NavItem[];
   isDashboardGroup: boolean;
   dashboardPrefsTenantId: string | null;
 }) {
   const { t } = useTranslation();
-  const subShouldBeActive = isNavItemActive(subItem, pathname);
+  const subShouldBeActive = isNavItemActive(subItem, pathname, siblings);
 
   if (subItem.children && subItem.children.length > 0) {
     return (
@@ -403,7 +433,7 @@ function NavSubMenuItem({
                       <SidebarMenuSubItem key={subSubItem.title}>
                         <SidebarMenuSubButton
                           asChild
-                          isActive={isNavItemActive(subSubItem, pathname)}
+                          isActive={isNavItemActive(subSubItem, pathname, subItem.children!)}
                           className="text-sm"
                         >
                           <Link href={subSubItem.href ?? "#"}>
@@ -570,6 +600,7 @@ export function NavMain({
                                   key={subItem.name ?? subItem.href ?? subItem.title}
                                   subItem={subItem}
                                   pathname={pathname}
+                                  siblings={item.children!}
                                   isDashboardGroup={isDashboardGroup}
                                   dashboardPrefsTenantId={dashboardPrefsTenantId}
                                 />

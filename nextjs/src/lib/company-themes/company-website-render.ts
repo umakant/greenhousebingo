@@ -9,7 +9,11 @@ import {
 } from "@/lib/company-themes/company-site-events-service";
 import { getCompanyWebsiteSettingsForOwnerId } from "@/lib/company-themes/company-website-settings";
 import { injectCompanySiteEvents } from "@/lib/company-themes/inject-company-site-events";
-import { loadCompanyThemeHtml } from "@/lib/company-themes/load-theme-html";
+import {
+  hasStaticCompanyThemeHtmlRoute,
+  isDynamicCompanySiteEventDetailPath,
+  loadCompanyThemeHtml,
+} from "@/lib/company-themes/load-theme-html";
 import { findCompanyPublicSlugByOwnerId } from "@/lib/company-themes/company-website-host-resolver";
 import { getCompanyNextjsTheme, type CompanyNextjsTheme } from "@/lib/company-themes/registry";
 import {
@@ -27,6 +31,10 @@ function noThemeHtml(): string {
 
 function unavailableHtml(): string {
   return `<!doctype html><html><body style="font-family:system-ui;padding:2rem"><h1>Company website unavailable</h1><p>This marketing site is only available for individual company accounts.</p></body></html>`;
+}
+
+function pageNotFoundHtml(sitePathPrefix: string): string {
+  return `<!doctype html><html><body style="font-family:system-ui;padding:2rem"><h1>Page not found</h1><p><a href="${sitePathPrefix || "/"}">Home</a></p></body></html>`;
 }
 
 export async function renderCompanyWebsitePage(
@@ -47,12 +55,23 @@ export async function renderCompanyWebsitePage(
     sitePathPrefix: sitePathPrefix || baseTheme.sitePathPrefix,
   };
 
+  let preloadedEventDetail: Awaited<ReturnType<typeof getCompanySiteEventByPublicSlug>> | undefined;
+  if (isDynamicCompanySiteEventDetailPath(theme, pathname) && !hasStaticCompanyThemeHtmlRoute(theme, pathname)) {
+    const eventSlug = pathname.replace(/^\/events\//, "").replace(/\/$/, "");
+    if (eventSlug) {
+      preloadedEventDetail = await getCompanySiteEventByPublicSlug(ownerId, eventSlug);
+      if (!preloadedEventDetail) {
+        return { ok: false, status: 404, html: pageNotFoundHtml(sitePathPrefix) };
+      }
+    }
+  }
+
   const html = loadCompanyThemeHtml(theme, pathname);
   if (!html) {
     return {
       ok: false,
       status: 404,
-      html: `<!doctype html><html><body style="font-family:system-ui;padding:2rem"><h1>Page not found</h1><p><a href="${sitePathPrefix || "/"}">Home</a></p></body></html>`,
+      html: pageNotFoundHtml(sitePathPrefix),
     };
   }
 
@@ -77,7 +96,8 @@ export async function renderCompanyWebsitePage(
     } else if (pathname.startsWith("/events/")) {
       const eventSlug = pathname.replace(/^\/events\//, "").replace(/\/$/, "");
       if (eventSlug) {
-        const detail = await getCompanySiteEventByPublicSlug(ownerId, eventSlug);
+        const detail =
+          preloadedEventDetail ?? (await getCompanySiteEventByPublicSlug(ownerId, eventSlug));
         if (detail) {
           bootstrap.detail = detail;
           bootstrap.eventSlug = eventSlug;

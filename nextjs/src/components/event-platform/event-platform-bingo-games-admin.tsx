@@ -5,6 +5,7 @@ import { Grid3x3, Loader2, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import NoRecordsFound from "@/components/no-records-found";
+import MediaPicker from "@/components/MediaPicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,11 +42,33 @@ const emptyForm = {
   name: "",
   pattern: "",
   difficulty: "Easy",
-  prize: "",
   description: "",
+  imageUrl: "",
   sortOrder: 0,
   status: "active",
 };
+
+function BingoGameThumbnail(props: { imageUrl: string | null; name: string; size?: "sm" | "md" }) {
+  const sizeClass = props.size === "sm" ? "h-10 w-10" : "h-16 w-16";
+  if (props.imageUrl?.trim()) {
+    return (
+      <div className={cn("shrink-0 overflow-hidden rounded-md border bg-muted", sizeClass)}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={props.imageUrl} alt={props.name} className="h-full w-full object-cover" />
+      </div>
+    );
+  }
+  return (
+    <div
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-md border border-dashed bg-muted/40 text-[10px] text-muted-foreground",
+        sizeClass,
+      )}
+    >
+      No image
+    </div>
+  );
+}
 
 export function EventPlatformBingoGamesAdmin() {
   const [games, setGames] = React.useState<EventBingoGameDto[] | null>(null);
@@ -79,10 +102,7 @@ export function EventPlatformBingoGamesAdmin() {
     const q = search.trim().toLowerCase();
     if (!q) return games;
     return games.filter(
-      (g) =>
-        g.name.toLowerCase().includes(q) ||
-        g.pattern.toLowerCase().includes(q) ||
-        g.prize.toLowerCase().includes(q),
+      (g) => g.name.toLowerCase().includes(q) || g.pattern.toLowerCase().includes(q),
     );
   }, [games, search]);
 
@@ -98,8 +118,8 @@ export function EventPlatformBingoGamesAdmin() {
       name: game.name,
       pattern: game.pattern,
       difficulty: game.difficulty,
-      prize: game.prize,
       description: game.description ?? "",
+      imageUrl: game.imageUrl ?? "",
       sortOrder: game.sortOrder,
       status: game.status,
     });
@@ -109,9 +129,8 @@ export function EventPlatformBingoGamesAdmin() {
   async function saveGame() {
     const name = form.name.trim();
     const pattern = form.pattern.trim();
-    const prize = form.prize.trim();
-    if (!name || !pattern || !prize) {
-      toast.error("Name, pattern, and prize are required.");
+    if (!name || !pattern) {
+      toast.error("Name and pattern are required.");
       return;
     }
 
@@ -123,7 +142,7 @@ export function EventPlatformBingoGamesAdmin() {
         method,
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, name, pattern, prize }),
+        body: JSON.stringify({ ...form, name, pattern }),
       });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
       if (!res.ok || !data?.ok) {
@@ -232,9 +251,9 @@ export function EventPlatformBingoGamesAdmin() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[56px]">Image</TableHead>
                 <TableHead>Game</TableHead>
                 <TableHead>Pattern</TableHead>
-                <TableHead>Prize</TableHead>
                 <TableHead>Difficulty</TableHead>
                 <TableHead>Order</TableHead>
                 <TableHead>Status</TableHead>
@@ -244,9 +263,11 @@ export function EventPlatformBingoGamesAdmin() {
             <TableBody>
               {filtered.map((game) => (
                 <TableRow key={game.id}>
+                  <TableCell>
+                    <BingoGameThumbnail imageUrl={game.imageUrl} name={game.name} size="sm" />
+                  </TableCell>
                   <TableCell className="font-medium">{game.name}</TableCell>
                   <TableCell className="max-w-[220px] truncate">{game.pattern}</TableCell>
-                  <TableCell>{game.prize}</TableCell>
                   <TableCell>{game.difficulty}</TableCell>
                   <TableCell>{game.sortOrder}</TableCell>
                   <TableCell>
@@ -298,33 +319,31 @@ export function EventPlatformBingoGamesAdmin() {
                   placeholder="Any line — horizontal, vertical, or diagonal"
                 />
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="bg-prize">Prize</Label>
-                  <Input
-                    id="bg-prize"
-                    autoComplete="off"
-                    value={form.prize}
-                    onChange={(e) => setForm((f) => ({ ...f, prize: e.target.value }))}
-                    placeholder="Pothos"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Difficulty</Label>
-                  <Select value={form.difficulty} onValueChange={(v) => setForm((f) => ({ ...f, difficulty: v }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LMS_EVENT_BINGO_DIFFICULTIES.map((level) => (
-                        <SelectItem key={level} value={level}>
-                          {level}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label>Difficulty</Label>
+                <Select value={form.difficulty} onValueChange={(v) => setForm((f) => ({ ...f, difficulty: v }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LMS_EVENT_BINGO_DIFFICULTIES.map((level) => (
+                      <SelectItem key={level} value={level}>
+                        {level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+              <MediaPicker
+                id="bg-image"
+                label="Pattern image"
+                value={form.imageUrl}
+                onChange={(v) => setForm((f) => ({ ...f, imageUrl: typeof v === "string" ? v : v[0] ?? "" }))}
+                placeholder="Upload bingo pattern image…"
+              />
+              <p className="text-xs text-muted-foreground -mt-2">
+                Shown when selecting games for an event and on the public event page.
+              </p>
               <div className="space-y-2">
                 <Label htmlFor="bg-sort">Sort order</Label>
                 <Input

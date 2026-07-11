@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus } from "lucide-react";
+import { ExternalLink, Plus, X } from "lucide-react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -31,6 +31,15 @@ import {
 import type { EventHostDto } from "@/lib/event-platform/hosts/host-types";
 import { EVENT_PLATFORM_PATHS } from "@/lib/event-platform/paths";
 import type { EventSponsorDto } from "@/lib/event-platform/sponsors/sponsor-types";
+import {
+  addPickerRow,
+  hostsFromIds,
+  normalizePickerRows,
+  removePickerRow,
+  selectedPickerIds,
+  setPickerRow,
+  sponsorsFromIds,
+} from "@/lib/event-platform/event-host-sponsor/event-host-sponsor-wizard";
 import { cn } from "@/lib/utils";
 
 type PatchFn = (partial: Partial<LmsEventCreateWizardInput>) => void;
@@ -43,14 +52,82 @@ function LibraryAdminLink({ href, label, className }: { href: string; label: str
       rel="noopener noreferrer"
       onClick={(e) => e.stopPropagation()}
       className={cn(
-        buttonVariants(),
-        "relative z-10 inline-flex shrink-0 items-center gap-2 no-underline",
+        buttonVariants({ variant: "ghost", size: "sm" }),
+        "relative z-10 inline-flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground no-underline hover:text-foreground",
         className,
       )}
     >
-      <Plus className="h-4 w-4" />
+      <ExternalLink className="h-3.5 w-3.5" />
       {label}
     </a>
+  );
+}
+
+function HostSponsorPickerRows({
+  rows,
+  loading,
+  placeholder,
+  options,
+  isOptionDisabled,
+  addLabel,
+  onAddRow,
+  onChangeRow,
+  onRemoveRow,
+}: {
+  rows: string[];
+  loading: boolean;
+  placeholder: string;
+  options: { id: string; label: string }[];
+  isOptionDisabled: (rowIndex: number, optionId: string) => boolean;
+  addLabel: string;
+  onAddRow: () => void;
+  onChangeRow: (index: number, value: string) => void;
+  onRemoveRow: (index: number) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      {rows.map((rowValue, index) => (
+        <div key={`picker-row-${index}`} className="flex items-center gap-2">
+          <Select
+            value={rowValue || undefined}
+            onValueChange={(value) => onChangeRow(index, value)}
+          >
+            <SelectTrigger className="flex-1">
+              <SelectValue placeholder={loading ? "Loading…" : placeholder} />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map((option) => (
+                <SelectItem
+                  key={option.id}
+                  value={option.id}
+                  disabled={isOptionDisabled(index, option.id)}
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {rows.length > 1 ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="shrink-0 text-muted-foreground hover:text-destructive"
+              onClick={() => onRemoveRow(index)}
+              aria-label="Remove row"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          ) : (
+            <div className="w-9 shrink-0" />
+          )}
+        </div>
+      ))}
+      <Button type="button" variant="outline" size="sm" className="gap-2" onClick={onAddRow}>
+        <Plus className="h-4 w-4" />
+        {addLabel}
+      </Button>
+    </div>
   );
 }
 
@@ -118,8 +195,20 @@ export function LmsEventHostSponsorFields({
   const [sponsors, setSponsors] = React.useState<EventSponsorDto[]>([]);
   const [hostsLoading, setHostsLoading] = React.useState(false);
   const [sponsorsLoading, setSponsorsLoading] = React.useState(false);
-  const [selectedHostId, setSelectedHostId] = React.useState("");
-  const [selectedSponsorId, setSelectedSponsorId] = React.useState("");
+  const [hostRows, setHostRows] = React.useState<string[]>(() => normalizePickerRows(values.hostIds));
+  const [sponsorRows, setSponsorRows] = React.useState<string[]>(() => normalizePickerRows(values.sponsorIds));
+  const hostHydratedRef = React.useRef(false);
+  const sponsorHydratedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    setHostRows(normalizePickerRows(values.hostIds));
+    hostHydratedRef.current = Boolean(values.hostIds?.length);
+  }, [values.hostIds]);
+
+  React.useEffect(() => {
+    setSponsorRows(normalizePickerRows(values.sponsorIds));
+    sponsorHydratedRef.current = Boolean(values.sponsorIds?.length);
+  }, [values.sponsorIds]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -159,34 +248,62 @@ export function LmsEventHostSponsorFields({
     };
   }, []);
 
+  const syncHostsFromRows = React.useCallback(
+    (rows: string[]) => {
+      const ids = selectedPickerIds(rows);
+      const roster = hostsFromIds(hosts, ids);
+      const primary = roster[0];
+      onPatch({
+        hostIds: ids,
+        hosts: roster,
+        hostName: primary?.name ?? "",
+        hostBio: primary?.bio ?? "",
+        hostImageUrl: primary?.imageUrl ?? "",
+        instructorName: primary?.name ?? "",
+      });
+    },
+    [hosts, onPatch],
+  );
+
+  const syncSponsorsFromRows = React.useCallback(
+    (rows: string[]) => {
+      const ids = selectedPickerIds(rows);
+      const roster = sponsorsFromIds(sponsors, ids);
+      const primary = roster[0];
+      onPatch({
+        sponsorIds: ids,
+        sponsors: roster,
+        sponsorName: primary?.name ?? "",
+        sponsorAddress: primary?.address ?? "",
+        sponsorPhone: primary?.phone ?? "",
+        sponsorPerk: primary?.perk ?? "",
+      });
+    },
+    [onPatch, sponsors],
+  );
+
   React.useEffect(() => {
-    if (!values.hostName?.trim() || hosts.length === 0) return;
+    if (hostHydratedRef.current || !values.hostName?.trim() || hosts.length === 0) return;
     const match = hosts.find((h) => h.displayName.trim().toLowerCase() === values.hostName?.trim().toLowerCase());
-    if (match) setSelectedHostId(match.id);
-  }, [values.hostName, hosts]);
+    if (!match) return;
+    const rows = [match.id];
+    hostHydratedRef.current = true;
+    setHostRows(rows);
+    syncHostsFromRows(rows);
+  }, [values.hostName, hosts, syncHostsFromRows]);
 
   React.useEffect(() => {
-    if (!values.sponsorName?.trim() || sponsors.length === 0) return;
+    if (sponsorHydratedRef.current || !values.sponsorName?.trim() || sponsors.length === 0) return;
     const match = sponsors.find((s) => s.name.trim().toLowerCase() === values.sponsorName?.trim().toLowerCase());
-    if (match) setSelectedSponsorId(match.id);
-  }, [values.sponsorName, sponsors]);
+    if (!match) return;
+    const rows = [match.id];
+    sponsorHydratedRef.current = true;
+    setSponsorRows(rows);
+    syncSponsorsFromRows(rows);
+  }, [values.sponsorName, sponsors, syncSponsorsFromRows]);
 
-  function applyHost(host: EventHostDto) {
-    onPatch({
-      hostName: host.displayName,
-      hostBio: host.bio ?? "",
-      hostImageUrl: host.imageUrl ?? "",
-    });
-  }
-
-  function applySponsor(sponsor: EventSponsorDto) {
-    onPatch({
-      sponsorName: sponsor.name,
-      sponsorAddress: sponsor.address ?? "",
-      sponsorPhone: sponsor.phone ?? "",
-      sponsorPerk: sponsor.perk ?? "",
-    });
-  }
+  const selectedHostIds = selectedPickerIds(hostRows);
+  const selectedSponsorIds = selectedPickerIds(sponsorRows);
 
   return (
     <div className="space-y-6">
@@ -194,29 +311,33 @@ export function LmsEventHostSponsorFields({
         <p className="text-sm font-medium">Meet your host</p>
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <Label>Host</Label>
-            <LibraryAdminLink href={EVENT_PLATFORM_PATHS.hosts} label="Add host" />
+            <Label>{selectedHostIds.length > 1 ? "Hosts" : "Host"}</Label>
+            <LibraryAdminLink href={EVENT_PLATFORM_PATHS.hosts} label="Manage hosts" />
           </div>
-          <Select
-            value={selectedHostId || undefined}
-            onValueChange={(hostId) => {
-              setSelectedHostId(hostId);
-              const host = hosts.find((h) => h.id === hostId);
-              if (host) applyHost(host);
+          <HostSponsorPickerRows
+            rows={hostRows}
+            loading={hostsLoading}
+            placeholder="Select a saved host"
+            options={hosts.map((host) => ({
+              id: host.id,
+              label: `${host.displayName}${host.email ? ` — ${host.email}` : ""}`,
+            }))}
+            isOptionDisabled={(rowIndex, optionId) =>
+              hostRows.some((id, i) => i !== rowIndex && id === optionId)
+            }
+            addLabel="Add host"
+            onAddRow={() => setHostRows((rows) => addPickerRow(selectedPickerIds(rows)))}
+            onChangeRow={(index, hostId) => {
+              const nextRows = setPickerRow(hostRows, index, hostId);
+              setHostRows(nextRows);
+              syncHostsFromRows(nextRows);
             }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={hostsLoading ? "Loading hosts…" : "Select a saved host"} />
-            </SelectTrigger>
-            <SelectContent>
-              {hosts.map((host) => (
-                <SelectItem key={host.id} value={host.id}>
-                  {host.displayName}
-                  {host.email ? ` — ${host.email}` : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onRemoveRow={(index) => {
+              const nextRows = removePickerRow(hostRows, index);
+              setHostRows(nextRows);
+              syncHostsFromRows(nextRows);
+            }}
+          />
           <p className="text-xs text-muted-foreground">
             Host bio and photo are pulled from your host directory when the event is saved.
           </p>
@@ -227,34 +348,54 @@ export function LmsEventHostSponsorFields({
         <p className="text-sm font-medium">Sponsor / partner</p>
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <Label>Sponsor</Label>
-            <LibraryAdminLink href={EVENT_PLATFORM_PATHS.sponsors} label="Add sponsor" />
+            <Label>{selectedSponsorIds.length > 1 ? "Sponsors" : "Sponsor"}</Label>
+            <LibraryAdminLink href={EVENT_PLATFORM_PATHS.sponsors} label="Manage sponsors" />
           </div>
-          <Select
-            value={selectedSponsorId || undefined}
-            onValueChange={(sponsorId) => {
-              setSelectedSponsorId(sponsorId);
-              const sponsor = sponsors.find((s) => s.id === sponsorId);
-              if (sponsor) applySponsor(sponsor);
+          <HostSponsorPickerRows
+            rows={sponsorRows}
+            loading={sponsorsLoading}
+            placeholder="Select a saved sponsor"
+            options={sponsors.map((sponsor) => ({
+              id: sponsor.id,
+              label: `${sponsor.name}${sponsor.address ? ` — ${sponsor.address}` : ""}`,
+            }))}
+            isOptionDisabled={(rowIndex, optionId) =>
+              sponsorRows.some((id, i) => i !== rowIndex && id === optionId)
+            }
+            addLabel="Add sponsor"
+            onAddRow={() => setSponsorRows((rows) => addPickerRow(selectedPickerIds(rows)))}
+            onChangeRow={(index, sponsorId) => {
+              const nextRows = setPickerRow(sponsorRows, index, sponsorId);
+              setSponsorRows(nextRows);
+              syncSponsorsFromRows(nextRows);
             }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={sponsorsLoading ? "Loading sponsors…" : "Select a saved sponsor"} />
-            </SelectTrigger>
-            <SelectContent>
-              {sponsors.map((sponsor) => (
-                <SelectItem key={sponsor.id} value={sponsor.id}>
-                  {sponsor.name}
-                  {sponsor.address ? ` — ${sponsor.address}` : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onRemoveRow={(index) => {
+              const nextRows = removePickerRow(sponsorRows, index);
+              setSponsorRows(nextRows);
+              syncSponsorsFromRows(nextRows);
+            }}
+          />
           <p className="text-xs text-muted-foreground">
             Sponsor address, phone, and perk are pulled from your sponsor directory when the event is saved.
           </p>
         </div>
       </div>
+    </div>
+  );
+}
+
+function BingoGamePatternImage(props: { imageUrl: string | null | undefined; name: string }) {
+  if (props.imageUrl?.trim()) {
+    return (
+      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md border bg-muted">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={props.imageUrl} alt={`${props.name} pattern`} className="h-full w-full object-cover" />
+      </div>
+    );
+  }
+  return (
+    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md border border-dashed bg-muted/40 px-1 text-center text-[10px] leading-tight text-muted-foreground">
+      No pattern image
     </div>
   );
 }
@@ -332,19 +473,15 @@ function BingoGamePicker({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-sm text-muted-foreground">
-          Select which games from your library appear on this event&apos;s public page.
-        </p>
-        <LibraryAdminLink href={EVENT_PLATFORM_PATHS.bingoGames} label="Add game" />
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Select which games from your library appear on this event&apos;s public page.
+      </p>
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading bingo games…</p>
       ) : games.length === 0 ? (
         <div className="rounded-lg border border-dashed p-6 text-center">
           <p className="text-sm text-muted-foreground">No bingo games in your library yet.</p>
-          <LibraryAdminLink href={EVENT_PLATFORM_PATHS.bingoGames} label="Add game" className="mt-4" />
         </div>
       ) : (
         <div className="space-y-2">
@@ -354,18 +491,17 @@ function BingoGamePicker({
               <label
                 key={game.id}
                 className={cn(
-                  "flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors",
+                  "flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors",
                   checked ? "border-primary/40 bg-primary/5" : "bg-muted/20 hover:bg-muted/30",
                 )}
               >
-                <Checkbox checked={checked} onCheckedChange={() => toggleGame(game.id)} className="mt-0.5" />
+                <Checkbox checked={checked} onCheckedChange={() => toggleGame(game.id)} className="shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="font-medium">{game.name}</p>
                   <p className="text-xs text-muted-foreground">{game.pattern}</p>
-                  <p className="mt-1 text-xs">
-                    Prize: {game.prize} · {game.difficulty}
-                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">{game.difficulty}</p>
                 </div>
+                <BingoGamePatternImage imageUrl={game.imageUrl} name={game.name} />
               </label>
             );
           })}
@@ -377,12 +513,15 @@ function BingoGamePicker({
           <p className="text-sm font-medium">Selected for this event ({selectedGames.length})</p>
           <ol className="space-y-2">
             {selectedGames.map((game, index) => (
-              <li key={game.id} className="flex items-start justify-between gap-3 text-sm">
-                <div>
-                  <span className="font-medium">
-                    Round {index + 1}: {game.name}
-                  </span>
-                  <p className="text-xs text-muted-foreground">{game.pattern}</p>
+              <li key={game.id} className="flex items-center justify-between gap-3 text-sm">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <BingoGamePatternImage imageUrl={game.imageUrl} name={game.name} />
+                  <div className="min-w-0">
+                    <span className="font-medium">
+                      Round {index + 1}: {game.name}
+                    </span>
+                    <p className="text-xs text-muted-foreground">{game.pattern}</p>
+                  </div>
                 </div>
                 <Button type="button" variant="ghost" size="sm" onClick={() => toggleGame(game.id)}>
                   Remove
@@ -471,19 +610,15 @@ function FaqPicker({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-sm text-muted-foreground">
-          Select which FAQs from your library appear on this event&apos;s public page.
-        </p>
-        <LibraryAdminLink href={EVENT_PLATFORM_PATHS.eventFaqs} label="Add FAQ" />
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Select which FAQs from your library appear on this event&apos;s public page.
+      </p>
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading FAQs…</p>
       ) : faqs.length === 0 ? (
         <div className="rounded-lg border border-dashed p-6 text-center">
           <p className="text-sm text-muted-foreground">No FAQs in your library yet.</p>
-          <LibraryAdminLink href={EVENT_PLATFORM_PATHS.eventFaqs} label="Add FAQ" className="mt-4" />
         </div>
       ) : (
         <div className="space-y-2">

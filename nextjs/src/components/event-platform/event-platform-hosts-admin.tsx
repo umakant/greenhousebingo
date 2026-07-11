@@ -36,7 +36,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { EventHostDto, EventHostInvitationDto } from "@/lib/event-platform/hosts/host-types";
 import { splitEventHostDisplayName } from "@/lib/event-platform/hosts/host-display-name";
-import { formatPhoneExtended, formatPhoneExtendedDisplay } from "@/lib/phone";
+import { appConfirm } from "@/lib/app-confirm";
+import { formatPhone, formatPhoneDisplay, normalizeMobileForStorage } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
 type EventOption = { id: string; title: string; startsAt: string };
@@ -57,7 +58,7 @@ function hostFormFromDto(host: EventHostDto) {
     firstName: host.firstName?.trim() || personName.firstName,
     lastName: host.lastName?.trim() || personName.lastName,
     email: host.email,
-    phone: formatPhoneExtendedDisplay(host.phone ?? ""),
+    phone: formatPhone(host.phone ?? ""),
     bio: host.bio ?? "",
     imageUrl: host.imageUrl ?? "",
     status: host.status,
@@ -178,7 +179,10 @@ export function EventPlatformHostsAdmin() {
         method,
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(hostForm),
+        body: JSON.stringify({
+          ...hostForm,
+          phone: normalizeMobileForStorage(hostForm.phone),
+        }),
       });
       const data = (await res.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
       if (!res.ok || !data?.ok) {
@@ -255,6 +259,65 @@ export function EventPlatformHostsAdmin() {
     toast.success("Invite link copied.");
   }
 
+  async function archiveHost(id: string) {
+    const res = await fetch(`/api/event-platform/hosts/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    const data = (await res.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
+    if (!res.ok || !data?.ok) {
+      toast.error(data?.message ?? "Could not archive host.");
+      return;
+    }
+    toast.success("Host archived.");
+    await reload();
+  }
+
+  async function deleteHost(host: EventHostDto) {
+    const confirmed = await appConfirm({
+      title: "Delete host",
+      description: `Permanently delete "${host.displayName}"? This cannot be undone.`,
+      confirmLabel: "Delete",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+
+    const res = await fetch(`/api/event-platform/hosts/${host.id}?permanent=1`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    const data = (await res.json().catch(() => null)) as { ok?: boolean; message?: string } | null;
+    if (!res.ok || !data?.ok) {
+      toast.error(data?.message ?? "Could not delete host.");
+      return;
+    }
+    toast.success("Host deleted.");
+    await reload();
+  }
+
+  function hostRowActions(host: EventHostDto) {
+    const items: TableActionItem[] = [
+      {
+        label: "Invite",
+        icon: <Mail className="h-4 w-4" />,
+        onSelect: () => void openInvite(host),
+      },
+    ];
+    if (host.status === "active") {
+      items.push({ label: "Archive", onSelect: () => void archiveHost(host.id) });
+    }
+    items.push({
+      label: "Delete",
+      onSelect: () => void deleteHost(host),
+      destructive: true,
+    });
+    return {
+      label: "Edit",
+      onPrimaryClick: () => openEditHost(host),
+      items,
+    };
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -304,7 +367,6 @@ export function EventPlatformHostsAdmin() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Host</TableHead>
-                    <TableHead>Email</TableHead>
                     <TableHead>Phone</TableHead>
                     <TableHead>Pending</TableHead>
                     <TableHead>Accepted</TableHead>
@@ -317,14 +379,16 @@ export function EventPlatformHostsAdmin() {
                     <TableRow key={host.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
                             <UserRound className="h-4 w-4 text-muted-foreground" />
                           </div>
-                          <span className="font-medium">{host.displayName}</span>
+                          <div className="min-w-0">
+                            <p className="font-medium">{host.displayName}</p>
+                            <p className="truncate text-xs text-muted-foreground">{host.email}</p>
+                          </div>
                         </div>
                       </TableCell>
-                      <TableCell>{host.email}</TableCell>
-                      <TableCell>{formatPhoneExtendedDisplay(host.phone, "—")}</TableCell>
+                      <TableCell>{formatPhoneDisplay(host.phone, "—")}</TableCell>
                       <TableCell>{host.pendingInvites}</TableCell>
                       <TableCell>{host.acceptedInvites}</TableCell>
                       <TableCell>
@@ -340,18 +404,7 @@ export function EventPlatformHostsAdmin() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                        <TableActionButton
-                          label="Edit"
-                          onPrimaryClick={() => openEditHost(host)}
-                          items={[
-                            {
-                              label: "Invite",
-                              icon: <Mail className="h-4 w-4" />,
-                              onSelect: () => void openInvite(host),
-                            },
-                          ]}
-                          className="ml-auto"
-                        />
+                        <TableActionButton {...hostRowActions(host)} className="ml-auto" />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -486,8 +539,8 @@ export function EventPlatformHostsAdmin() {
               <Input
                 id="host-phone"
                 value={hostForm.phone}
-                onChange={(e) => setHostForm((f) => ({ ...f, phone: formatPhoneExtended(e.target.value) }))}
-                placeholder="(000) 0000-000"
+                onChange={(e) => setHostForm((f) => ({ ...f, phone: formatPhone(e.target.value) }))}
+                placeholder="(000) 000-0000"
               />
             </div>
             <div className="space-y-2">
