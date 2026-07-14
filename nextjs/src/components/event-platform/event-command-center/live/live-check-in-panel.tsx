@@ -119,7 +119,13 @@ export function LiveCheckInPanel(props: LiveCheckInPanelProps) {
 
   return (
     <div className="space-y-4">
-      <QRScannerPlaceholder />
+      <QRScannerPlaceholder
+        disabled={!props.canCheckIn}
+        onScan={(token) => {
+          if (submitting) return;
+          void checkIn({ qrToken: token });
+        }}
+      />
       <div className="space-y-2">
         <Label htmlFor="live-qr">Scan / QR token</Label>
         <div className="flex gap-2">

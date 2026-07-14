@@ -55,6 +55,7 @@ import {
   Globe,
   Handshake,
   Wallet,
+  Dices,
 } from "lucide-react";
 
 /** Deterministic icon for Industry / Business modules from display name. */
@@ -64,6 +65,7 @@ export function getBusinessModuleIcon(name: string): LucideIcon {
 
   type Rule = { test: (s: string) => boolean; Icon: LucideIcon };
   const rules: Rule[] = [
+    { test: (s) => s.includes("bingo"), Icon: Dices },
     { test: (s) => /dog|pet waste|poop|feces/.test(s), Icon: Dog },
     { test: (s) => s.includes("dna") || s.includes("genetic"), Icon: Dna },
     { test: (s) => s.includes("drug test") || (s.includes("drug") && s.includes("mobile")), Icon: Pill },

@@ -31,6 +31,8 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,6 +56,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
+import { LMS_TICKET_STATUSES } from "@/lib/lms-events/constants";
+import type { LmsEventTicketStatus } from "@/lib/lms-events/constants";
 import {
   lmsEventAdminAttendeesPath,
   lmsEventAdminDetailPath,
@@ -137,8 +142,8 @@ function DetailRow(props: {
   );
 }
 
-function TicketCard(props: { ticket: LmsEventTicket; eventId: string }) {
-  const { ticket, eventId } = props;
+function TicketCard(props: { ticket: LmsEventTicket; eventId: string; onEdit: () => void }) {
+  const { ticket, eventId, onEdit } = props;
   const revenue = ticket.price * ticket.soldCount;
   const isAvailable = ticket.ticketStatus === "available";
   const priceLabel = ticket.isFree ? "Free" : money(ticket.price, ticket.currency);
@@ -170,11 +175,9 @@ function TicketCard(props: { ticket: LmsEventTicket; eventId: string }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href={lmsEventAdminEditPath(eventId)}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit ticket
-                </Link>
+              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); onEdit(); }}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit ticket
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href={lmsEventAdminAttendeesPath(eventId)}>
@@ -228,11 +231,9 @@ function TicketCard(props: { ticket: LmsEventTicket; eventId: string }) {
           <Button asChild variant="outline" size="sm">
             <Link href={lmsEventAdminAttendeesPath(eventId)}>View Sales</Link>
           </Button>
-          <Button asChild variant="outline" size="sm" className="gap-1.5">
-            <Link href={lmsEventAdminEditPath(eventId)}>
-              <Pencil className="h-3.5 w-3.5" />
-              Edit Ticket
-            </Link>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={onEdit}>
+            <Pencil className="h-3.5 w-3.5" />
+            Edit Ticket
           </Button>
         </div>
       </CardContent>
@@ -289,6 +290,188 @@ function SalesDonut(props: { segments: Array<{ value: number; color: string }>; 
   );
 }
 
+/* ----------------------------- edit ticket ------------------------------- */
+
+const TICKET_STATUS_LABELS: Record<LmsEventTicketStatus, string> = {
+  available: "Available",
+  sold_out: "Sold out",
+  closed: "Closed",
+  hidden: "Hidden",
+};
+
+function EditTicketDrawer(props: {
+  eventId: string;
+  ticket: LmsEventTicket | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSaved: () => void;
+}) {
+  const { ticket } = props;
+  const [name, setName] = React.useState("");
+  const [description, setDescription] = React.useState("");
+  const [isFree, setIsFree] = React.useState(false);
+  const [price, setPrice] = React.useState<number | null>(null);
+  const [unlimited, setUnlimited] = React.useState(true);
+  const [quantity, setQuantity] = React.useState("");
+  const [status, setStatus] = React.useState<LmsEventTicketStatus>("available");
+  const [submitting, setSubmitting] = React.useState(false);
+
+  React.useEffect(() => {
+    if (props.open && ticket) {
+      setName(ticket.name);
+      setDescription(ticket.description ?? "");
+      setIsFree(ticket.isFree);
+      setPrice(ticket.isFree ? null : ticket.price);
+      setUnlimited(ticket.quantity == null);
+      setQuantity(ticket.quantity != null ? String(ticket.quantity) : "");
+      setStatus(ticket.ticketStatus);
+    }
+  }, [props.open, ticket]);
+
+  async function submit() {
+    if (!ticket) return;
+    if (!name.trim()) {
+      toast.error("Ticket name is required.");
+      return;
+    }
+    const qty = unlimited ? null : Number(quantity);
+    if (!unlimited && (!Number.isInteger(qty) || (qty as number) < 0)) {
+      toast.error("Capacity must be a whole number.");
+      return;
+    }
+    if (qty != null && qty < ticket.soldCount) {
+      toast.error(`Capacity cannot be lower than tickets already sold (${ticket.soldCount}).`);
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch(
+        `/api/lms/admin/events/${encodeURIComponent(props.eventId)}/tickets/${encodeURIComponent(ticket.id)}`,
+        {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: name.trim(),
+            description: description.trim() || null,
+            isFree,
+            price: isFree ? 0 : (price ?? 0),
+            quantity: qty,
+            ticketStatus: status,
+          }),
+        },
+      );
+      const data = (await res.json().catch(() => null)) as { ok?: boolean; message?: string };
+      if (!res.ok || !data?.ok) {
+        toast.error(data?.message ?? "Could not update ticket.");
+        return;
+      }
+      toast.success("Ticket updated.");
+      props.onSaved();
+      props.onOpenChange(false);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Sheet open={props.open} onOpenChange={props.onOpenChange}>
+      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>Edit Ticket</SheetTitle>
+          <SheetDescription>
+            Update pricing, capacity, and availability for this ticket type.
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="mt-6 space-y-4">
+          <div className="space-y-2">
+            <Label>Ticket Name</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. General admission" />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Description</Label>
+            <Textarea
+              rows={2}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What's included with this ticket…"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="ticket-free"
+              checked={isFree}
+              onCheckedChange={(v) => setIsFree(Boolean(v))}
+            />
+            <Label htmlFor="ticket-free">Free ticket</Label>
+          </div>
+
+          {!isFree ? (
+            <div className="space-y-2">
+              <Label>Price</Label>
+              <CurrencyInput value={price} onChange={setPrice} showSymbol allowEmpty placeholder="0.00" />
+            </div>
+          ) : null}
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="ticket-unlimited"
+              checked={unlimited}
+              onCheckedChange={(v) => setUnlimited(Boolean(v))}
+            />
+            <Label htmlFor="ticket-unlimited">Unlimited capacity</Label>
+          </div>
+
+          {!unlimited ? (
+            <div className="space-y-2">
+              <Label>Capacity</Label>
+              <Input
+                type="number"
+                min={ticket?.soldCount ?? 0}
+                step={1}
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                placeholder="e.g. 80"
+              />
+              {ticket ? (
+                <p className="text-xs text-muted-foreground">{ticket.soldCount} already sold.</p>
+              ) : null}
+            </div>
+          ) : null}
+
+          <div className="space-y-2">
+            <Label>Status</Label>
+            <Select value={status} onValueChange={(v) => setStatus(v as LmsEventTicketStatus)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LMS_TICKET_STATUSES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {TICKET_STATUS_LABELS[s]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <SheetFooter className="mt-6 gap-2 sm:gap-0">
+          <Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="button" disabled={submitting} onClick={() => void submit()}>
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save changes"}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 /* -------------------------------- main view ------------------------------- */
 
 export function LmsEventAdminTicketsClient(props: { eventId: string }) {
@@ -299,6 +482,21 @@ export function LmsEventAdminTicketsClient(props: { eventId: string }) {
   const [range, setRange] = React.useState<"7" | "30" | "all">("7");
   const [summaryRange, setSummaryRange] = React.useState<"all" | "30">("all");
   const [discountsOpen, setDiscountsOpen] = React.useState(false);
+  const [editTicket, setEditTicket] = React.useState<LmsEventTicket | null>(null);
+
+  const reloadTickets = React.useCallback(async () => {
+    const res = await fetch(`/api/lms/admin/events/${encodeURIComponent(props.eventId)}`, {
+      credentials: "include",
+      cache: "no-store",
+    });
+    const data = (await res.json().catch(() => null)) as
+      | { ok?: boolean; event?: LmsEvent; tickets?: LmsEventTicket[] }
+      | null;
+    if (res.ok && data?.ok) {
+      setEvent(data.event ?? null);
+      setTickets(data.tickets ?? []);
+    }
+  }, [props.eventId]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -443,7 +641,14 @@ export function LmsEventAdminTicketsClient(props: { eventId: string }) {
               </CardContent>
             </Card>
           ) : (
-            tickets.map((ticket) => <TicketCard key={ticket.id} ticket={ticket} eventId={props.eventId} />)
+            tickets.map((ticket) => (
+              <TicketCard
+                key={ticket.id}
+                ticket={ticket}
+                eventId={props.eventId}
+                onEdit={() => setEditTicket(ticket)}
+              />
+            ))
           )}
         </div>
 
@@ -589,6 +794,15 @@ export function LmsEventAdminTicketsClient(props: { eventId: string }) {
       </Card>
 
       <TicketDiscountsDrawer open={discountsOpen} onOpenChange={setDiscountsOpen} currency={currency} />
+      <EditTicketDrawer
+        eventId={props.eventId}
+        ticket={editTicket}
+        open={editTicket !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditTicket(null);
+        }}
+        onSaved={() => void reloadTickets()}
+      />
     </div>
   );
 }

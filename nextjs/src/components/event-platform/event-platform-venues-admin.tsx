@@ -52,6 +52,7 @@ import { EVENT_PLATFORM_PATHS } from "@/lib/event-platform/paths";
 import {
   computeAmenityRows,
   computeCapacitySlices,
+  computeEventCountsByVenue,
   computeUpcomingByVenue,
   computeVenueDashboardSummary,
   venueCapacityTier,
@@ -214,6 +215,10 @@ export function EventPlatformVenuesAdmin() {
   const amenityRows = React.useMemo(() => (items ? computeAmenityRows(items) : []), [items]);
   const upcomingByVenue = React.useMemo(
     () => (items ? computeUpcomingByVenue(items, events) : []),
+    [items, events],
+  );
+  const eventCountsByVenue = React.useMemo(
+    () => (items ? computeEventCountsByVenue(items, events) : new Map()),
     [items, events],
   );
 
@@ -578,6 +583,7 @@ export function EventPlatformVenuesAdmin() {
                   <TableHead>Drinks</TableHead>
                   <TableHead>Food</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead title="Scheduled / Upcoming">Events</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -627,6 +633,25 @@ export function EventPlatformVenuesAdmin() {
                       >
                         {v.status}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const c = (eventCountsByVenue.get(v.id) as
+                          | { scheduled: number; upcoming: number }
+                          | undefined) ?? { scheduled: 0, upcoming: 0 };
+                        return (
+                          <span
+                            className="inline-flex items-center gap-1 tabular-nums"
+                            title={`${c.scheduled} scheduled · ${c.upcoming} upcoming`}
+                          >
+                            <span className="font-medium">{c.scheduled}</span>
+                            <span className="text-muted-foreground">/</span>
+                            <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                              {c.upcoming}
+                            </span>
+                          </span>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell className="text-right">
                       <TableActionButton

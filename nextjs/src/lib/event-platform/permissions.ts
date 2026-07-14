@@ -19,6 +19,8 @@ export const EVENT_PLATFORM_PERMISSION_NAMES = [
   "sponsors.manage",
   "bingoGames.view",
   "bingoGames.manage",
+  "plantCatalog.view",
+  "plantCatalog.manage",
   "eventFaqs.view",
   "eventFaqs.manage",
   "commissions.manage",
@@ -52,6 +54,8 @@ export const EVENT_PLATFORM_PERMISSION_LABELS: Record<EventPlatformPermission, s
   "sponsors.manage": "Manage Sponsors",
   "bingoGames.view": "View Bingo Games",
   "bingoGames.manage": "Manage Bingo Games",
+  "plantCatalog.view": "View Plant Inventory",
+  "plantCatalog.manage": "Manage Plant Inventory",
   "eventFaqs.view": "View Event FAQs",
   "eventFaqs.manage": "Manage Event FAQs",
   "commissions.manage": "Manage Commissions",
@@ -81,6 +85,8 @@ export const EVENT_PLATFORM_COMPANY_DEFAULT_PERMISSIONS: readonly EventPlatformP
   "sponsors.manage",
   "bingoGames.view",
   "bingoGames.manage",
+  "plantCatalog.view",
+  "plantCatalog.manage",
   "eventFaqs.view",
   "eventFaqs.manage",
   "commissions.manage",
@@ -113,6 +119,8 @@ export function userHasEventPlatformPermission(
       required === "sponsors.manage" ||
       required === "bingoGames.view" ||
       required === "bingoGames.manage" ||
+      required === "plantCatalog.view" ||
+      required === "plantCatalog.manage" ||
       required === "eventFaqs.view" ||
       required === "eventFaqs.manage")
   ) {

@@ -156,6 +156,7 @@ model User {
   epEventHostPerformanceNotesCreated EventHostPerformanceNote[] @relation("EpEventHostPerformanceNoteCreatedBy")
   epEventSponsors             EventSponsor[]           @relation("EpEventSponsorOrganization")
   epEventBingoGames           EventBingoGame[]         @relation("EpEventBingoGameOrganization")
+  epEventPlantCatalog         EventPlantCatalog[]      @relation("EpEventPlantCatalogOrganization")
   epEventBingoRoundInstances  EventBingoRoundInstance[] @relation("EpEventBingoRoundOrganization")
   epEventBingoWinners         EventBingoWinner[]       @relation("EpEventBingoWinnerOrganization")
   epEventBingoWinnersVerified EventBingoWinner[]       @relation("EpEventBingoWinnerVerifiedBy")
@@ -7022,6 +7023,35 @@ model EventBingoGame {
   @@map("event_bingo_games")
 }
 
+/// Organization-scoped plant inventory library (reusable across events).
+model EventPlantCatalog {
+  id             BigInt    @id @default(autoincrement())
+  organizationId BigInt    @map("organization_id")
+  name           String    @db.VarChar(255)
+  scientificName String?   @map("scientific_name") @db.VarChar(255)
+  category       String?   @db.VarChar(128)
+  careLevel      String    @default("Easy") @map("care_level") @db.VarChar(32)
+  light          String?   @db.VarChar(255)
+  water          String?   @db.VarChar(255)
+  petSafe        Boolean   @default(false) @map("pet_safe")
+  description    String?   @db.Text
+  imageUrl       String?   @map("image_url") @db.VarChar(2048)
+  retailValue    Decimal?  @map("retail_value") @db.Decimal(12, 2)
+  sortOrder      Int       @default(0) @map("sort_order")
+  status         String    @default("active") @db.VarChar(32)
+  archivedAt     DateTime? @map("archived_at")
+  createdById    BigInt?   @map("created_by_id")
+  updatedById    BigInt?   @map("updated_by_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt @map("updated_at")
+
+  organization User @relation("EpEventPlantCatalogOrganization", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@index([organizationId, sortOrder])
+  @@map("event_plant_catalog")
+}
+
 /// Live bingo round instance for a specific event (execution state).
 model EventBingoRoundInstance {
   id               BigInt    @id @default(autoincrement())
@@ -7137,6 +7167,9 @@ model EventPlantRequest {
   registrationId     BigInt    @map("registration_id")
   eventPlantId       BigInt?   @map("event_plant_id")
   requestedPlantName String?   @map("requested_plant_name") @db.VarChar(255)
+  /// take_home = guaranteed free plant; winning = bingo prize preference
+  requestType        String    @default("winning") @map("request_type") @db.VarChar(32)
+  quantity           Int       @default(1)
   priority           Int?      @default(1)
   notes              String?   @db.Text
   createdAt          DateTime  @default(now()) @map("created_at")
@@ -7150,6 +7183,7 @@ model EventPlantRequest {
   @@index([organizationId, eventId])
   @@index([registrationId])
   @@index([eventPlantId])
+  @@index([organizationId, eventId, requestType])
   @@map("event_plant_requests")
 }
 

@@ -687,6 +687,51 @@ export class LmsEventDbRepository {
     return rows.map(mapDbTicket);
   }
 
+  async updateTicket(
+    eventId: string,
+    ticketId: string,
+    patch: {
+      name?: string;
+      description?: string | null;
+      price?: number;
+      currency?: string;
+      quantity?: number | null;
+      ticketStatus?: LmsEventTicket["ticketStatus"];
+      isFree?: boolean;
+    },
+    actorUserId?: string,
+  ): Promise<LmsEventTicket> {
+    const orgId = this.orgId();
+    const existing = await prisma.lmsEventTicket.findFirst({
+      where: { id: BigInt(ticketId), organizationId: orgId, eventId: BigInt(eventId) },
+    });
+    if (!existing) throw new Error("Ticket not found.");
+
+    if (patch.quantity != null && patch.quantity < existing.soldCount) {
+      throw new Error(
+        `Capacity cannot be lower than tickets already sold (${existing.soldCount}).`,
+      );
+    }
+
+    const nextIsFree = patch.isFree ?? existing.isFree;
+    const data: Prisma.LmsEventTicketUncheckedUpdateInput = {
+      updatedById: actorUserId ? BigInt(actorUserId) : null,
+      updatedAt: new Date(),
+    };
+    if (patch.name !== undefined) data.name = patch.name.trim();
+    if (patch.description !== undefined) data.description = patch.description?.trim() || null;
+    if (patch.currency !== undefined) data.currency = patch.currency || "USD";
+    if (patch.quantity !== undefined) data.quantity = patch.quantity;
+    if (patch.ticketStatus !== undefined) data.ticketStatus = patch.ticketStatus;
+    if (patch.isFree !== undefined) data.isFree = nextIsFree;
+    if (patch.price !== undefined || patch.isFree !== undefined) {
+      data.price = nextIsFree ? 0 : (patch.price ?? num(existing.price));
+    }
+
+    const updated = await prisma.lmsEventTicket.update({ where: { id: existing.id }, data });
+    return mapDbTicket(updated);
+  }
+
   async listMyRegistrations(tab?: "upcoming" | "completed" | "cancelled" | "waitlisted"): Promise<LmsEventRegistration[]> {
     const uid = this.scope.studentUserId;
     if (!uid) return [];

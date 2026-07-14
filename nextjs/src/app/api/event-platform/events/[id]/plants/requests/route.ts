@@ -19,6 +19,8 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     registrationId?: string;
     eventPlantId?: string | null;
     requestedPlantName?: string | null;
+    requestType?: "take_home" | "winning";
+    quantity?: number | null;
     priority?: number | null;
     notes?: string | null;
   } | null;
@@ -35,6 +37,8 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       registrationId: body.registrationId.trim(),
       eventPlantId: body.eventPlantId,
       requestedPlantName: body.requestedPlantName,
+      requestType: body.requestType,
+      quantity: body.quantity,
       priority: body.priority,
       notes: body.notes,
     },

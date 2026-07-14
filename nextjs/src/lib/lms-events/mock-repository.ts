@@ -347,6 +347,54 @@ export class LmsEventMockRepository {
     return scopeOrg(ticketStore, this.scope.organizationId).filter((t) => t.eventId === eventId);
   }
 
+  async updateTicket(
+    eventId: string,
+    ticketId: string,
+    patch: {
+      name?: string;
+      description?: string | null;
+      price?: number;
+      currency?: string;
+      quantity?: number | null;
+      ticketStatus?: LmsEventTicket["ticketStatus"];
+      isFree?: boolean;
+    },
+    _actorUserId?: string,
+  ): Promise<LmsEventTicket> {
+    await delay();
+    const existing = ticketStore.find(
+      (t) =>
+        t.id === ticketId &&
+        t.eventId === eventId &&
+        t.organizationId === this.scope.organizationId,
+    );
+    if (!existing) throw new Error("Ticket not found.");
+    if (patch.quantity != null && patch.quantity < existing.soldCount) {
+      throw new Error(
+        `Capacity cannot be lower than tickets already sold (${existing.soldCount}).`,
+      );
+    }
+    const nextIsFree = patch.isFree ?? existing.isFree;
+    const updated: LmsEventTicket = {
+      ...existing,
+      name: patch.name !== undefined ? patch.name.trim() : existing.name,
+      description:
+        patch.description !== undefined ? patch.description?.trim() || null : existing.description,
+      currency: patch.currency !== undefined ? patch.currency || "USD" : existing.currency,
+      quantity: patch.quantity !== undefined ? patch.quantity : existing.quantity,
+      ticketStatus: patch.ticketStatus ?? existing.ticketStatus,
+      isFree: nextIsFree,
+      price:
+        patch.price !== undefined || patch.isFree !== undefined
+          ? nextIsFree
+            ? 0
+            : (patch.price ?? existing.price)
+          : existing.price,
+    };
+    ticketStore = ticketStore.map((t) => (t.id === ticketId ? updated : t));
+    return updated;
+  }
+
   async listMyRegistrations(tab?: "upcoming" | "completed" | "cancelled" | "waitlisted"): Promise<LmsEventRegistration[]> {
     await delay();
     const uid = this.scope.studentUserId;

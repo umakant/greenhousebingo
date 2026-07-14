@@ -14,6 +14,7 @@ export const EVENT_PLATFORM_PATHS = {
   hosts: `${EVENT_PLATFORM_BASE}/hosts`,
   sponsors: `${EVENT_PLATFORM_BASE}/sponsors`,
   bingoGames: `${EVENT_PLATFORM_BASE}/bingo-games`,
+  plantInventory: `${EVENT_PLATFORM_BASE}/plant-inventory`,
   eventFaqs: `${EVENT_PLATFORM_BASE}/event-faqs`,
   commissions: `${EVENT_PLATFORM_BASE}/commissions`,
   payouts: `${EVENT_PLATFORM_BASE}/payouts`,

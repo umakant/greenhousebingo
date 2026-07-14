@@ -220,13 +220,18 @@ async function syncAwardedFromWinners(organizationId: bigint, eventId: bigint): 
   }
 
   for (const plant of plants) {
-    const awarded = winCounts.get(plantKey(plant.name)) ?? 0;
-    if (awarded !== plant.quantityAwarded) {
+    const winnerAwarded = winCounts.get(plantKey(plant.name)) ?? 0;
+    // Reconcile awarded count with verified bingo winners without clobbering a
+    // manual "Mark awarded" adjustment: only bump the count up to reflect new
+    // verified winners, never below the value an operator already recorded.
+    const target = Math.min(
+      plant.quantityPurchased - plant.quantityRemoved,
+      Math.max(plant.quantityAwarded, winnerAwarded),
+    );
+    if (target !== plant.quantityAwarded) {
       await prisma.eventPlant.update({
         where: { id: plant.id },
-        data: {
-          quantityAwarded: Math.min(plant.quantityPurchased - plant.quantityRemoved, awarded),
-        },
+        data: { quantityAwarded: target },
       });
     }
   }
@@ -370,6 +375,8 @@ export async function getEventPlantsOverview(
     attendeeEmail: r.registration.attendeeEmail,
     eventPlantId: r.eventPlantId?.toString() ?? null,
     plantName: r.eventPlant?.name ?? r.requestedPlantName ?? "—",
+    requestType: (r.requestType === "take_home" ? "take_home" : "winning") as EventPlantRequestDto["requestType"],
+    quantity: r.quantity ?? 1,
     priority: r.priority,
     notes: r.notes,
     createdAt: r.createdAt.toISOString(),
@@ -466,6 +473,8 @@ export async function getEventPlantDetail(
       attendeeEmail: r.registration.attendeeEmail,
       eventPlantId: r.eventPlantId?.toString() ?? null,
       plantName: row.name,
+      requestType: (r.requestType === "take_home" ? "take_home" : "winning") as EventPlantRequestDto["requestType"],
+      quantity: r.quantity ?? 1,
       priority: r.priority,
       notes: r.notes,
       createdAt: r.createdAt.toISOString(),
@@ -892,6 +901,8 @@ export async function createPlantRequest(input: {
 
   let eventPlantId: bigint | null = null;
   let plantName = input.data.requestedPlantName?.trim() || null;
+  const requestType = input.data.requestType === "take_home" ? "take_home" : "winning";
+  const quantity = Math.max(1, Math.floor(input.data.quantity ?? 1));
 
   if (input.data.eventPlantId) {
     try {
@@ -915,12 +926,41 @@ export async function createPlantRequest(input: {
     organizationId: input.organizationId,
     eventId: input.eventId,
     registrationId,
+    requestType,
   };
   if (eventPlantId) dupWhere.eventPlantId = eventPlantId;
   else if (plantName) dupWhere.requestedPlantName = { equals: plantName, mode: "insensitive" };
 
   const dup = await prisma.eventPlantRequest.findFirst({ where: dupWhere });
-  if (dup) return { error: "This attendee already has a request for this plant." };
+  // Take-home: bump quantity when the same plant is selected again.
+  // Winning preferences stay unique per (registration, plant, type).
+  if (dup) {
+    if (requestType !== "take_home") {
+      return { error: "This attendee already has a request for this plant." };
+    }
+    const updated = await prisma.eventPlantRequest.update({
+      where: { id: dup.id },
+      data: { quantity: dup.quantity + quantity, updatedAt: new Date() },
+      include: {
+        registration: { select: { attendeeName: true, attendeeEmail: true } },
+        eventPlant: { select: { name: true } },
+      },
+    });
+    return {
+      id: updated.id.toString(),
+      eventId: updated.eventId.toString(),
+      registrationId: updated.registrationId.toString(),
+      attendeeName: updated.registration.attendeeName,
+      attendeeEmail: updated.registration.attendeeEmail,
+      eventPlantId: updated.eventPlantId?.toString() ?? null,
+      plantName: updated.eventPlant?.name ?? updated.requestedPlantName ?? "—",
+      requestType: "take_home",
+      quantity: updated.quantity,
+      priority: updated.priority,
+      notes: updated.notes,
+      createdAt: updated.createdAt.toISOString(),
+    };
+  }
 
   const row = await prisma.eventPlantRequest.create({
     data: {
@@ -929,6 +969,8 @@ export async function createPlantRequest(input: {
       registrationId,
       eventPlantId,
       requestedPlantName: plantName,
+      requestType,
+      quantity,
       priority: input.data.priority ?? 1,
       notes: input.data.notes?.trim() || null,
     },
@@ -944,7 +986,7 @@ export async function createPlantRequest(input: {
     action: "plant_request.added",
     entityType: "event_plant_request",
     entityId: row.id.toString(),
-    metadata: { eventId: input.eventId.toString() },
+    metadata: { eventId: input.eventId.toString(), requestType },
   });
 
   return {
@@ -955,6 +997,8 @@ export async function createPlantRequest(input: {
     attendeeEmail: row.registration.attendeeEmail,
     eventPlantId: row.eventPlantId?.toString() ?? null,
     plantName: row.eventPlant?.name ?? row.requestedPlantName ?? "—",
+    requestType,
+    quantity: row.quantity,
     priority: row.priority,
     notes: row.notes,
     createdAt: row.createdAt.toISOString(),
@@ -1001,7 +1045,7 @@ export function eventPlantsToCsv(plants: EventPlantDto[]): string {
 }
 
 export function plantRequestsToCsv(requests: EventPlantRequestDto[]): string {
-  const headers = ["Attendee", "Email", "Plant", "Priority", "Notes", "Requested At"];
+  const headers = ["Attendee", "Email", "Plant", "Type", "Qty", "Priority", "Notes", "Requested At"];
   const lines = [headers.join(",")];
   for (const r of requests) {
     lines.push(
@@ -1009,6 +1053,8 @@ export function plantRequestsToCsv(requests: EventPlantRequestDto[]): string {
         csvCell(r.attendeeName),
         csvCell(r.attendeeEmail),
         csvCell(r.plantName),
+        r.requestType,
+        String(r.quantity),
         r.priority != null ? String(r.priority) : "",
         csvCell(r.notes ?? ""),
         r.createdAt,

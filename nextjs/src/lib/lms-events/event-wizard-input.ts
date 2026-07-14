@@ -7,7 +7,10 @@ export const EXTRA_BINGO_CARD_TICKET_NAME = "Extra bingo card";
 export const BONUS_CARD_TICKET_DESCRIPTION = "Additional bingo card for the same event";
 export const DEFAULT_BONUS_CARD_NAME = "Bonus card";
 
-export function isBonusBingoCardTicket(ticket: LmsEventTicket): boolean {
+export function isBonusBingoCardTicket(ticket: {
+  name: string;
+  description: string | null;
+}): boolean {
   return (
     ticket.description === BONUS_CARD_TICKET_DESCRIPTION ||
     ticket.name === EXTRA_BINGO_CARD_TICKET_NAME ||

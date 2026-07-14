@@ -454,6 +454,32 @@ async function main() {
     `);
 
     await pg.query(`
+      CREATE TABLE IF NOT EXISTS event_plant_catalog (
+        id BIGSERIAL PRIMARY KEY,
+        organization_id BIGINT NOT NULL,
+        name TEXT NOT NULL,
+        scientific_name VARCHAR(255) NULL,
+        category VARCHAR(128) NULL,
+        care_level TEXT NOT NULL DEFAULT 'Easy',
+        light VARCHAR(255) NULL,
+        water VARCHAR(255) NULL,
+        pet_safe BOOLEAN NOT NULL DEFAULT FALSE,
+        description TEXT NULL,
+        image_url VARCHAR(2048) NULL,
+        retail_value NUMERIC(12,2) NULL,
+        sort_order INT NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'active',
+        archived_at TIMESTAMP(3) NULL,
+        created_by_id BIGINT NULL,
+        updated_by_id BIGINT NULL,
+        created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP(3) NULL
+      );
+    `);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_plant_catalog_org_status_idx ON event_plant_catalog(organization_id, status);`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_plant_catalog_org_sort_idx ON event_plant_catalog(organization_id, sort_order);`);
+
+    await pg.query(`
       CREATE TABLE IF NOT EXISTS event_bingo_faqs (
         id BIGSERIAL PRIMARY KEY,
         organization_id BIGINT NOT NULL,
@@ -582,6 +608,8 @@ async function main() {
         registration_id BIGINT NOT NULL REFERENCES lms_event_registrations(id) ON DELETE CASCADE,
         event_plant_id BIGINT NULL REFERENCES event_plants(id) ON DELETE SET NULL,
         requested_plant_name VARCHAR(255) NULL,
+        request_type VARCHAR(32) NOT NULL DEFAULT 'winning',
+        quantity INT NOT NULL DEFAULT 1,
         priority INT NULL DEFAULT 1,
         notes TEXT NULL,
         created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -591,6 +619,9 @@ async function main() {
     await pg.query(`CREATE INDEX IF NOT EXISTS event_plant_requests_org_event_idx ON event_plant_requests(organization_id, event_id);`);
     await pg.query(`CREATE INDEX IF NOT EXISTS event_plant_requests_registration_idx ON event_plant_requests(registration_id);`);
     await pg.query(`CREATE INDEX IF NOT EXISTS event_plant_requests_plant_idx ON event_plant_requests(event_plant_id);`);
+    await pg.query(`ALTER TABLE event_plant_requests ADD COLUMN IF NOT EXISTS request_type VARCHAR(32) NOT NULL DEFAULT 'winning';`);
+    await pg.query(`ALTER TABLE event_plant_requests ADD COLUMN IF NOT EXISTS quantity INT NOT NULL DEFAULT 1;`);
+    await pg.query(`CREATE INDEX IF NOT EXISTS event_plant_requests_org_event_type_idx ON event_plant_requests(organization_id, event_id, request_type);`);
 
     await pg.query(`
       CREATE TABLE IF NOT EXISTS event_plant_assignments (

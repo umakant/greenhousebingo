@@ -54,8 +54,6 @@ export function RecordWinnerDialog(props: RecordWinnerDialogProps) {
   const [winningCardNumber, setWinningCardNumber] = React.useState("");
   const [cardType, setCardType] = React.useState<EventBingoCardType>("included");
   const [prizeLabel, setPrizeLabel] = React.useState("");
-  const [prizeCost, setPrizeCost] = React.useState("");
-  const [prizeRetail, setPrizeRetail] = React.useState("");
   const [verified, setVerified] = React.useState(false);
   const [notes, setNotes] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
@@ -127,8 +125,8 @@ export function RecordWinnerDialog(props: RecordWinnerDialogProps) {
             winningCardNumber: winningCardNumber.trim(),
             cardType,
             prizeLabel,
-            prizeCost: prizeCost ? Number(prizeCost) : null,
-            prizeRetailValue: prizeRetail ? Number(prizeRetail) : null,
+            prizeCost: null,
+            prizeRetailValue: null,
             verified,
             notes: notes || null,
             force,
@@ -243,17 +241,6 @@ export function RecordWinnerDialog(props: RecordWinnerDialogProps) {
           <div className="space-y-2">
             <Label>Prize</Label>
             <Input value={prizeLabel} onChange={(e) => setPrizeLabel(e.target.value)} />
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Prize cost</Label>
-              <Input type="number" min={0} step="0.01" value={prizeCost} onChange={(e) => setPrizeCost(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Retail value</Label>
-              <Input type="number" min={0} step="0.01" value={prizeRetail} onChange={(e) => setPrizeRetail(e.target.value)} />
-            </div>
           </div>
 
           <div className="flex items-center gap-2">

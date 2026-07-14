@@ -397,6 +397,46 @@ export async function createEventBingoRound(input: {
   return serializeRound(created, new Map());
 }
 
+/**
+ * Create several bingo rounds in one pass (used by the "Randomize" generator).
+ * Rounds are appended sequentially so their round numbers stay contiguous.
+ */
+export async function createEventBingoRoundsBulk(input: {
+  organizationId: bigint;
+  eventId: bigint;
+  actorUserId?: bigint;
+  rounds: Array<{
+    name: string;
+    pattern: string;
+    difficulty?: string;
+    assignedPrize?: string;
+    prizeCost?: number | null;
+    prizeRetailValue?: number | null;
+    scheduledAt?: string | null;
+  }>;
+}): Promise<{ created: number; rounds: EventBingoRoundDto[] }> {
+  if (input.rounds.length === 0) throw new Error("No rounds to create.");
+  if (input.rounds.length > 50) throw new Error("You can generate at most 50 rounds at a time.");
+
+  const out: EventBingoRoundDto[] = [];
+  for (const r of input.rounds) {
+    const round = await createEventBingoRound({
+      organizationId: input.organizationId,
+      eventId: input.eventId,
+      actorUserId: input.actorUserId,
+      name: r.name,
+      pattern: r.pattern,
+      difficulty: r.difficulty ?? "Easy",
+      assignedPrize: r.assignedPrize ?? "",
+      prizeCost: typeof r.prizeCost === "number" ? r.prizeCost : null,
+      prizeRetailValue: typeof r.prizeRetailValue === "number" ? r.prizeRetailValue : null,
+      scheduledAt: r.scheduledAt ?? null,
+    });
+    out.push(round);
+  }
+  return { created: out.length, rounds: out };
+}
+
 export async function applyRoundAction(input: {
   organizationId: bigint;
   eventId: bigint;

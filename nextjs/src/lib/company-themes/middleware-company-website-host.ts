@@ -79,6 +79,9 @@ export async function maybeRewriteCompanyWebsiteCustomDomain(
     return NextResponse.redirect(url, 308);
   }
 
+  // Live React routes (not prerendered theme HTML).
+  // Plant-bingo checkout lives at /events/{slug}/checkout → /sites/{company}/events/{slug}/checkout
+  const plantBingoCheckoutMatch = pathname.match(/^\/events\/([^/]+)\/checkout\/?$/);
   if (
     pathname === "/cart" ||
     pathname.startsWith("/cart/") ||
@@ -86,7 +89,8 @@ export async function maybeRewriteCompanyWebsiteCustomDomain(
     pathname.startsWith("/checkout/") ||
     pathname.startsWith("/ticket/") ||
     pathname === "/access" ||
-    pathname.startsWith("/access/")
+    pathname.startsWith("/access/") ||
+    plantBingoCheckoutMatch
   ) {
     const dest = req.nextUrl.clone();
     dest.pathname = `${slugPrefix}${pathname}`;

@@ -159,7 +159,12 @@ export function EventPlantsTab(props: { eventId: string }) {
     return Math.max(0, Math.min(100, 100 - gaps * 8 - lowStock * 6 - outStock * 15));
   }, [overview, plants]);
 
-  async function runAction(plantId: string, action: string, extra?: Record<string, unknown>) {
+  async function runAction(
+    plantId: string,
+    action: string,
+    extra?: Record<string, unknown>,
+    successMessage = "Done.",
+  ) {
     const res = await fetch(
       `/api/event-platform/events/${encodeURIComponent(props.eventId)}/plants/${encodeURIComponent(plantId)}/actions`,
       {
@@ -174,7 +179,7 @@ export function EventPlantsTab(props: { eventId: string }) {
       toast.error(data?.message ?? "Action failed.");
       return false;
     }
-    toast.success("Done.");
+    toast.success(successMessage);
     void load();
     return true;
   }
@@ -452,7 +457,14 @@ export function EventPlantsTab(props: { eventId: string }) {
                                     },
                                     {
                                       label: "Mark awarded",
-                                      onSelect: () => void runAction(plant.id, "mark_awarded", { quantity: 1 }),
+                                      onSelect: () =>
+                                        void runAction(
+                                          plant.id,
+                                          "mark_awarded",
+                                          { quantity: 1 },
+                                          `Marked 1 ${plant.name} as awarded.`,
+                                        ),
+                                      disabled: plant.quantityRemaining <= 0,
                                     },
                                     {
                                       label: "View requests",
@@ -460,11 +472,18 @@ export function EventPlantsTab(props: { eventId: string }) {
                                     },
                                     {
                                       label: "Duplicate",
-                                      onSelect: () => void runAction(plant.id, "duplicate"),
+                                      onSelect: () =>
+                                        void runAction(plant.id, "duplicate", undefined, `Duplicated ${plant.name}.`),
                                     },
                                     {
                                       label: "Remove from event",
-                                      onSelect: () => void runAction(plant.id, "remove_from_event"),
+                                      onSelect: () =>
+                                        void runAction(
+                                          plant.id,
+                                          "remove_from_event",
+                                          undefined,
+                                          `Removed ${plant.name} from the event.`,
+                                        ),
                                     },
                                   ]
                                 : []),
@@ -579,10 +598,12 @@ export function EventPlantsTab(props: { eventId: string }) {
               type="button"
               onClick={() => {
                 if (!assignPlantId || !assignRoundId) return;
-                void runAction(assignPlantId, "assign_to_game", {
-                  roundInstanceId: assignRoundId,
-                  quantity: 1,
-                }).then((ok) => ok && setAssignOpen(false));
+                void runAction(
+                  assignPlantId,
+                  "assign_to_game",
+                  { roundInstanceId: assignRoundId, quantity: 1 },
+                  "Plant assigned to round.",
+                ).then((ok) => ok && setAssignOpen(false));
               }}
             >
               Assign
@@ -608,9 +629,12 @@ export function EventPlantsTab(props: { eventId: string }) {
               type="button"
               onClick={() => {
                 if (!addQtyPlantId) return;
-                void runAction(addQtyPlantId, "add_quantity", {
-                  quantity: Number.parseInt(addQty, 10) || 0,
-                }).then((ok) => ok && setAddQtyOpen(false));
+                void runAction(
+                  addQtyPlantId,
+                  "add_quantity",
+                  { quantity: Number.parseInt(addQty, 10) || 0 },
+                  "Inventory updated.",
+                ).then((ok) => ok && setAddQtyOpen(false));
               }}
             >
               Add

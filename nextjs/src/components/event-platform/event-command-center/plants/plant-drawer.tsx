@@ -7,6 +7,7 @@ import {
   PlantImageThumb,
   plantStatusBadge,
 } from "@/components/event-platform/event-command-center/plants/plant-panels";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
@@ -15,7 +16,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { EventPlantDetail } from "@/lib/event-platform/event-plants/event-plant-types";
+import {
+  EVENT_PLANT_REQUEST_TYPE_LABELS,
+  type EventPlantDetail,
+} from "@/lib/event-platform/event-plants/event-plant-types";
+import { cn } from "@/lib/utils";
 
 function Field(props: { label: string; value: React.ReactNode }) {
   return (
@@ -112,7 +117,21 @@ export function PlantDrawer(props: PlantDrawerProps) {
                 <ul className="space-y-2">
                   {detail!.requests.map((r) => (
                     <li key={r.id} className="rounded-lg border p-2 text-sm">
-                      <p className="font-medium">{r.attendeeName}</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-medium">{r.attendeeName}</p>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "h-5 px-1.5 text-[10px] font-medium",
+                            r.requestType === "take_home"
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              : "border-amber-200 bg-amber-50 text-amber-700",
+                          )}
+                        >
+                          {EVENT_PLANT_REQUEST_TYPE_LABELS[r.requestType]}
+                          {r.quantity > 1 ? ` ×${r.quantity}` : ""}
+                        </Badge>
+                      </div>
                       <p className="text-xs text-muted-foreground">{r.attendeeEmail}</p>
                     </li>
                   ))}

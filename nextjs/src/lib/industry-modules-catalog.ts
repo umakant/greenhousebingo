@@ -30,6 +30,20 @@ export const INDUSTRY_MODULE_CATEGORIES: IndustryCatalogCategory[] = [
     ],
   },
   {
+    id: "bingo",
+    title: "Bingo",
+    description:
+      "Themed live bingo experiences where guests play for prizes — one module per bingo type.",
+    moduleNames: [
+      "Plant Bingo",
+      "Bible Bingo",
+      "Candle Bingo",
+      "Perfume Bingo",
+      "Book Bingo",
+      "Music Bingo",
+    ],
+  },
+  {
     id: "cleaning-services",
     title: "Cleaning Services",
     description:

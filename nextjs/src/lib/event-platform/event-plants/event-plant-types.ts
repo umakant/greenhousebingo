@@ -28,6 +28,14 @@ export type EventPlantDto = {
   createdAt: string;
 };
 
+export const EVENT_PLANT_REQUEST_TYPES = ["take_home", "winning"] as const;
+export type EventPlantRequestType = (typeof EVENT_PLANT_REQUEST_TYPES)[number];
+
+export const EVENT_PLANT_REQUEST_TYPE_LABELS: Record<EventPlantRequestType, string> = {
+  take_home: "Take-home",
+  winning: "Winning",
+};
+
 export type EventPlantRequestDto = {
   id: string;
   eventId: string;
@@ -36,6 +44,8 @@ export type EventPlantRequestDto = {
   attendeeEmail: string;
   eventPlantId: string | null;
   plantName: string;
+  requestType: EventPlantRequestType;
+  quantity: number;
   priority: number | null;
   notes: string | null;
   createdAt: string;
@@ -124,6 +134,8 @@ export type CreatePlantRequestInput = {
   registrationId: string;
   eventPlantId?: string | null;
   requestedPlantName?: string | null;
+  requestType?: EventPlantRequestType;
+  quantity?: number | null;
   priority?: number | null;
   notes?: string | null;
 };

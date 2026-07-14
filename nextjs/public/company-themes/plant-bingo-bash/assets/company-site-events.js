@@ -625,6 +625,195 @@
     }
   }
 
+  function money(n) {
+    return "$" + (Math.round(n * 100) / 100).toFixed(2);
+  }
+
+  function findQtySpan(button) {
+    if (!button || !button.parentElement) return null;
+    var spans = button.parentElement.querySelectorAll("span.font-display, span");
+    for (var i = 0; i < spans.length; i++) {
+      if (/^\d+$/.test((spans[i].textContent || "").trim())) return spans[i];
+    }
+    return null;
+  }
+
+  /**
+   * Activate the static ticket / extras steppers on the detail page and send
+   * Checkout to the live React plant-bingo checkout flow.
+   */
+  function wireCheckoutSidebar(event, cfg) {
+    if (!event) return;
+    var decTickets = document.querySelector('button[aria-label="Decrease tickets"]');
+    var incTickets = document.querySelector('button[aria-label="Increase tickets"]');
+    var decExtras = document.querySelector('button[aria-label="Decrease extra cards"]');
+    var incExtras = document.querySelector('button[aria-label="Increase extra cards"]');
+    if (!decTickets || !incTickets) return;
+    // Already wired (detail re-fetch) — just refresh prices/totals from latest event data.
+    if (document.documentElement.getAttribute("data-pbs-checkout-wired") === "1") {
+      try {
+        document.dispatchEvent(new CustomEvent("pbs-checkout-refresh", { detail: { event: event, cfg: cfg } }));
+      } catch (e) {
+        /* ignore */
+      }
+      return;
+    }
+    document.documentElement.setAttribute("data-pbs-checkout-wired", "1");
+
+    var ticketSpan = findQtySpan(incTickets);
+    var extrasSpan = findQtySpan(incExtras);
+    var tickets = Math.max(1, parseInt(ticketSpan && ticketSpan.textContent, 10) || 1);
+    var extras = Math.max(0, parseInt(extrasSpan && extrasSpan.textContent, 10) || 0);
+    var price = Number(event.price) || 0;
+    var extraPrice = Number(event.extraCardPrice) || 5;
+    var feePct = Number(event.cardFeePercent);
+    if (!isFinite(feePct)) feePct = 3.5;
+    var maxTickets = event.soldOut || event.left <= 0 ? 0 : Math.max(1, Number(event.left) || 20);
+    if (maxTickets > 0 && tickets > maxTickets) tickets = maxTickets;
+
+    function totals() {
+      var ticketsSub = Math.round(tickets * price * 100) / 100;
+      var cardsSub = Math.round(extras * extraPrice * 100) / 100;
+      var subtotal = Math.round((ticketsSub + cardsSub) * 100) / 100;
+      var fee = Math.round(subtotal * (feePct / 100) * 100) / 100;
+      var total = Math.round((subtotal + fee) * 100) / 100;
+      return { ticketsSub: ticketsSub, cardsSub: cardsSub, subtotal: subtotal, fee: fee, total: total };
+    }
+
+    function paint() {
+      if (ticketSpan) ticketSpan.textContent = String(tickets);
+      if (extrasSpan) extrasSpan.textContent = String(extras);
+      decTickets.disabled = tickets <= 1;
+      incTickets.disabled = maxTickets <= 0 || tickets >= maxTickets;
+      if (decExtras) decExtras.disabled = extras <= 0;
+      if (incExtras) incExtras.disabled = extras >= 100;
+
+      var t = totals();
+      // Update unit price labels "× $30" / "× $5"
+      var unitLabels = document.querySelectorAll(".ml-auto.text-sm.text-muted-foreground");
+      if (unitLabels[0]) unitLabels[0].textContent = "× $" + price;
+      if (unitLabels[1]) unitLabels[1].textContent = "× $" + extraPrice;
+
+      var summary = null;
+      var candidates = document.querySelectorAll(".mt-6.space-y-2, .space-y-2.text-sm");
+      for (var c = 0; c < candidates.length; c++) {
+        if ((candidates[c].textContent || "").indexOf("Subtotal") >= 0) {
+          summary = candidates[c];
+          break;
+        }
+      }
+      if (summary) {
+        var rows = summary.querySelectorAll(":scope > div");
+        if (rows[0]) {
+          var spans0 = rows[0].querySelectorAll("span");
+          if (spans0[0]) spans0[0].textContent = tickets + " ticket" + (tickets === 1 ? "" : "s");
+          if (spans0[1]) spans0[1].textContent = money(t.ticketsSub);
+        }
+        if (rows[1] && (rows[1].textContent || "").toLowerCase().indexOf("extra") >= 0) {
+          rows[1].style.display = extras > 0 ? "" : "none";
+          var spans1 = rows[1].querySelectorAll("span");
+          if (spans1[0]) spans1[0].textContent = extras + " extra card" + (extras === 1 ? "" : "s");
+          if (spans1[1]) spans1[1].textContent = money(t.cardsSub);
+        }
+        for (var r = 0; r < rows.length; r++) {
+          var txt = rows[r].textContent || "";
+          var spans = rows[r].querySelectorAll("span");
+          if (txt.indexOf("Subtotal") >= 0 && spans[1]) spans[1].textContent = money(t.subtotal);
+          if (txt.indexOf("Card fee") >= 0) {
+            if (spans[0]) {
+              spans[0].innerHTML =
+                spans[0].innerHTML.replace(/Card fee\s*\([^)]*\)/, "Card fee (" + feePct + "%)") ||
+                spans[0].textContent;
+              // Keep icon; rewrite fee label text node safely
+              var labelNode = spans[0].querySelector("svg") ? spans[0] : spans[0];
+              var feeLabel = labelNode;
+              // Replace trailing fee text via last text content approach
+              feeLabel.childNodes.forEach(function (node) {
+                if (node.nodeType === 3 && /Card fee|%/.test(node.textContent || "")) {
+                  node.textContent = " Card fee (" + feePct + "%)";
+                }
+              });
+            }
+            if (spans[1]) spans[1].textContent = money(t.fee);
+          }
+          if (txt.indexOf("Total") >= 0 && spans.length) {
+            var last = spans[spans.length - 1];
+            if (last) last.textContent = money(t.total);
+          }
+        }
+      }
+
+      var checkoutBtn = null;
+      document.querySelectorAll("button").forEach(function (btn) {
+        if ((btn.textContent || "").indexOf("Checkout") >= 0) checkoutBtn = btn;
+      });
+      if (checkoutBtn) {
+        checkoutBtn.disabled = maxTickets <= 0;
+        checkoutBtn.innerHTML =
+          '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5"><path d="M2 9a3 3 0 0 1 3-3h14a3 3 0 0 1 3 3v2a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V9Z"/><path d="M13 13v4"/><path d="M11 13v4"/></svg> Checkout · ' +
+          money(t.total);
+        checkoutBtn.onclick = function (ev) {
+          ev.preventDefault();
+          if (maxTickets <= 0) return;
+          var url =
+            sitePath("/events/" + encodeURIComponent(event.slug) + "/checkout", cfg) +
+            "?tickets=" +
+            encodeURIComponent(String(tickets)) +
+            "&extras=" +
+            encodeURIComponent(String(extras));
+          window.location.href = url;
+        };
+      }
+    }
+
+    decTickets.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      if (tickets > 1) {
+        tickets -= 1;
+        paint();
+      }
+    });
+    incTickets.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      if (tickets < maxTickets) {
+        tickets += 1;
+        paint();
+      }
+    });
+    if (decExtras) {
+      decExtras.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        if (extras > 0) {
+          extras -= 1;
+          paint();
+        }
+      });
+    }
+    if (incExtras) {
+      incExtras.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        if (extras < 100) {
+          extras += 1;
+          paint();
+        }
+      });
+    }
+
+    document.addEventListener("pbs-checkout-refresh", function (ev) {
+      var next = ev && ev.detail && ev.detail.event;
+      if (!next) return;
+      price = Number(next.price) || price;
+      extraPrice = Number(next.extraCardPrice) || extraPrice;
+      feePct = Number(next.cardFeePercent);
+      if (!isFinite(feePct)) feePct = 3.5;
+      maxTickets = next.soldOut || next.left <= 0 ? 0 : Math.max(1, Number(next.left) || 20);
+      if (maxTickets > 0 && tickets > maxTickets) tickets = maxTickets;
+      paint();
+    });
+
+    paint();
+  }
+
   function fetchEvents(cfg) {
     return fetch(cfg.apiBase, { credentials: "same-origin", cache: "no-store" }).then(function (res) {
       return res.json();
@@ -687,6 +876,7 @@
       function applyDetail(ev) {
         if (!ev) return;
         patchDetailPage(ev);
+        wireCheckoutSidebar(ev, cfg);
       }
       if (detail) applyDetail(detail);
       fetchEvent(cfg, slug).then(function (data) {

@@ -153,6 +153,30 @@ export function computeUpcomingByVenue(
   return rows.sort((a, b) => b.count - a.count).slice(0, 6);
 }
 
+export type VenueEventCounts = { scheduled: number; upcoming: number };
+
+/**
+ * Per-venue event tallies for the venues table "Events" column.
+ * `scheduled` = all events matched to the venue; `upcoming` = those starting now or later.
+ */
+export function computeEventCountsByVenue(
+  venues: EventVenueDto[],
+  events: { venueName?: string | null; startsAt?: string | null }[],
+): Map<string, VenueEventCounts> {
+  const now = Date.now();
+  const map = new Map<string, VenueEventCounts>();
+  for (const venue of venues) {
+    const matched = events.filter((e) => matchVenueToEvent(venue, e.venueName));
+    const upcoming = matched.filter((e) => {
+      if (!e.startsAt) return false;
+      const t = new Date(e.startsAt).getTime();
+      return Number.isFinite(t) && t >= now;
+    }).length;
+    map.set(venue.id, { scheduled: matched.length, upcoming });
+  }
+  return map;
+}
+
 export function venueInUseIds(
   venues: EventVenueDto[],
   events: { venueName?: string | null; startsAt?: string | null }[],

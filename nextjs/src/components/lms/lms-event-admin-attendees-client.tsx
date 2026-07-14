@@ -74,6 +74,15 @@ import type {
   EventAttendeesListResult,
   EventAttendeeSortField,
 } from "@/lib/event-platform/attendees/event-attendees-types";
+import {
+  IssueRefundDrawer,
+  ResendTicketDrawer,
+  SellBonusCardsDrawer as AttendeeBonusDrawer,
+  type ActionAttendee,
+} from "@/components/event-platform/event-command-center/attendees/attendee-action-drawers";
+import { RecordWinnerDialog } from "@/components/event-platform/event-command-center/games/record-winner-dialog";
+import { QRScannerPlaceholder } from "@/components/lms/events/qr-scanner-placeholder";
+import type { EventBingoRoundDto } from "@/lib/event-platform/bingo-rounds/bingo-round-types";
 import { LMS_BOOKING_STATUSES } from "@/lib/lms-events/constants";
 import { isBonusBingoCardTicket } from "@/lib/lms-events/event-wizard-input";
 import type { LmsEventTicket } from "@/lib/lms-events/types";
@@ -192,6 +201,14 @@ export function LmsEventAdminAttendeesClient(props: { eventId: string; embedded?
   const [meta, setMeta] = React.useState<EventMeta | null>(null);
   const [topSpenders, setTopSpenders] = React.useState<EventAttendeeRow[]>([]);
   const [addOpen, setAddOpen] = React.useState(false);
+  const [bonusOpen, setBonusOpen] = React.useState(false);
+  const [bonusUnitPrice, setBonusUnitPrice] = React.useState(0);
+  const [actionAttendee, setActionAttendee] = React.useState<ActionAttendee | null>(null);
+  const [rowBonusOpen, setRowBonusOpen] = React.useState(false);
+  const [resendOpen, setResendOpen] = React.useState(false);
+  const [refundOpen, setRefundOpen] = React.useState(false);
+  const [winnerOpen, setWinnerOpen] = React.useState(false);
+  const [rounds, setRounds] = React.useState<EventBingoRoundDto[]>([]);
 
   React.useEffect(() => {
     const id = window.setTimeout(() => setDebouncedQ(filters.q.trim()), 300);
@@ -269,6 +286,25 @@ export function LmsEventAdminAttendeesClient(props: { eventId: string; embedded?
     };
   }, [props.eventId]);
 
+  // Bonus card unit price for the row-level "Sell bonus cards" action.
+  React.useEffect(() => {
+    let active = true;
+    void fetch(`/api/lms/admin/events/${encodeURIComponent(props.eventId)}`, {
+      credentials: "include",
+      cache: "no-store",
+    })
+      .then((r) => r.json())
+      .then((d: { ok?: boolean; tickets?: LmsEventTicket[] }) => {
+        if (!active || !d?.ok) return;
+        const bonus = (d.tickets ?? []).find(isBonusBingoCardTicket);
+        if (bonus) setBonusUnitPrice(bonus.price);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [props.eventId]);
+
   async function checkInOne(registrationId: string): Promise<boolean> {
     const res = await fetch(`/api/lms/admin/events/${encodeURIComponent(props.eventId)}/check-in`, {
       method: "POST",
@@ -292,6 +328,47 @@ export function LmsEventAdminAttendeesClient(props: { eventId: string; embedded?
 
   function patchFilters(patch: Partial<FiltersState>) {
     setFilters((f) => ({ ...f, ...patch }));
+  }
+
+  function toActionAttendee(row: EventAttendeeRow): ActionAttendee {
+    return {
+      registrationId: row.registrationId,
+      fullName: row.fullName,
+      email: row.email,
+      currency: row.currency,
+      totalSpend: row.totalSpend,
+    };
+  }
+
+  function openRowBonus(row: EventAttendeeRow) {
+    setActionAttendee(toActionAttendee(row));
+    setRowBonusOpen(true);
+  }
+
+  function openResend(row: EventAttendeeRow) {
+    setActionAttendee(toActionAttendee(row));
+    setResendOpen(true);
+  }
+
+  function openRefund(row: EventAttendeeRow) {
+    setActionAttendee(toActionAttendee(row));
+    setRefundOpen(true);
+  }
+
+  function openRecordWinner(row: EventAttendeeRow) {
+    setActionAttendee(toActionAttendee(row));
+    setWinnerOpen(true);
+    if (rounds.length === 0) {
+      void fetch(`/api/event-platform/events/${encodeURIComponent(props.eventId)}/games`, {
+        credentials: "include",
+        cache: "no-store",
+      })
+        .then((r) => r.json())
+        .then((d: { overview?: { rounds: EventBingoRoundDto[] } }) => {
+          setRounds(d.overview?.rounds ?? []);
+        })
+        .catch(() => setRounds([]));
+    }
   }
 
   const summary = data?.summary ?? null;
@@ -353,7 +430,7 @@ export function LmsEventAdminAttendeesClient(props: { eventId: string; embedded?
             <Ticket className="mr-1.5 h-4 w-4" />
             Sell Ticket
           </Button>
-          <Button variant="outline" size="sm" onClick={() => toast.info("Bonus card sales coming soon.")}>
+          <Button variant="outline" size="sm" onClick={() => setBonusOpen(true)}>
             <Star className="mr-1.5 h-4 w-4" />
             Sell Bonus Cards
           </Button>
@@ -549,6 +626,10 @@ export function LmsEventAdminAttendeesClient(props: { eventId: string; embedded?
                         currency={currency}
                         maxSpend={maxSpend}
                         onCheckIn={() => void checkInOne(row.registrationId).then((ok) => { if (ok) void load(); })}
+                        onSellBonus={() => openRowBonus(row)}
+                        onRecordWin={() => openRecordWinner(row)}
+                        onResend={() => openResend(row)}
+                        onRefund={() => openRefund(row)}
                       />
                     ))}
                   </TableBody>
@@ -612,7 +693,7 @@ export function LmsEventAdminAttendeesClient(props: { eventId: string; embedded?
                   Check In
                 </Link>
               </Button>
-              <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => toast.info("Bonus card sales coming soon.")}>
+              <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => setBonusOpen(true)}>
                 <Star className="mr-1.5 h-4 w-4" />
                 Sell Bonus Cards
               </Button>
@@ -633,6 +714,48 @@ export function LmsEventAdminAttendeesClient(props: { eventId: string; embedded?
         eventId={props.eventId}
         open={addOpen}
         onOpenChange={setAddOpen}
+        onSaved={() => void load()}
+      />
+
+      <SellBonusCardsDrawer
+        eventId={props.eventId}
+        open={bonusOpen}
+        onOpenChange={setBonusOpen}
+        onSaved={() => void load()}
+      />
+
+      <AttendeeBonusDrawer
+        open={rowBonusOpen}
+        onOpenChange={setRowBonusOpen}
+        eventId={props.eventId}
+        attendee={actionAttendee}
+        unitPrice={bonusUnitPrice}
+        onSaved={() => void load()}
+      />
+
+      <ResendTicketDrawer
+        open={resendOpen}
+        onOpenChange={setResendOpen}
+        eventId={props.eventId}
+        attendee={actionAttendee}
+        onSaved={() => void load()}
+      />
+
+      <IssueRefundDrawer
+        open={refundOpen}
+        onOpenChange={setRefundOpen}
+        eventId={props.eventId}
+        attendee={actionAttendee}
+        onSaved={() => void load()}
+      />
+
+      <RecordWinnerDialog
+        open={winnerOpen}
+        onOpenChange={setWinnerOpen}
+        eventId={props.eventId}
+        rounds={rounds}
+        defaultRegistrationId={actionAttendee?.registrationId ?? null}
+        defaultRegistrationLabel={actionAttendee?.fullName ?? null}
         onSaved={() => void load()}
       />
     </div>
@@ -916,6 +1039,227 @@ function AddAttendeeDrawer(props: {
   );
 }
 
+/* --------------------------- sell bonus cards ----------------------------- */
+
+function SellBonusCardsDrawer(props: {
+  eventId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSaved: () => void;
+}) {
+  const [unitPrice, setUnitPrice] = React.useState(0);
+  const [currency, setCurrency] = React.useState("USD");
+  const [search, setSearch] = React.useState("");
+  const [debounced, setDebounced] = React.useState("");
+  const [results, setResults] = React.useState<EventAttendeeRow[]>([]);
+  const [searching, setSearching] = React.useState(false);
+  const [selected, setSelected] = React.useState<EventAttendeeRow | null>(null);
+  const [quantity, setQuantity] = React.useState("1");
+  const [paymentMethod, setPaymentMethod] = React.useState("cash");
+  const [busy, setBusy] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!props.open) {
+      setSearch("");
+      setDebounced("");
+      setResults([]);
+      setSelected(null);
+      setQuantity("1");
+      setPaymentMethod("cash");
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const res = await fetch(`/api/lms/admin/events/${encodeURIComponent(props.eventId)}`, {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const data = (await res.json().catch(() => null)) as { ok?: boolean; tickets?: LmsEventTicket[] } | null;
+      if (cancelled || !res.ok || !data?.ok) return;
+      const bonus = (data.tickets ?? []).find(isBonusBingoCardTicket);
+      if (bonus) {
+        setUnitPrice(bonus.price);
+        setCurrency(bonus.currency);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [props.open, props.eventId]);
+
+  React.useEffect(() => {
+    const t = window.setTimeout(() => setDebounced(search.trim()), 300);
+    return () => window.clearTimeout(t);
+  }, [search]);
+
+  React.useEffect(() => {
+    if (!props.open || selected || debounced.length < 2) {
+      setResults([]);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      setSearching(true);
+      const qs = new URLSearchParams({ q: debounced, pageSize: "8" });
+      const res = await fetch(
+        `/api/event-platform/events/${encodeURIComponent(props.eventId)}/attendees?${qs}`,
+        { credentials: "include" },
+      );
+      const data = (await res.json().catch(() => null)) as { ok?: boolean; rows?: EventAttendeeRow[] };
+      if (!cancelled) {
+        setResults(data?.ok ? (data.rows ?? []) : []);
+        setSearching(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [props.open, props.eventId, debounced, selected]);
+
+  const qty = Math.max(1, Number(quantity) || 1);
+  const totalAmount = unitPrice * qty;
+
+  async function submit() {
+    if (!selected) {
+      toast.error("Select an attendee first.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/event-platform/events/${encodeURIComponent(props.eventId)}/live/actions`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "sell_bonus_cards",
+          registrationId: selected.registrationId,
+          quantity: qty,
+          unitPrice,
+          paymentMethod,
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as { ok?: boolean; message?: string };
+      if (!res.ok || !data?.ok) {
+        toast.error(data?.message ?? "Sale failed.");
+        return;
+      }
+      toast.success("Bonus cards recorded.");
+      props.onSaved();
+      props.onOpenChange(false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Sheet open={props.open} onOpenChange={props.onOpenChange}>
+      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>Sell Bonus Cards</SheetTitle>
+          <SheetDescription>Search an attendee and record extra bingo card sales.</SheetDescription>
+        </SheetHeader>
+
+        <div className="mt-6 space-y-4">
+          {selected ? (
+            <div className="flex items-center justify-between gap-2 rounded-md border bg-muted/40 p-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{selected.fullName}</p>
+                <p className="truncate text-xs text-muted-foreground">{selected.email || "—"}</p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1.5 px-2 text-muted-foreground"
+                onClick={() => {
+                  setSelected(null);
+                  setSearch("");
+                }}
+              >
+                <X className="h-3.5 w-3.5" />
+                Change
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Attendee</Label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Name, email, or phone…"
+                  className="pl-9"
+                />
+              </div>
+              {searching ? (
+                <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Searching…
+                </p>
+              ) : null}
+              {results.length > 0 ? (
+                <div className="max-h-40 overflow-y-auto rounded-md border">
+                  {results.map((a) => (
+                    <button
+                      key={a.registrationId}
+                      type="button"
+                      className="flex w-full flex-col px-3 py-2 text-left text-sm hover:bg-muted"
+                      onClick={() => {
+                        setSelected(a);
+                        setResults([]);
+                      }}
+                    >
+                      <span className="font-medium">{a.fullName}</span>
+                      <span className="text-xs text-muted-foreground">{a.email || a.phone || "—"}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Quantity</Label>
+              <Input type="number" min={1} value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Unit price</Label>
+              <Input readOnly value={unitPrice.toFixed(2)} />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Payment</Label>
+            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cash">Cash</SelectItem>
+                <SelectItem value="card">Card</SelectItem>
+                <SelectItem value="comp">Comp</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <p className="text-sm font-medium">Total: {money(totalAmount, currency)}</p>
+        </div>
+
+        <SheetFooter className="mt-6">
+          <Button type="button" variant="outline" onClick={() => props.onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="button" disabled={busy || !selected} onClick={() => void submit()}>
+            {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Complete Sale
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 /* -------------------------------- sub views -------------------------------- */
 
 function StatCard(props: {
@@ -975,6 +1319,10 @@ function AttendeeRow(props: {
   currency: string;
   maxSpend: number;
   onCheckIn: () => void;
+  onSellBonus: () => void;
+  onRecordWin: () => void;
+  onResend: () => void;
+  onRefund: () => void;
 }) {
   const { row } = props;
   const isVip = row.customerType === "vip";
@@ -1093,10 +1441,14 @@ function AttendeeRow(props: {
               onSelect: props.onCheckIn,
               disabled: row.checkInStatus === "checked_in",
             },
-            { label: "Sell bonus cards", onSelect: () => toast.info("Coming soon.") },
-            { label: "Record bingo win", onSelect: () => toast.info("Coming soon.") },
-            { label: "Resend ticket", onSelect: () => toast.info("Coming soon.") },
-            { label: "Issue refund", onSelect: () => toast.info("Coming soon.") },
+            { label: "Sell bonus cards", onSelect: props.onSellBonus },
+            { label: "Record bingo win", onSelect: props.onRecordWin },
+            { label: "Resend ticket", onSelect: props.onResend },
+            {
+              label: "Issue refund",
+              onSelect: props.onRefund,
+              disabled: row.bookingStatus === "refunded" || row.bookingStatus === "cancelled",
+            },
           ]}
         />
       </TableCell>
@@ -1372,26 +1724,13 @@ export function LmsEventAdminCheckInClient(props: { eventId: string; compact?: b
 
       {/* Scanner + manual entry */}
       <div className={cn("grid gap-4", !compact && "lg:grid-cols-2")}>
-        <div className="rounded-xl border bg-card p-4 shadow-sm">
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
-            <ScanLine className="h-4 w-4 text-muted-foreground" />
-            QR Scanner
-          </h3>
-          <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-green-300 bg-green-50/60 px-6 py-10 text-center">
-            <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-xl border-2 border-green-400 text-green-500">
-              <ScanLine className="h-7 w-7" />
-            </div>
-            <p className="text-sm font-semibold">Ready to scan</p>
-            <p className="mt-1 max-w-xs text-xs text-muted-foreground">Place QR code in front of the camera</p>
-            <div className="my-4 flex w-full items-center gap-3 text-[11px] text-muted-foreground">
-              <span className="h-px flex-1 bg-border" />
-              OR
-              <span className="h-px flex-1 bg-border" />
-            </div>
-            <p className="text-[11px] font-medium text-muted-foreground">Scanner tips</p>
-            <p className="mt-1 text-[11px] text-muted-foreground">Ensure good lighting · Hold steady · Avoid glare</p>
-          </div>
-        </div>
+        <QRScannerPlaceholder
+          disabled={submitting}
+          onScan={(token) => {
+            if (submitting) return;
+            void checkIn({ qrToken: token });
+          }}
+        />
 
         <div className="rounded-xl border bg-card p-4 shadow-sm">
           <h3 className="text-sm font-semibold">Enter ticket or search manually</h3>

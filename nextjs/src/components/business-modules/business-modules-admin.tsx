@@ -9,6 +9,7 @@ import {
   Car,
   Check,
   ChevronDown,
+  Dices,
   Droplets,
   Edit,
   Eye,
@@ -68,6 +69,7 @@ import { t } from "@/lib/admin-t";
 const OTHER_CATEGORY_ID = "other-modules";
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  bingo: Dices,
   "outdoor-services": Leaf,
   "cleaning-services": Sparkles,
   "core-trades": Wrench,

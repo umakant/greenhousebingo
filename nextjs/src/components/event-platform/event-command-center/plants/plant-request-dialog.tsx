@@ -4,7 +4,11 @@ import * as React from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import type { EventPlantDto } from "@/lib/event-platform/event-plants/event-plant-types";
+import type {
+  EventPlantDto,
+  EventPlantRequestType,
+} from "@/lib/event-platform/event-plants/event-plant-types";
+import { EVENT_PLANT_REQUEST_TYPES } from "@/lib/event-platform/event-plants/event-plant-types";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -39,6 +43,8 @@ export function PlantRequestDialog(props: PlantRequestDialogProps) {
   const [registrationId, setRegistrationId] = React.useState(props.registrationId ?? "");
   const [plantId, setPlantId] = React.useState(props.defaultPlantId ?? "free_text");
   const [freeText, setFreeText] = React.useState("");
+  const [requestType, setRequestType] = React.useState<EventPlantRequestType>("winning");
+  const [quantity, setQuantity] = React.useState("1");
   const [priority, setPriority] = React.useState("1");
   const [notes, setNotes] = React.useState("");
   const [busy, setBusy] = React.useState(false);
@@ -47,6 +53,11 @@ export function PlantRequestDialog(props: PlantRequestDialogProps) {
     if (props.open) {
       setRegistrationId(props.registrationId ?? "");
       setPlantId(props.defaultPlantId ?? "free_text");
+      setRequestType("winning");
+      setQuantity("1");
+      setPriority("1");
+      setNotes("");
+      setFreeText("");
     }
   }, [props.open, props.registrationId, props.defaultPlantId]);
 
@@ -67,6 +78,8 @@ export function PlantRequestDialog(props: PlantRequestDialogProps) {
             registrationId: registrationId.trim(),
             eventPlantId: plantId !== "free_text" ? plantId : null,
             requestedPlantName: plantId === "free_text" ? freeText.trim() || null : null,
+            requestType,
+            quantity: Number.parseInt(quantity, 10) || 1,
             priority: Number.parseInt(priority, 10) || 1,
             notes: notes.trim() || null,
           }),
@@ -125,8 +138,44 @@ export function PlantRequestDialog(props: PlantRequestDialogProps) {
             </div>
           ) : null}
           <div className="space-y-2">
-            <Label>Priority</Label>
-            <Input type="number" min={1} max={5} value={priority} onChange={(e) => setPriority(e.target.value)} />
+            <Label>Request type</Label>
+            <Select
+              value={requestType}
+              onValueChange={(v) => setRequestType(v as EventPlantRequestType)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {EVENT_PLANT_REQUEST_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t === "take_home" ? "Take-home (free plant)" : "Winning preference"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Quantity</Label>
+              <Input
+                type="number"
+                min={1}
+                max={20}
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Priority</Label>
+              <Input
+                type="number"
+                min={1}
+                max={5}
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label>Notes</Label>

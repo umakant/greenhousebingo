@@ -22,13 +22,31 @@ import {
 import type {
   EventPlantDto,
   EventPlantRequestDto,
+  EventPlantRequestType,
   EventPlantsOverview,
 } from "@/lib/event-platform/event-plants/event-plant-types";
+import { EVENT_PLANT_REQUEST_TYPE_LABELS } from "@/lib/event-platform/event-plants/event-plant-types";
 import { EVENT_PLANT_STATUS_LABELS } from "@/lib/event-platform/event-plants/event-plant-constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+
+function RequestTypeBadge({ type }: { type: EventPlantRequestType }) {
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        "h-5 px-1.5 text-[10px] font-medium",
+        type === "take_home"
+          ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300"
+          : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300",
+      )}
+    >
+      {EVENT_PLANT_REQUEST_TYPE_LABELS[type]}
+    </Badge>
+  );
+}
 
 const CATEGORY_COLORS = [
   "hsl(142 71% 45%)",
@@ -274,18 +292,33 @@ export function PlantAttendeeRequests(props: {
   canManage: boolean;
   onAdd: () => void;
 }) {
-  const grouped = new Map<string, { name: string; plants: Set<string>; count: number }>();
-  for (const r of props.requests) {
-    const entry = grouped.get(r.attendeeName) ?? { name: r.attendeeName, plants: new Set<string>(), count: 0 };
-    entry.plants.add(r.plantName);
-    entry.count += 1;
+  const [typeFilter, setTypeFilter] = React.useState<"all" | EventPlantRequestType>("all");
+  const filtered =
+    typeFilter === "all"
+      ? props.requests
+      : props.requests.filter((r) => r.requestType === typeFilter);
+
+  const grouped = new Map<
+    string,
+    {
+      name: string;
+      plants: Array<{ name: string; type: EventPlantRequestType; qty: number }>;
+      count: number;
+    }
+  >();
+  for (const r of filtered) {
+    const entry = grouped.get(r.attendeeName) ?? { name: r.attendeeName, plants: [], count: 0 };
+    entry.plants.push({ name: r.plantName, type: r.requestType, qty: r.quantity });
+    entry.count += r.quantity;
     grouped.set(r.attendeeName, entry);
   }
-  const rows = [...grouped.values()].slice(0, 6);
+  const rows = [...grouped.values()].slice(0, 8);
+  const takeHomeCount = props.requests.filter((r) => r.requestType === "take_home").length;
+  const winningCount = props.requests.filter((r) => r.requestType === "winning").length;
 
   return (
     <Card className="shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
         <CardTitle className="text-sm font-semibold">Attendee Requests</CardTitle>
         {props.canManage ? (
           <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={props.onAdd}>
@@ -293,21 +326,57 @@ export function PlantAttendeeRequests(props: {
           </Button>
         ) : null}
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-3">
+        <div className="flex flex-wrap gap-1.5">
+          {(
+            [
+              { id: "all", label: `All (${props.requests.length})` },
+              { id: "take_home", label: `Take-home (${takeHomeCount})` },
+              { id: "winning", label: `Winning (${winningCount})` },
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => setTypeFilter(opt.id)}
+              className={cn(
+                "rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors",
+                typeFilter === opt.id
+                  ? "border-foreground/20 bg-foreground text-background"
+                  : "border-border text-muted-foreground hover:bg-muted",
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
         {rows.length === 0 ? (
           <p className="text-xs text-muted-foreground">No plant requests yet.</p>
         ) : (
           <ul className="space-y-2.5">
             {rows.map((r) => (
-              <li key={r.name} className="flex items-center gap-2.5">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold">
+              <li key={r.name} className="flex items-start gap-2.5">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold">
                   {initials(r.name)}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{r.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{[...r.plants].join(", ")}</p>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {r.plants.map((p, i) => (
+                      <span
+                        key={`${p.name}-${p.type}-${i}`}
+                        className="inline-flex items-center gap-1 rounded-md border bg-muted/40 px-1.5 py-0.5 text-[10px]"
+                      >
+                        <RequestTypeBadge type={p.type} />
+                        <span className="max-w-[100px] truncate">{p.name}</span>
+                        {p.qty > 1 ? <span className="text-muted-foreground">×{p.qty}</span> : null}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <span className="shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">{r.count}</span>
+                <span className="shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">
+                  {r.count}
+                </span>
               </li>
             ))}
           </ul>

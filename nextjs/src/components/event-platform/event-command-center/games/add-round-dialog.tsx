@@ -5,6 +5,8 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { DatePickerInput } from "@/components/ui/date-picker-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -37,9 +39,10 @@ export function AddRoundDialog(props: AddRoundDialogProps) {
   const [pattern, setPattern] = React.useState("");
   const [difficulty, setDifficulty] = React.useState<string>("Easy");
   const [prizeLabel, setPrizeLabel] = React.useState("");
-  const [prizeCost, setPrizeCost] = React.useState("");
-  const [prizeRetail, setPrizeRetail] = React.useState("");
-  const [scheduledAt, setScheduledAt] = React.useState("");
+  const [prizeCost, setPrizeCost] = React.useState<number | null>(null);
+  const [prizeRetail, setPrizeRetail] = React.useState<number | null>(null);
+  const [scheduledDate, setScheduledDate] = React.useState("");
+  const [scheduledTime, setScheduledTime] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
 
   React.useEffect(() => {
@@ -48,15 +51,28 @@ export function AddRoundDialog(props: AddRoundDialogProps) {
       setPattern("");
       setDifficulty("Easy");
       setPrizeLabel("");
-      setPrizeCost("");
-      setPrizeRetail("");
-      setScheduledAt("");
+      setPrizeCost(null);
+      setPrizeRetail(null);
+      setScheduledDate("");
+      setScheduledTime("");
     }
   }, [props.open]);
 
   async function submit() {
     if (!name.trim() || !pattern.trim()) {
       toast.error("Round name and pattern / rule are required.");
+      return;
+    }
+    let scheduledAtIso: string | null = null;
+    if (scheduledDate) {
+      const parsed = new Date(`${scheduledDate}T${scheduledTime || "00:00"}`);
+      if (Number.isNaN(parsed.getTime())) {
+        toast.error("Scheduled time is invalid.");
+        return;
+      }
+      scheduledAtIso = parsed.toISOString();
+    } else if (scheduledTime) {
+      toast.error("Please pick a scheduled date for the time you entered.");
       return;
     }
     setSubmitting(true);
@@ -72,9 +88,9 @@ export function AddRoundDialog(props: AddRoundDialogProps) {
             pattern: pattern.trim(),
             difficulty,
             assignedPrize: prizeLabel.trim(),
-            prizeCost: prizeCost ? Number(prizeCost) : null,
-            prizeRetailValue: prizeRetail ? Number(prizeRetail) : null,
-            scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : null,
+            prizeCost: prizeCost,
+            prizeRetailValue: prizeRetail,
+            scheduledAt: scheduledAtIso,
           }),
         },
       );
@@ -121,28 +137,37 @@ export function AddRoundDialog(props: AddRoundDialogProps) {
             />
           </div>
 
+          <div className="space-y-2">
+            <Label>Difficulty</Label>
+            <Select value={difficulty} onValueChange={setDifficulty}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LMS_EVENT_BINGO_DIFFICULTIES.map((d) => (
+                  <SelectItem key={d} value={d}>
+                    {d}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Difficulty</Label>
-              <Select value={difficulty} onValueChange={setDifficulty}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LMS_EVENT_BINGO_DIFFICULTIES.map((d) => (
-                    <SelectItem key={d} value={d}>
-                      {d}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Scheduled Date</Label>
+              <DatePickerInput
+                value={scheduledDate}
+                onChange={(e) => setScheduledDate(e.target.value)}
+                placeholder="Pick a date"
+              />
             </div>
             <div className="space-y-2">
               <Label>Scheduled Time</Label>
               <Input
-                type="datetime-local"
-                value={scheduledAt}
-                onChange={(e) => setScheduledAt(e.target.value)}
+                type="time"
+                value={scheduledTime}
+                onChange={(e) => setScheduledTime(e.target.value)}
               />
             </div>
           </div>
@@ -159,22 +184,22 @@ export function AddRoundDialog(props: AddRoundDialogProps) {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Prize Cost</Label>
-              <Input
-                type="number"
-                min={0}
-                step="0.01"
+              <CurrencyInput
                 value={prizeCost}
-                onChange={(e) => setPrizeCost(e.target.value)}
+                onChange={setPrizeCost}
+                showSymbol
+                allowEmpty
+                placeholder="0.00"
               />
             </div>
             <div className="space-y-2">
               <Label>Retail Value</Label>
-              <Input
-                type="number"
-                min={0}
-                step="0.01"
+              <CurrencyInput
                 value={prizeRetail}
-                onChange={(e) => setPrizeRetail(e.target.value)}
+                onChange={setPrizeRetail}
+                showSymbol
+                allowEmpty
+                placeholder="0.00"
               />
             </div>
           </div>

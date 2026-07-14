@@ -66,8 +66,12 @@ function LibraryAdminLink({ href, label, className }: { href: string; label: str
 
 type PickerOption = { id: string; label: string; imageUrl?: string | null };
 
+function pickerName(label: string): string {
+  return label.split(" — ")[0]?.trim() || label.trim();
+}
+
 function pickerInitials(label: string): string {
-  const name = label.split(" — ")[0]?.trim() || label.trim();
+  const name = pickerName(label);
   const parts = name.split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
@@ -124,10 +128,8 @@ function HostSponsorPickerRows({
   return (
     <div className="space-y-3">
       {rows.map((rowValue, index) => {
-        const selected = options.find((option) => option.id === rowValue);
         return (
         <div key={`picker-row-${index}`} className="flex items-center gap-2">
-          <PickerIcon kind={kind} option={selected} />
           <Select
             value={rowValue || undefined}
             onValueChange={(value) => onChangeRow(index, value)}
@@ -144,7 +146,7 @@ function HostSponsorPickerRows({
                 >
                   <span className="flex items-center gap-2">
                     <PickerIcon kind={kind} option={option} />
-                    {option.label}
+                    {pickerName(option.label)}
                   </span>
                 </SelectItem>
               ))}

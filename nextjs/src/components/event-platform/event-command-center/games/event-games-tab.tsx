@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ListOrdered, Loader2, Plus, Trophy } from "lucide-react";
+import { Dices, ListOrdered, Loader2, Plus, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -10,6 +10,7 @@ import {
   GamesSummaryCards,
 } from "@/components/event-platform/event-command-center/games/games-panels";
 import { AddRoundDialog } from "@/components/event-platform/event-command-center/games/add-round-dialog";
+import { RandomizeRoundsDialog } from "@/components/event-platform/event-command-center/games/randomize-rounds-dialog";
 import { LiveGameControls } from "@/components/event-platform/event-command-center/games/live-game-controls";
 import { RecordWinnerDialog } from "@/components/event-platform/event-command-center/games/record-winner-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +56,7 @@ export function EventGamesTab(props: { eventId: string }) {
   const [selectedRoundId, setSelectedRoundId] = React.useState<string | null>(null);
   const [recordOpen, setRecordOpen] = React.useState(false);
   const [addRoundOpen, setAddRoundOpen] = React.useState(false);
+  const [randomizeOpen, setRandomizeOpen] = React.useState(false);
   const [showAllRounds, setShowAllRounds] = React.useState(false);
 
   const load = React.useCallback(async () => {
@@ -175,6 +177,14 @@ export function EventGamesTab(props: { eventId: string }) {
               </div>
               {canManage ? (
                 <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => setRandomizeOpen(true)}
+                  >
+                    <Dices className="mr-1.5 h-4 w-4" />
+                    Randomize
+                  </Button>
                   <Button
                     type="button"
                     size="sm"
@@ -317,6 +327,12 @@ export function EventGamesTab(props: { eventId: string }) {
           <AddRoundDialog
             open={addRoundOpen}
             onOpenChange={setAddRoundOpen}
+            eventId={props.eventId}
+            onSaved={load}
+          />
+          <RandomizeRoundsDialog
+            open={randomizeOpen}
+            onOpenChange={setRandomizeOpen}
             eventId={props.eventId}
             onSaved={load}
           />

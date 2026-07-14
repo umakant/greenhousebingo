@@ -433,18 +433,8 @@ function EventDetail() {
               ) : (
                 <button
                   onClick={() => {
-                    addItem({
-                      slug: e.slug,
-                      city: e.city,
-                      state: e.state,
-                      venue: e.venue,
-                      qty,
-                      extraCards,
-                      price: PRICE,
-                      extraCardPrice: EXTRA_CARD,
-                    });
-                    toast.success(`${qty} ticket${qty > 1 ? "s" : ""} added to cart`);
-                    navigate({ to: "/buy-tickets" });
+                    // Live Next.js plant-bingo checkout (free + winning plant selection).
+                    window.location.href = `/events/${encodeURIComponent(e.slug)}/checkout?tickets=${qty}&extras=${extraCards}`;
                   }}
                   className="mt-6 flex items-center justify-center gap-2 rounded-full bg-forest px-6 py-4 font-bold text-cream hover:bg-forest-deep transition w-full shadow-glow cursor-pointer"
                 >
